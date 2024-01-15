@@ -1,7 +1,15 @@
 ##############################################################
 #### Script to analyze seed masting data from Mt. Rainier ####
-#### Script created 12/01/2024; last worked on 12/01/2024 ####
+#### Script created 12/01/2024; last worked on 15/01/2024 ####
 ##############################################################
+
+
+#To do
+#Add 2018-2023 data (JHRL working on cleaning and merging scripts)
+#Some issues with fitting most complicated model - probably b/c some years with 0 seeds
+#Assess how to decide which stands to keep (what is enough data?)
+#add basal area (per stand) to analysis (how much do stands vary by year)
+#how to identify masting? 
 
 ###Read in seed data and seed trap size data
 ###Note - seed data have been cleaned and compiled from individual years
@@ -26,7 +34,8 @@ for(i in 2009:2017){
 seeds_anal <- merge(finaltrap,seeds,by = c("stand","trap","year"))
 
 #Quick analysis by species
-spp <- unique(seeds_anal$species)
+#spp <- unique(seeds_anal$species) #all species
+spp <- c("ABAM","ABLA","CANO","PICO","PSME","THPL", "TSHE", "TMSE")
 stnds <- unique(seeds_anal$stand)
 
 for(i in 1:length(spp)){
@@ -48,9 +57,9 @@ for(i in 1:length(spp)){
   if(length(stnds_rm)>0){
     for(j in 1:length(stnds_rm)){
       spp_seeds_anal <- spp_seeds_anal[spp_seeds_anal$stand!=stnds_rm[j],]
-    }
+    }}
 
-    if(sum(na.omit(spp_seeds_anal$filledseeds))<10){break}
+    if(sum(na.omit(spp_seeds_anal$filledseeds))<10){next}
     #Now analyzee - ask whether year and site and their interaction matter
     #use a glm with a Poisson distribution, and an offset (trapsize)
     null.mod <- glm(filledseeds ~ 1, family = poisson, offset = size, 
@@ -66,14 +75,27 @@ for(i in 1:length(spp)){
     
     #Anova table
     print(spp[i])
-    anova(null.mod,yr.mod,stnd.mod,yrstnd.mod,yrxstnd.mod)
+    AICs <- AIC(null.mod,yr.mod,stnd.mod,yrstnd.mod,yrxstnd.mod)
+    print(anova(null.mod,yr.mod,stnd.mod,yrstnd.mod,yrxstnd.mod))
+    print(AICs)
     
     #Graph
+    #average
+    seed_avg <- tapply(spp_seeds_anal$filledseeds, 
+                       list(spp_seeds_anal$year,spp_seeds_anal$stand),
+                       mean)
+    #create a blank plot to add points to
+    yrs <- as.numeric(dimnames(seed_avg)[[1]])
+    plot(yrs,seed_avg[,1], xlab="years",ylab="seed density",
+         type="n", ylim=c(0,1.1*max(na.omit(seed_avg[,]))))
+    title(spp[i])
     
-    
-  }
-  
-  
-  
-  
+    #for loop to add lines for each year
+    for(j in 1:dim(seed_avg)[2]){
+      points(yrs,seed_avg[,j], type="b", pch=21, bg="yellowgreen")
+    }
 }
+  
+  
+  
+
