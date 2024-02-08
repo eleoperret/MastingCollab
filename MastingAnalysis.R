@@ -124,25 +124,6 @@ for(i in 1:length(spp)){
     }}
   
   if(sum(na.omit(spp_seeds_anal$filledseeds))<10){next}
-  #Now analyzee - ask whether year and site and their interaction matter
-  #use a glm with a Poisson distribution, and an offset (trapsize)
-  null.mod <- glm(filledseeds ~ 1, family = poisson, offset = size, 
-                  data = spp_seeds_anal)
-  yr.mod <- glm(filledseeds ~ year, family = poisson, offset = size, 
-                data = spp_seeds_anal)
-  stnd.mod <- glm(filledseeds ~ stand, family = poisson, offset = size, 
-                  data = spp_seeds_anal)
-  yrstnd.mod <- glm(filledseeds ~ year + stand, family = poisson, 
-                    offset = size, data = spp_seeds_anal)
-  yrxstnd.mod <- glm(filledseeds ~ year*stand, family = poisson, 
-                     offset = size, data = spp_seeds_anal)
-  
-  #Anova table
-  print(spp[i])
-  AICs <- AIC(null.mod,yr.mod,stnd.mod,yrstnd.mod,yrxstnd.mod)
-  print(anova(null.mod,yr.mod,stnd.mod,yrstnd.mod,yrxstnd.mod))
-  print(AICs)
-  
   #Graph
   # Specify the directory where PNG files will be stored
   output_directory <- "C:/Users/eleop/polybox/phD/PhD/R/Masting_US/Masting/Output/"
