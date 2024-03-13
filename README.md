@@ -1,7 +1,11 @@
 # Masting, Seeds and Seedlings (Mt. Rainier)
 Mount Rainier Seed and Seedling (germinants)
 
-This repo contains the data collected from 2008 - 2022(ish). Data from 2009-2017 was examined and cleaned, but there hasn't been any (much) cleaning since then, so the data are added as they were entered. This means there could be typos, odd columns, or other oddities. Please let me know which issues arise so I can fix them...
+This repo contains the data collected from 2008 - 2022(ish). Data from 2009-2017 was examined and cleaned, and you can find a full excel file (all years together) with I think some useful meta data in the two files MORA_cleanseeds_2009-2017.xlsx (also the seed trap size / info). The individual csv files for each year are still in the raw data, and my eventual goal is to add a cleaning and merging script so we can just update the data each year.
+
+The MastingAnalysis.R script is a very basic script I created for Eleonore so she could explore the cleaned 2009-2017 data.
+
+Data collected after 2017 hasn't been integrated, so the data are added as they were entered. This means there could be typos, odd columns, or other oddities in those csv files especially. Please let me know which issues arise so I can fix them...
 
 In this repo is the following data (in raw data folder):
 1. Sortedseeds csv files includes the number and species of seeds sorted from seed traps, one file per year. Seeds are distinguished by filled (full embryo) vs. unfilled. Number of cones are also included as counts, as well as the number of seeds dissected from cones. It is important to recognize that the zeroes are not included (for example, if zero TSHE seeds were found in a trap, you have to infer that from the fact that no TSHE seeds were found). Note that the data collected from seed traps in 2012 (and labeled 2012) came from seeds produced and dispersed in fall of 2011. Therefore 2012 labeled seed trap data is the input for 2012 labeled germinant data (this gets confusing).
