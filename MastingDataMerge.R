@@ -1,6 +1,10 @@
 ## Started 13 March 2024 ##
 ## Satrted by Lizzie cribbing off Janneke's MastingAnalysis.R code ##
 
+## Search for: Alert! 
+## Check those alerts ... 
+## Also, I did nothing to 2011, but it sounds like it needs special help
+
 ## JHRL says ...
 # checkout README! and ...
 # I think what we want is a figure showing that we have a long time series for many species OR many locations. 
@@ -61,7 +65,7 @@ subset(seedsall, stand=="AG05" & year=="2009")
 # For now, do it cheaply using seedsthru2017 ... quite sure Janneke has a better way
 seedsforzeroes <- expand.grid(year=c(2009:2022), stand=unique(seedsthru2017$stand), species=unique(seedsthru2017$species))
 seedsallzeros  <- merge(seedsforzeroes, seedsall, all.x=TRUE, all.y=TRUE)
-seedsallzeros[is.na(seedsallzeros)] <- 0
+seedsallzeros[is.na(seedsallzeros)] <- 0 # ALERT! There's a problem, I think maybe to do with the below?
 unique(seedsall$species) # Hmmm... I ignore this NA problem and error for now!
 seedsallzeros$stand[seedsallzeros$stand=="PARA "] <- "PARA"
 
@@ -102,7 +106,6 @@ for (year in c(2018:2022)){
 
 ## ALERT! 
 ## Below is copied from Janneke's script and I don't actually know what it's doing...  
-## reconfigure trapsize data
 trapsize <- trapsizemerge
 trapsize2 <- trapsize[,1:5]
 size <- rep(NA, times=dim(trapsize)[1]); year <- size
@@ -119,27 +122,10 @@ for(i in 2009:2022){
 
 # Merge size and seed data
 d <- merge(finaltrap, seedsallzeros, by = c("stand","trap","year"))
-d$totfilledseeds <- d$filledseeds + d$conefilledseeds
 
-## Plotting
-##
-library(ggplot2)
+# Divide out by trapsize and take sums
+d$totfilledseeds <- (d$filledseeds/d$size) + (d$conefilledseeds/d$size)
+d$totemptyseeds <- (d$emptyseeds/d$size) + (d$coneemptyseeds/d$size)
+d$allseeds <- d$totfilledseeds + d$totemptyseeds
 
-# Quick look by ABAM
-dabam <- subset(d, species=="ABAM")
-dabamagg <- aggregate(dabam[c("totfilledseeds")], dabam[c("stand", "year")], FUN=sum)
-
-ggplot(dabamagg, aes(y=totfilledseeds, x=year, color=stand)) +
-  geom_line() 
-
-ggplot(dabamagg, aes(y=totfilledseeds, x=year)) +
-  geom_line() + 
-  facet_wrap(stand~.)
-
-# Quick look for AGO5
-specieshere <- c("ABAM", "PSME", "TSHE", "THPL")
-dag05 <- subset(d[which(d$species %in% specieshere),], stand=="AG05")
-dag05agg <- aggregate(dag05[c("totfilledseeds")], dag05[c("stand", "year", "species")], FUN=sum)
-
-ggplot(dag05agg, aes(y=totfilledseeds, x=year, color=species)) +
-  geom_line() 
+write.csv(d, "./output/seedswithtraps_allyears_quickdirty.csv", row.names=FALSE)
