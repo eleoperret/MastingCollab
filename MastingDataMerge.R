@@ -4,6 +4,7 @@
 ## Search for: Alert! 
 ## Check those alerts ... 
 ## Also, I did nothing to 2011, but it sounds like it needs special help
+## Also, we should add in the Germinantsintraps data to the seed counts, but I have not done that
 
 ## JHRL says ...
 # checkout README! and ...
@@ -23,6 +24,7 @@ if(length(grep("lizzie", getwd())>0)) {
 
 ## 
 ## Start by cleaning the seeds! 
+## We should add in the Germinantsintraps data, but I have not done that
 ##
 
 seedsthru2017 <- read.csv("./data/MORA_cleanseeds_2009-2017.csv", header=TRUE) #seeds
@@ -129,3 +131,35 @@ d$totemptyseeds <- (d$emptyseeds/d$size) + (d$coneemptyseeds/d$size)
 d$allseeds <- d$totfilledseeds + d$totemptyseeds
 
 write.csv(d, "./output/seedswithtraps_allyears_quickdirty.csv", row.names=FALSE)
+
+
+
+
+
+##
+## Tried cleaning the firstyeargerminants
+## 
+
+## But too many issues to deal with just now... 
+## Double dates in AE10 in 2021 is due to NA which is due to earlier sampling with different formatting
+## Actually ... 2021 is not usable given date formatting and looking at it makes me think need to handle this carefully 
+
+firstgermies <- data.frame(stand=character(), quadrat=numeric(), date=character(), species=numeric(), count=numeric())
+yearz <- c(c(2009:2017), c(2019:2022))
+
+for (year in yearz){
+  filehere <- read.csv(paste("./data/rawdata/1styearseedlings/1styearseedlings_", year, ".csv", sep=""))
+  filehere[["stand"]] <- filehere[["Stand"]]
+  filehere[["quadrat"]] <- filehere[["Quadrat"]]
+  filehere[["date"]] <- as.Date(filehere[["Date"]], format="%d-%m-%y")
+  if(year==2019){
+      filehere[["date"]] <- as.Date(filehere[["Date"]], format="%m/%d/%Y")
+  }
+  for (standhere in unique(filehere[["stand"]])){
+    subby <- subset(filehere, filehere[["stand"]]==standhere)
+    if(length(unique(subby[["date"]]))>1){
+      print(paste(year, standhere, "has multiple dates"))
+    }
+  }
+}
+
