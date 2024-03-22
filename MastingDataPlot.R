@@ -133,15 +133,42 @@ dev.off()
 
 standzsm <- standz[which(standz$PlotNo %in% c("AG05", "AO03", "AV06", "AV14", "PARA")),]
 colz <- rev(viridis(nrow(standzsm)))
+dabamaggsm <- dabamagg[which(dabamagg$stand %in% c("AG05", "AO03", "AV06", "AV14", "PARA")),]
+
 
 pdf("./figures/abamplotlnbaseR_fewerstands.pdf", height=6, width=8)
 par(mar=c(4,5,2,7), xpd=TRUE)
-plot(log(totfilledseeds)~year, data=dabamagg, type="n", xlab="Year", 
+plot(log(totfilledseeds)~year, data=dabamaggsm, type="n", xlab="Year", 
   ylab=expression(paste("ln(Total filled seeds (m"^"-2", "))", sep=""))) 
 for (i in 1:nrow(standz)){
-  subby <- subset(dabamagg, stand==standzsm$PlotNo[i])
+  subby <- subset(dabamaggsm, stand==standzsm$PlotNo[i])
   lines(log(totfilledseeds)~year, data=subby, col=colz[i], lwd=2)
   points(log(totfilledseeds)~year, data=subby, col=colz[i], pch=16)
+}
+legend("topright", standzsm$PlotNo, pch=16, col=colz, bty="n", lwd=2)
+dev.off()
+
+
+## Put them together
+pdf("./figures/abamwag05plotbaseR_fewerstands.pdf", height=11, width=10)
+par(mfrow=c(2,1))
+par(mar=c(4,5,2,2))
+colz <- (viridis(6))
+plot(totfilledseeds~year, data=dag05agg, type="n", xlab="Year", 
+  ylab=expression(paste("Total viable seeds (m"^"-2", ")", sep="")), ylim=c(0, 10800)) 
+for (i in 1:length(specieshere)){
+  subby <- subset(dag05agg, species==specieshere[i])
+  lines(totfilledseeds~year, data=subby, col=colz[i], lwd=2)
+  points(totfilledseeds~year, data=subby, col=colz[i], pch=16)
+}
+legend("topleft", latbihere, pch=16, col=colz[1:4], bty="n", lwd=2)
+colz <- rev(viridis(nrow(standzsm)))
+plot(totfilledseeds~year, data=dabamaggsm, type="n", xlab="Year", 
+  ylab=expression(paste("Total viable seeds (m"^"-2", ")", sep=""))) 
+for (i in 1:nrow(standz)){
+  subby <- subset(dabamaggsm, stand==standzsm$PlotNo[i])
+  lines(totfilledseeds~year, data=subby, col=colz[i], lwd=2)
+  points(totfilledseeds~year, data=subby, col=colz[i], pch=16)
 }
 legend("topright", standzsm$PlotNo, pch=16, col=colz, bty="n", lwd=2)
 dev.off()
