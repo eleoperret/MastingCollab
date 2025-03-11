@@ -30,6 +30,12 @@ dabamaggall <- aggregate(dabam[c("allseeds")], dabam[c("stand", "year")], FUN=su
 
 ## ggplot versions
 
+ggplot(dabamagg, aes(x=totfilledseeds)) +
+  geom_histogram() + 
+  theme_bw() +
+  facet_wrap(.~stand, scales="free")
+
+
 ggplot(dabamagg, aes(y=totfilledseeds, x=year, color=stand)) +
   geom_line() + 
   scale_colour_viridis_d() + 
