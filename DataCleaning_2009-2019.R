@@ -40,4 +40,4 @@ for(i in 2:length(seed_files)){
   }
 }
 
-##Now make corrections to each file
+##Now make corrections to each file, and write out.
