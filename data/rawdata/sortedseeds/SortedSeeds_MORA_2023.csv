@@ -1,0 +1,294 @@
+"country","year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","standardized_notes"
+"US",2023,"AM16",9,"Pseudotsuga menziesii",1,0,0,0,0,NA
+"US",2023,"AM16",9,"Abies amabalis",15,5,0,0,0,NA
+"US",2023,"AB08",8,"Tsuga heterophylla",507,93,4,1,1,NA
+"US",2023,"AB08",8,"Pseudotsuga menziesii",5,4,0,0,0,NA
+"US",2023,"AB08",8,"Abies amabalis",2,0,0,0,0,NA
+"US",2023,"AB08",8,"Thuja plicata",3,0,0,0,0,NA
+"US",2023,"AB08",13,"Tsuga heterophylla",638,98,7,4,0,NA
+"US",2023,"AB08",13,"Thuja plicata",1,1,0,0,0,NA
+"US",2023,"AB08",13,"Abies amabalis",1,2,0,0,0,NA
+"US",2023,"AB08",13,"Pseudotsuga menziesii",3,3,0,0,0,NA
+"US",2023,"AB08",9,"Tsuga heterophylla",380,102,0,0,0,NA
+"US",2023,"AB08",9,"Abies amabalis",2,1,0,0,0,NA
+"US",2023,"AB08",9,"Pseudotsuga menziesii",4,6,0,0,0,NA
+"US",2023,"AB08",9,"Thuja plicata",2,3,13,48,82,NA
+"US",2023,"AB08",7,"Tsuga heterophylla",386,112,2,0,0,NA
+"US",2023,"AB08",7,"Pseudotsuga menziesii",4,0,0,0,0,NA
+"US",2023,"AB08",7,"Abies amabalis",2,0,0,0,0,NA
+"US",2023,"AB08",7,"Thuja plicata",4,1,0,0,0,NA
+"US",2023,"PARA",5,"Tsuga mertensiana",392,86,1,0,3,NA
+"US",2023,"PARA",5,"Abies amabalis",7,12,0,0,0,NA
+"US",2023,"PARA",5,"Abies lasiocarpa",28,4,0,0,0,NA
+"US",2023,"AM16",11,"Tsuga mertensiana",90,14,2,2,0,"Species not expected for this stand"
+"US",2023,"AM16",11,"Tsuga heterophylla",132,22,0,0,0,NA
+"US",2023,"AM16",11,"Abies amabalis",4,1,0,0,0,NA
+"US",2023,"AM16",11,"Chamaecyparis nootkatensis",6,0,6,1,1,"Species not expected for this stand"
+"US",2023,"AG05",9,"Thuja plicata",22,27,7,12,13,NA
+"US",2023,"AG05",9,"Tsuga heterophylla",92,24,2,0,0,NA
+"US",2023,"AG05",9,"Tsuga mertensiana",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AG05",9,"Pseudotsuga menziesii",6,2,0,0,0,NA
+"US",2023,"AG05",9,"Abies amabalis",65,39,0,0,0,NA
+"US",2023,"AO03",8,"Tsuga heterophylla",288,293,33,33,44,NA
+"US",2023,"AO03",8,"Thuja plicata",40,38,25,17,30,NA
+"US",2023,"AO03",8,"Pseudotsuga menziesii",1,2,0,0,0,NA
+"US",2023,"AO03",8,"Abies amabalis",4,1,0,0,0,NA
+"US",2023,"AG05",15,"Thuja plicata",30,46,47,63,121,NA
+"US",2023,"AG05",15,"Tsuga heterophylla",47,9,0,0,0,NA
+"US",2023,"AG05",15,"Pseudotsuga menziesii",6,0,0,0,0,NA
+"US",2023,"AG05",15,"Abies amabalis",7,1,0,0,0,NA
+"US",2023,"AG05",11,"Tsuga heterophylla",74,12,0,0,0,NA
+"US",2023,"AG05",11,"Thuja plicata",12,12,15,34,43,NA
+"US",2023,"AG05",11,"Pseudotsuga menziesii",6,7,0,0,0,NA
+"US",2023,"AG05",11,"Abies amabalis",14,6,0,0,0,NA
+"US",2023,"AG05",14,"Abies amabalis",10,3,0,0,0,NA
+"US",2023,"PARA",3,"Tsuga mertensiana",455,86,4,15,23,NA
+"US",2023,"PARA",3,"Abies amabalis",33,13,0,0,0,NA
+"US",2023,"PARA",3,"Abies lasiocarpa",0,2,0,0,0,NA
+"US",2023,"TO04",10,"Tsuga heterophylla",333,33,4,23,7,NA
+"US",2023,"TO04",10,"Thuja plicata",21,20,1,0,0,NA
+"US",2023,"TO04",10,"Pseudotsuga menziesii",11,1,0,0,0,NA
+"US",2023,"TA01",14,"Pseudotsuga menziesii",23,6,1,1,9,NA
+"US",2023,"TA01",14,"Tsuga heterophylla",82,11,0,0,0,NA
+"US",2023,"TA01",12,"Pseudotsuga menziesii",20,15,1,0,6,NA
+"US",2023,"TA01",12,"Tsuga heterophylla",108,23,0,0,0,NA
+"US",2023,"TA01",12,"Thuja plicata",1,1,0,0,0,NA
+"US",2023,"TA01",10,"Tsuga heterophylla",124,20,2,1,0,NA
+"US",2023,"TA01",10,"Pseudotsuga menziesii",18,17,0,0,0,NA
+"US",2023,"TA01",13,"Pseudotsuga menziesii",9,4,1.5,6,22,NA
+"US",2023,"TA01",13,"Tsuga heterophylla",119,23,2,1,0,NA
+"US",2023,"AE10",13,"Chamaecyparis nootkatensis",13,2,5,0,0,"Species not expected for this stand"
+"US",2023,"AE10",13,"Tsuga mertensiana",105,15,0,0,0,NA
+"US",2023,"AE10",13,"Abies lasiocarpa",2,4,0,0,0,NA
+"US",2023,"AE10",13,"Abies amabalis",7,7,0,0,0,"uncertain species ID (ABAM/ABPR)"
+"US",2023,"AB08",14,"Thuja plicata",0,1,2,7,19,NA
+"US",2023,"AB08",14,"Tsuga heterophylla",679,117,6,0,0,NA
+"US",2023,"AB08",14,"Pseudotsuga menziesii",6,1,0,0,0,NA
+"US",2023,"AB08",14,"Abies amabalis",1,0,0,0,0,NA
+"US",2023,"AB08",15,"Tsuga heterophylla",472,83,16,15,12,NA
+"US",2023,"AB08",15,"Thuja plicata",10,15,22,27,102,NA
+"US",2023,"AB08",15,"Pseudotsuga menziesii",4,0,0,0,0,NA
+"US",2023,"AB08",10,"Tsuga heterophylla",699,125,13,0,0,NA
+"US",2023,"AB08",10,"Pseudotsuga menziesii",2,1,0,0,0,NA
+"US",2023,"AB08",10,"Thuja plicata",0,1,0,0,0,NA
+"US",2023,"AB08",10,"Abies amabalis",0,1,0,0,0,NA
+"US",2023,"PARA",4,"Tsuga mertensiana",489,89,1,16,21,NA
+"US",2023,"PARA",4,"Abies lasiocarpa",26,1,0,0,0,NA
+"US",2023,"PARA",4,"Abies amabalis",4,0,0,0,0,NA
+"US",2023,"PARA",4,"Abies amabalis",0,14,0,0,0,"uncertain with filled/unfilled"
+"US",2023,"AG05",7,"Pseudotsuga menziesii",8,2,1,0,0,NA
+"US",2023,"AG05",7,"Tsuga heterophylla",111,24,2,0,0,NA
+"US",2023,"AG05",7,"Thuja plicata",20,26,1,0,0,NA
+"US",2023,"AB08",11,"Tsuga heterophylla",505,102,3,0,0,NA
+"US",2023,"AB08",11,"Pseudotsuga menziesii",2,3,0,0,0,NA
+"US",2023,"AB08",11,"Abies amabalis",0,2,0,0,0,NA
+"US",2023,"AB08",11,"Thuja plicata",2,2,0,0,0,NA
+"US",2023,"AM16",9,"Tsuga heterophylla",139,41,3,4,1,NA
+"US",2023,"AM16",9,"Tsuga mertensiana",120,19,0,0,0,"Species not expected for this stand"
+"US",2023,"AM16",9,"Chamaecyparis nootkatensis",7,1,0,0,0,"Species not expected for this stand"
+"US",2023,"AG05",14,"Pseudotsuga menziesii",1,5,2.5,1,35,NA
+"US",2023,"AG05",14,"Thuja plicata",16,13,1,0,0,NA
+"US",2023,"AG05",14,"Tsuga heterophylla",47,8,0,0,0,NA
+"US",2023,"AB08",12,"Tsuga heterophylla",497,141,31,24,13,NA
+"US",2023,"AB08",12,"Thuja plicata",7,5,9,42,38,NA
+"US",2023,"AB08",12,"Pseudotsuga menziesii",3,5,0,0,0,NA
+"US",2023,"AB08",12,"Abies amabalis",1,0,0,0,0,NA
+"US",2023,"AV06",10,"Abies amabalis",26,6,0,0,0,NA
+"US",2023,"AV06",10,"Tsuga heterophylla",182,57,3,0,3,NA
+"US",2023,"AV06",10,"Thuja plicata",7,2,2,3,2,NA
+"US",2023,"AV06",10,"Pseudotsuga menziesii",1,1,0,0,0,NA
+"US",2023,"AV06",11,"Thuja plicata",6,5,6,12,8,NA
+"US",2023,"AV06",11,"Abies amabalis",17,8,0,0,0,NA
+"US",2023,"AV06",11,"Pseudotsuga menziesii",4,2,0,0,0,NA
+"US",2023,"AV06",11,"Tsuga heterophylla",125,29,0,0,0,NA
+"US",2023,"AV06",13,"Tsuga heterophylla",198,37,1,0,0,NA
+"US",2023,"AV06",13,"Thuja plicata",3,2,0,0,0,NA
+"US",2023,"AV06",13,"Pseudotsuga menziesii",3,2,0,0,0,NA
+"US",2023,"AV06",13,"Abies amabalis",12,11,0,0,0,NA
+"US",2023,"AV06",7,"Tsuga heterophylla",175,30,1,0,0,NA
+"US",2023,"AV06",7,"Thuja plicata",2,1,0,0,0,NA
+"US",2023,"AV06",7,"Abies amabalis",56,11,0,0,0,NA
+"US",2023,"AV06",7,"Pseudotsuga menziesii",3,0,0,0,0,NA
+"US",2023,"AV06",15,"Tsuga heterophylla",72,9,3,1,0,NA
+"US",2023,"AV06",15,"Thuja plicata",24,19,40,35,74,NA
+"US",2023,"AV06",15,"Abies amabalis",20,9,0,0,2,NA
+"US",2023,"AV06",15,"Chamaecyparis nootkatensis",2,0,0,0,0,NA
+"US",2023,"AV06",15,"Pseudotsuga menziesii",2,1,0,0,0,NA
+"US",2023,"AO03",10,"Tsuga heterophylla",236,95,13,17,4,NA
+"US",2023,"AO03",10,"Thuja plicata",18,10,100,232,408,NA
+"US",2023,"AO03",10,"Abies amabalis",6,6,0,0,0,NA
+"US",2023,"AO03",10,"Pseudotsuga menziesii",5,19,0,0,0,NA
+"US",2023,"AO03",12,"Tsuga heterophylla",181,129,9,43,12,NA
+"US",2023,"AO03",12,"Pseudotsuga menziesii",7,17,1,2,9,NA
+"US",2023,"AO03",12,"Thuja plicata",23,34,1,0,0,NA
+"US",2023,"AO03",12,"Abies amabalis",18,11,0,0,0,NA
+"US",2023,"AG05",13,"Thuja plicata",37,17,10,11,23,NA
+"US",2023,"AG05",13,"Tsuga heterophylla",87,17,0,0,0,NA
+"US",2023,"AG05",13,"Pseudotsuga menziesii",8,2,0,0,0,NA
+"US",2023,"AG05",13,"Abies amabalis",34,9,0,0,0,NA
+"US",2023,"AG05",12,"Thuja plicata",31,30,16,33,42,NA
+"US",2023,"AG05",12,"Tsuga heterophylla",97,22,0,0,0,NA
+"US",2023,"AG05",12,"Abies amabalis",5,6,0,0,0,NA
+"US",2023,"AG05",12,"Pseudotsuga menziesii",7,5,0,0,0,NA
+"US",2023,"AG05",12,"Tsuga mertensiana",1,1,0,0,0,"Species not expected for this stand"
+"US",2023,"AV06",14,"Abies amabalis",18,9,0,0,0,NA
+"US",2023,"AV06",14,"Pseudotsuga menziesii",0,2,0,0,0,NA
+"US",2023,"AV06",14,"Thuja plicata",12,8,19,15,18,NA
+"US",2023,"AV06",14,"Tsuga heterophylla",185,29,0,0,0,NA
+"US",2023,"AV06",9,"Tsuga heterophylla",48,12,0,0,0,NA
+"US",2023,"AV06",9,"Abies amabalis",25,7,0,0,0,NA
+"US",2023,"AV06",9,"Pseudotsuga menziesii",6,4,0,0,0,NA
+"US",2023,"AV06",9,"Thuja plicata",1,0,0,0,0,NA
+"US",2023,"AV06",12,"Tsuga heterophylla",140,34,1,0,1,NA
+"US",2023,"AV06",12,"Pseudotsuga menziesii",1,0,0,0,0,NA
+"US",2023,"AV06",12,"Thuja plicata",1,4,0,0,0,NA
+"US",2023,"AV06",12,"Abies amabalis",22,9,0,0,0,NA
+"US",2023,"AV06",8,"Tsuga heterophylla",103,21,0,0,0,NA
+"US",2023,"AV06",8,"Pseudotsuga menziesii",2,1,0,0,0,NA
+"US",2023,"AV06",8,"Thuja plicata",1,1,0,0,0,NA
+"US",2023,"AV06",8,"Abies amabalis",13,3,0,0,0,NA
+"US",2023,"AG05",10,"Tsuga heterophylla",146,32,0,0,0,NA
+"US",2023,"AG05",10,"Tsuga mertensiana",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AG05",10,"Abies amabalis",58,8,0,0,0,NA
+"US",2023,"AG05",10,"Thuja plicata",19,23,21,26,31,NA
+"US",2023,"AG05",10,"Pseudotsuga menziesii",2,1,0,0,0,NA
+"US",2023,"AG05",8,"Thuja plicata",12,10,19,31,38,NA
+"US",2023,"AG05",8,"Abies amabalis",26,6,0,0,0,NA
+"US",2023,"AG05",8,"Pseudotsuga menziesii",4,2,0,0,0,NA
+"US",2023,"AG05",8,"Tsuga heterophylla",33,7,0,0,0,NA
+"US",2023,"AO03",7,"Thuja plicata",94,82,135,86,106,NA
+"US",2023,"AO03",7,"Abies amabalis",47,32,0,0,0,NA
+"US",2023,"AO03",7,"Tsuga heterophylla",141,46,0,0,0,NA
+"US",2023,"AO03",7,"Pseudotsuga menziesii",1,1,0,0,0,NA
+"US",2023,"AM16",7,"Tsuga heterophylla",141,44,9,16,10,NA
+"US",2023,"AM16",7,"Chamaecyparis nootkatensis",5,1,1,0,0,"Species not expected for this stand"
+"US",2023,"AM16",7,"Abies amabalis",1,3,0,0,0,NA
+"US",2023,"AM16",7,"Tsuga mertensiana",28,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AO03",11,"Abies amabalis",3,14,0,0,0,NA
+"US",2023,"AO03",11,"Tsuga heterophylla",152,77,4,0,0,NA
+"US",2023,"AO03",11,"Thuja plicata",64,65,34,14,23,NA
+"US",2023,"AO03",11,"Pseudotsuga menziesii",3,2,0,0,0,NA
+"US",2023,"AO03",13,"Thuja plicata",6,6,170,46,46,NA
+"US",2023,"AO03",13,"Tsuga mertensiana",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AO03",13,"Tsuga heterophylla",98,14,1,25,7,NA
+"US",2023,"AO03",13,"Pseudotsuga menziesii",4,1,0,0,0,NA
+"US",2023,"AO03",13,"Abies amabalis",17,12,0,0,0,NA
+"US",2023,"AO03",9,"Tsuga heterophylla",132,36,3,3,0,NA
+"US",2023,"AO03",9,"Thuja plicata",13,5,1,0,0,NA
+"US",2023,"AO03",9,"Pseudotsuga menziesii",2,2,0,0,0,NA
+"US",2023,"AO03",9,"Abies amabalis",8,4,0,0,0,NA
+"US",2023,"AM16",13,"Tsuga heterophylla",75,7,0,0,0,NA
+"US",2023,"AM16",13,"Abies amabalis",6,3,0,0,0,NA
+"US",2023,"AM16",13,"Chamaecyparis nootkatensis",3,0,6,2,0,"Species not expected for this stand"
+"US",2023,"AM16",13,"Tsuga mertensiana",52,4,0,0,0,"Species not expected for this stand"
+"US",2023,"AM16",8,"Tsuga mertensiana",63,4,1,0,0,"Species not expected for this stand"
+"US",2023,"AM16",8,"Tsuga heterophylla",68,22,1,0,0,NA
+"US",2023,"AM16",8,"Abies amabalis",8,0,0,0,0,NA
+"US",2023,"AM16",8,"Chamaecyparis nootkatensis",6,1,2,0,0,"Species not expected for this stand"
+"US",2023,"AM16",14,"Tsuga mertensiana",148,16,1,71,4,"Species not expected for this stand"
+"US",2023,"AM16",14,"Abies amabalis",2,1,0,0,0,NA
+"US",2023,"AM16",14,"Tsuga heterophylla",58,32,0,0,0,NA
+"US",2023,"AM16",14,"Chamaecyparis nootkatensis",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AM16",14,"Alnus viridis",7,0,1,68,4,"uncertain with filled/unfilled"
+"US",2023,"AM16",15,"Chamaecyparis nootkatensis",6,2,3,19,0,"Species not expected for this stand"
+"US",2023,"AM16",15,"Tsuga heterophylla",57,9,0,0,0,NA
+"US",2023,"AM16",15,"Abies amabalis",10,2,0,0,0,NA
+"US",2023,"AM16",15,"Tsuga mertensiana",78,13,0,0,0,"Species not expected for this stand"
+"US",2023,"AO03",14,"Tsuga heterophylla",142,31,3,3,4,NA
+"US",2023,"AO03",14,"Thuja plicata",19,5,6,1,2,NA
+"US",2023,"AO03",14,"Pseudotsuga menziesii",1,0,0,0,0,NA
+"US",2023,"AO03",14,"Abies amabalis",4,7,0,0,0,NA
+"US",2023,"AM16",12,"Chamaecyparis nootkatensis",27,6,4,8,1,"Species not expected for this stand"
+"US",2023,"AM16",12,"Abies amabalis",4,0,0,0,0,NA
+"US",2023,"AM16",12,"Tsuga mertensiana",78,4,0,0,0,"Species not expected for this stand"
+"US",2023,"AM16",12,"Tsuga heterophylla",67,6,0,0,0,NA
+"US",2023,"AO03",15,"Thuja plicata",20,9,0,0,0,NA
+"US",2023,"AO03",15,"Abies amabalis",16,18,0,0,0,NA
+"US",2023,"AO03",15,"Pseudotsuga menziesii",3,5,0,0,0,NA
+"US",2023,"AO03",15,"Tsuga heterophylla",118,30,0,0,0,NA
+"US",2023,"TO04",14,"Abies grandis",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"TO04",14,"Pseudotsuga menziesii",7,0,0,0,0,NA
+"US",2023,"TO04",14,"Thuja plicata",112,17,0,0,0,NA
+"US",2023,"TO04",14,"Tsuga heterophylla",462,104,5,27,9,NA
+"US",2023,"PARA",2,"Abies lasiocarpa",9,5,0,0,0,NA
+"US",2023,"PARA",2,"Abies amabalis",62,2,0,0,0,NA
+"US",2023,"PARA",2,"Tsuga mertensiana",418,40,0,0,0,NA
+"US",2023,"AE10",8,"Chamaecyparis nootkatensis",9,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AE10",8,"Abies lasiocarpa",0,2,0,0,0,NA
+"US",2023,"AE10",8,"Abies amabalis",7,7,0,0,0,NA
+"US",2023,"AE10",8,"Tsuga mertensiana",15,0,0,0,0,NA
+"US",2023,"TO04",15,"Pseudotsuga menziesii",4,0,0,0,0,NA
+"US",2023,"TO04",15,"Tsuga heterophylla",423,69,6,9,0,NA
+"US",2023,"TO04",15,"Thuja plicata",13,0,2,0,0,NA
+"US",2023,"TO04",7,"Pseudotsuga menziesii",11,3,2,0,0,NA
+"US",2023,"TO04",7,"Thuja plicata",20,9,0,0,0,NA
+"US",2023,"TO04",7,"Chamaecyparis nootkatensis",2,0,0,0,0,"Species not expected for this stand"
+"US",2023,"TO04",7,"Tsuga heterophylla",550,68,11,28,0,NA
+"US",2023,"AE10",10,"Abies amabalis",8,1,0,0,0,NA
+"US",2023,"AE10",10,"Abies procera",14,2,0,0,0,NA
+"US",2023,"AE10",10,"Chamaecyparis nootkatensis",10,0,8,4,0,"Species not expected for this stand"
+"US",2023,"AE10",10,"Tsuga mertensiana",10,0,0,0,0,NA
+"US",2023,"TO04",13,"Tsuga heterophylla",274,21,2,0,0,NA
+"US",2023,"TO04",13,"Pseudotsuga menziesii",4,1,0,0,0,NA
+"US",2023,"TO04",13,"Abies amabalis",1,0,0,0,0,NA
+"US",2023,"TO04",13,"Thuja plicata",3,0,6,8,9,NA
+"US",2023,"TO04",12,"Abies grandis",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"TO04",12,"Chamaecyparis nootkatensis",1,0,0,0,0,"Species not expected for this stand"
+"US",2023,"TO04",12,"Pseudotsuga menziesii",6,1,0,0,0,NA
+"US",2023,"TO04",12,"Thuja plicata",43,34,105,68,169,NA
+"US",2023,"TO04",12,"Tsuga heterophylla",454,35,8,28,13,NA
+"US",2023,"TO04",11,"Pseudotsuga menziesii",4,2,0,0,0,NA
+"US",2023,"TO04",11,"Thuja plicata",37,41,5,2,7,NA
+"US",2023,"TO04",11,"Tsuga heterophylla",383,40,3,5,0,NA
+"US",2023,"TO04",8,"Thuja plicata",28,36,4,9,5,NA
+"US",2023,"TO04",8,"Pseudotsuga menziesii",7,2,0,0,0,NA
+"US",2023,"TO04",8,"Tsuga heterophylla",317,112,16,63,14,NA
+"US",2023,"TO04",9,"Pseudotsuga menziesii",3,2,2,0,1,NA
+"US",2023,"TO04",9,"Thuja plicata",126,125,66,137,154,NA
+"US",2023,"TO04",9,"Tsuga heterophylla",276,37,20,19,0,NA
+"US",2023,"PARA",1,"Abies amabalis",30,5,66,0,0,NA
+"US",2023,"PARA",1,"Abies lasiocarpa",26,4,0,0,0,NA
+"US",2023,"PARA",1,"Tsuga mertensiana",109,6,0,0,0,NA
+"US",2023,"AE10",12,"Chamaecyparis nootkatensis",16,0,6,0,0,"Species not expected for this stand"
+"US",2023,"AE10",12,"Tsuga mertensiana",17,4,0,0,0,NA
+"US",2023,"AE10",12,"Abies procera",10,0,0,0,0,"uncertain species ID"
+"US",2023,"AE10",12,"Abies lasiocarpa",1,4,0,0,0,NA
+"US",2023,"AE10",12,"Abies amabalis",10,2,0,0,0,NA
+"US",2023,"AM16",10,"Tsuga heterophylla",25,45,2,0,4,NA
+"US",2023,"AM16",10,"Abies amabalis",2,0,0,0,0,NA
+"US",2023,"AM16",10,"Chamaecyparis nootkatensis",1,2,0,0,0,"Species not expected for this stand"
+"US",2023,"AM16",10,"Tsuga mertensiana",23,32,0,0,0,"Species not expected for this stand"
+"US",2023,"TA01",8,"Pseudotsuga menziesii",18,19,0,0,0,NA
+"US",2023,"TA01",8,"Abies procera",1,0,0,0,0,NA
+"US",2023,"TA01",8,"Tsuga heterophylla",26,34,0,0,0,NA
+"US",2023,"TA01",15,"Pseudotsuga menziesii",14,22,1,0,8,NA
+"US",2023,"TA01",15,"Tsuga heterophylla",70,78,4,1,9,NA
+"US",2023,"PARA",6,"Tsuga mertensiana",17,22,1,0,68,NA
+"US",2023,"PARA",6,"Abies amabalis",9,3,0,0,0,NA
+"US",2023,"AE10",15,"Chamaecyparis nootkatensis",5,0,2,0,0,"Species not expected for this stand"
+"US",2023,"AE10",15,"Tsuga mertensiana",26,34,0,0,0,NA
+"US",2023,"AE10",15,"Abies lasiocarpa",1,2,0,0,0,"uncertain species ID"
+"US",2023,"AE10",15,"Abies amabalis",2,3,0,0,0,"uncertain species ID"
+"US",2023,"AE10",15,"Abies procera",5,1,0,0,0,"uncertain species ID"
+"US",2023,"AE10",14,"Chamaecyparis nootkatensis",8,1,0,0,0,"Species not expected for this stand"
+"US",2023,"AE10",14,"Tsuga mertensiana",23,18,0,0,0,NA
+"US",2023,"AE10",14,"Abies amabalis",5,10,0,0,0,NA
+"US",2023,"AE10",11,"Tsuga mertensiana",7,3,0,0,0,NA
+"US",2023,"AE10",11,"Abies amabalis",3,24,0,0,0,NA
+"US",2023,"AE10",9,"Chamaecyparis nootkatensis",2,0,0,0,0,"Species not expected for this stand"
+"US",2023,"AE10",9,"Tsuga mertensiana",8,2,0,0,0,NA
+"US",2023,"AE10",9,"Abies amabalis",21,11,0,0,0,NA
+"US",2023,"AE10",9,"Abies lasiocarpa",0,5,0,0,0,NA
+"US",2023,"AE10",7,"Chamaecyparis nootkatensis",5,0,4,0,0,"Species not expected for this stand"
+"US",2023,"AE10",7,"Pseudotsuga menziesii",0,1,0,0,0,NA
+"US",2023,"AE10",7,"Tsuga mertensiana",5,1,0,0,0,NA
+"US",2023,"AE10",7,"Abies amabalis",9,10,0,0,0,NA
+"US",2023,"TA01",11,"Thuja plicata",1,0,0,0,0,NA
+"US",2023,"TA01",11,"Pseudotsuga menziesii",18,22,0,0,0,NA
+"US",2023,"TA01",11,"Tsuga heterophylla",42,56,0,0,0,NA
+"US",2023,"TA01",7,"Thuja plicata",0,2,0,0,0,NA
+"US",2023,"TA01",7,"Pseudotsuga menziesii",10,22,0,0,0,NA
+"US",2023,"TA01",7,"Tsuga heterophylla",55,58,0,0,0,NA
+"US",2023,"TA01",9,"Tsuga heterophylla",9,26,1,0,0,NA
+"US",2023,"TA01",9,"Thuja plicata",0,3,0,0,0,NA
+"US",2023,"TA01",9,"Pseudotsuga menziesii",42,117,0,0,0,NA
