@@ -1,0 +1,419 @@
+"year","stand","trapno","spp","Filled_seeds","loose_sds_unfilled","cones","FilledSeeds_Cones","cones_sds_unfilled","Field.Notes","Data.Entry.Notes"
+2019,"AB08",1,"ABAM",2,1,0,0,0,"",NA
+2019,"AB08",1,"PSME",8,2,0,0,0,"",NA
+2019,"AB08",1,"THPL",9,1,0,0,0,"",NA
+2019,"AB08",1,"TSHE",837,7,2,12,0,"filled estimated by weight, filled seeds in 3 vials labeled A, B, and C",NA
+2019,"AB08",1,"TSME",1,0,0,0,0,"",NA
+2019,"AB08",2,"ABAM",0,1,0,0,0,"",NA
+2019,"AB08",2,"CANO",1,0,0,0,0,"",NA
+2019,"AB08",2,"PSME",2,4,0,0,0,"",NA
+2019,"AB08",2,"THPL",4,0,0,0,0,"",NA
+2019,"AB08",2,"TSHE",745,39,6,15,NA,"filled seeds in 3 vials",NA
+2019,"AB08",3,"ABAM",1,0,0,0,0,"",NA
+2019,"AB08",3,"PSME",4,3,0,0,0,"",NA
+2019,"AB08",3,"THPL",9,0,0,0,0,"",NA
+2019,"AB08",3,"TSHE",586,36,5,0,0,"filled seeds in 3 vials",NA
+2019,"AB08",4,"ABAM",1,0,0,0,0,"",NA
+2019,"AB08",4,"ALRU",1,0,0,0,0,"",NA
+2019,"AB08",4,"PSME",6,7,0,0,0,"",NA
+2019,"AB08",4,"THPL",9,1,0,0,0,"",NA
+2019,"AB08",4,"TSHE",588,25,9,4,0,"filled seeds in 3 vials",NA
+2019,"AB08",5,"ABAM",2,0,0,0,0,"",NA
+2019,"AB08",5,"PSME",6,8,0,0,0,"",NA
+2019,"AB08",5,"THPL",17,2,0,0,0,"",NA
+2019,"AB08",5,"TSHE",627,72,12,3,2,"filled seeds in 3 vials",NA
+2019,"AB08",6,"PSME",4,5,0,0,0,"",NA
+2019,"AB08",6,"THPL",16,0,0,0,0,"",NA
+2019,"AB08",6,"TSHE",678,49,21,4,1,"filled seeds in 3 vials",NA
+2019,"AE10",1,"ABAM",34,7,0,1,0,"1 cone scale with seed, 3 unfilled seeds broken in half, filled seeds in 2 vials labeled A and B",NA
+2019,"AE10",1,"CANO",28,2,0,0,0,"",NA
+2019,"AE10",1,"TSME",2,0,0,0,0,"",NA
+2019,"AE10",2,"ABAM",28,5,0,0,0,"filled seeds in 2 vials labeled A and B",NA
+2019,"AE10",2,"CANO",20,4,0,0,0,"",NA
+2019,"AE10",2,"TSME",5,0,0,0,0,"",NA
+2019,"AE10",3,"ABAM",25,7,0,0,2,"1 cone scale with seeds, filled seeds in 2 vials labeled A and B",NA
+2019,"AE10",3,"CANO",54,10,0,0,0,"",NA
+2019,"AE10",3,"TSME",12,1,0,0,0,"",NA
+2019,"AE10",4,"ABAM",30,3,0,0,0,"filled seeds in 3 vials labeled A, B, and C",NA
+2019,"AE10",4,"CANO",25,2,0,0,0,"",NA
+2019,"AE10",4,"TSME",8,0,0,0,0,"",NA
+2019,"AE10",5,"ABAM",45,12,0,0,1,"1 cone scale with seed, 3 unfilled seeds broken in half, filled seeds in 4 vials labeled A, B, C, and D",NA
+2019,"AE10",5,"CANO",58,1,0,0,0,"",NA
+2019,"AE10",5,"TSME",15,0,0,0,0,"",NA
+2019,"AE10",6,"ABAM",12,3,0,0,0,"3 ABIES species known in the area, very difficult to decipher the difference",NA
+2019,"AE10",6,"ABLA",5,4,0,0,0,"3 ABIES species known in the area, very difficult to decipher the difference",NA
+2019,"AE10",6,"ABPR",7,0,0,0,0,"3 ABIES species known in the area, very difficult to decipher the difference",NA
+2019,"AE10",6,"CANO",56,0,0,0,0,"",NA
+2019,"AE10",6,"TSME",9,0,0,0,0,"",NA
+2019,"AG05",1,"ABAM",10,6,0,0,0,"",NA
+2019,"AG05",1,"PSME",23,16,0,0,0,"broke 1 unfilled seed in half",NA
+2019,"AG05",1,"THPL",232,65,1,0,0,"broke 1 filled seed in thirds",NA
+2019,"AG05",1,"TSHE",129,5,0,0,1,"1 cone scale with seeds",NA
+2019,"AG05",2,"ABAM",11,4,0,0,0,"",NA
+2019,"AG05",2,"PSME",19,6,0,0,0,"Broke 1 filled seed in half",NA
+2019,"AG05",2,"THPL",187,52,1,0,4,"broke 5 unfilled seeds in half",NA
+2019,"AG05",2,"TSHE",123,3,0,0,0,"",NA
+2019,"AG05",3,"ABAM",19,12,0,0,2,"3 cone scales with seeds",NA
+2019,"AG05",3,"PSME",23,7,0,0,0,"",NA
+2019,"AG05",3,"THPL",171,75,5,3,1,"broke 5 filled seeds in half",NA
+2019,"AG05",3,"TSHE",123,16,0,0,0,"",NA
+2019,"AG05",4,"ABAM",12,8,0,1,8,"3 cone scales with seeds",NA
+2019,"AG05",4,"PSME",12,17,0,0,0,"",NA
+2019,"AG05",4,"THPL",175,116,8,27,5,"6 cone scales with seeds",NA
+2019,"AG05",4,"TSHE",206,26,0,0,1,"1 cone scale with seeds",NA
+2019,"AG05",5,"ABAM",10,22,0,0,0,"",NA
+2019,"AG05",5,"PSME",33,16,0,0,0,"",NA
+2019,"AG05",5,"THPL",510,62,23,102,34,"13 cones scales with seeds, filled seeds in 4 vials",NA
+2019,"AG05",5,"TSHE",203,8,1,0,0,"",NA
+2019,"AG05",5,"TSME",1,0,0,0,0,"not expected at this stand but darker, bigger, and more triangular than TSHE",NA
+2019,"AG05",6,"ABAM",9,6,0,0,0,"",NA
+2019,"AG05",6,"ALRU",1,0,0,0,0,"",NA
+2019,"AG05",6,"PSME",36,19,2,15,4,"",NA
+2019,"AG05",6,"THPL",273,19,10,29,6,"filled seeds in 2 vials",NA
+2019,"AG05",6,"TSHE",305,21,0,0,0,"",NA
+2019,"AM16",1,"ABAM",4,0,0,0,0,"",NA
+2019,"AM16",1,"CANO",25,0,2,2,0,"",NA
+2019,"AM16",1,"TSHE",182,6,0,0,0,"",NA
+2019,"AM16",1,"TSME",27,2,0,0,0,"",NA
+2019,"AM16",2,"ABAM",4,0,0,0,0,"",NA
+2019,"AM16",2,"CANO",25,1,1,13,0,"",NA
+2019,"AM16",2,"PSME",1,3,0,0,0,"",NA
+2019,"AM16",2,"TSHE",409,9,0,0,0,"filled seeds in 2 vials",NA
+2019,"AM16",2,"TSME",33,3,0,0,0,"",NA
+2019,"AM16",3,"ABAM",2,0,0,0,0,"",NA
+2019,"AM16",3,"CANO",22,1,0,0,0,"",NA
+2019,"AM16",3,"TSHE",214,3,0,0,0,"",NA
+2019,"AM16",3,"TSME",63,2,0,0,0,"",NA
+2019,"AM16",4,"ABAM",1,1,0,0,0,"",NA
+2019,"AM16",4,"CANO",19,2,1,0,0,"",NA
+2019,"AM16",4,"TSHE",132,10,0,0,0,"",NA
+2019,"AM16",4,"TSME",48,1,0,0,0,"",NA
+2019,"AM16",5,"ABAM",1,0,0,0,0,"",NA
+2019,"AM16",5,"ALSI",2,0,0,0,0,"",NA
+2019,"AM16",5,"CANO",66,11,5,4,1,"",NA
+2019,"AM16",5,"PSME",2,2,0,0,0,"",NA
+2019,"AM16",5,"THPL",0,1,0,0,0,"",NA
+2019,"AM16",5,"TSHE",218,12,0,0,0,"",NA
+2019,"AM16",5,"TSME",66,4,0,0,0,"",NA
+2019,"AM16",6,"CANO",92,24,14,9,0,"",NA
+2019,"AM16",6,"PSME",1,0,0,0,0,"",NA
+2019,"AM16",6,"TSHE",250,27,0,0,0,"",NA
+2019,"AM16",6,"TSME",47,2,0,0,0,"",NA
+2019,"AO03",4,"ABAM",7,2,0,1,0,"1 cone scale with seed",NA
+2019,"AO03",4,"PSME",40,45,2,32,8,"",NA
+2019,"AO03",4,"THPL",1098,55,10,69,2,"filled seeds in 6 vials",NA
+2019,"AO03",4,"TSHE",555,56,8,16,3,"filled seeds in 3 vials",NA
+2019,"AO03",5,"ABAM",9,2,0,0,0,"",NA
+2019,"AO03",5,"PSME",73,28,5,37,26,"filled seeds in 2 vials",NA
+2019,"AO03",5,"THPL",832,303,1,0,2,"weighed / estimated, seeds in 6 vials",NA
+2019,"AO03",5,"TSHE",393,64,5,19,2,"filled seeds in 2 vials",NA
+2019,"AO03",6,"ABAM",3,2,0,0,0,"2 cone scales with no seeds",NA
+2019,"AO03",6,"PSME",18,12,9,1,3,"6 of the cones very small / too young to develop seeds",NA
+2019,"AO03",6,"THPL",410,313,1,2,3,"weighed / estimated, seeds in 4 vials",NA
+2019,"AO03",6,"TSHE",246,45,2,1,3,"lost 1 unfilled seed after counting it (not in vial)",NA
+2019,"AR07",1,"ABAM",5,1,0,0,0,"",NA
+2019,"AR07",1,"CANO",60,1,5,17,0,"",NA
+2019,"AR07",1,"TSME",111,4,1,0,0,"",NA
+2019,"AR07",2,"ABAM",15,4,0,0,0,"",NA
+2019,"AR07",2,"CANO",90,0,15,2,37,"",NA
+2019,"AR07",2,"TSME",105,11,0,0,0,"",NA
+2019,"AR07",3,"ABAM",6,4,0,0,0,"",NA
+2019,"AR07",3,"CANO",52,3,9,13,0,"",NA
+2019,"AR07",3,"TSME",105,4,0,0,0,"",NA
+2019,"AR07",4,"ABAM",8,1,0,0,0,"",NA
+2019,"AR07",4,"CANO",20,2,0,0,0,"",NA
+2019,"AR07",4,"TSME",78,8,0,0,0,"",NA
+2019,"AR07",5,"ABAM",11,3,0,0,0,"",NA
+2019,"AR07",5,"CANO",13,1,2,3,1,"",NA
+2019,"AR07",5,"TSME",56,18,1,0,5,"1 cone scale",NA
+2019,"AR07",6,"ABAM",10,6,0,0,0,"",NA
+2019,"AR07",6,"CANO",35,2,8,26,0,"",NA
+2019,"AR07",6,"TSME",118,4,0,0,0,"",NA
+2019,"AV02",1,"ABAM",5,2,0,0,0,"",NA
+2019,"AV02",1,"PSME",2,0,0,0,0,"",NA
+2019,"AV02",1,"THPL",25,6,0,0,0,"",NA
+2019,"AV02",1,"TSHE",700,85,4,1,0,"filled seeds in 3 vials",NA
+2019,"AV02",2,"ABAM",11,8,0,0,0,"",NA
+2019,"AV02",2,"THPL",27,0,0,0,0,"",NA
+2019,"AV02",2,"TSHE",447,100,8,1,0,"filled seeds in 2 vials",NA
+2019,"AV02",3,"ABAM",14,3,0,0,0,"a lot of cone scales but none with seeds attached",NA
+2019,"AV02",3,"PSME",0,3,0,0,0,"",NA
+2019,"AV02",3,"THPL",24,1,0,0,0,"",NA
+2019,"AV02",3,"TSHE",492,66,7,3,0,"filled seeds in 2 vials",NA
+2019,"AV02",4,"ABAM",8,6,0,0,0,"",NA
+2019,"AV02",4,"PSME",0,1,0,0,0,"",NA
+2019,"AV02",4,"THPL",16,0,0,0,0,"",NA
+2019,"AV02",4,"TSHE",358,59,10,12,0,"",NA
+2019,"AV02",5,"ABAM",22,16,0,0,1,"1 cone scale with seed, filled seeds in 2 vials",NA
+2019,"AV02",5,"PSME",2,0,0,0,0,"",NA
+2019,"AV02",5,"THPL",21,0,0,0,0,"",NA
+2019,"AV02",5,"TSHE",636,79,2,0,0,"filled seeds in 3 vials",NA
+2019,"AV02",6,"ABAM",34,27,0,1,2,"2 cone scales with seeds, filled seeds in 3 vials, unfilled seeds in 2 vials",NA
+2019,"AV02",6,"THPL",14,5,0,0,0,"",NA
+2019,"AV02",6,"TSHE",370,15,1,0,0,"filled seeds in 2 vials",NA
+2019,"AV06",1,"ABAM",3,1,0,0,0,"",NA
+2019,"AV06",1,"PSME",7,1,0,0,0,"",NA
+2019,"AV06",1,"THPL",4,1,0,0,0,"",NA
+2019,"AV06",1,"TSHE",220,12,1,0,0,"",NA
+2019,"AV06",2,"ABAM",3,1,0,0,0,"",NA
+2019,"AV06",2,"PSME",6,5,0,0,0,"",NA
+2019,"AV06",2,"THPL",5,0,0,0,0,"",NA
+2019,"AV06",2,"TSHE",191,6,18,0,3,"",NA
+2019,"AV06",3,"ABAM",4,4,0,0,0,"",NA
+2019,"AV06",3,"PSME",4,4,0,0,0,"",NA
+2019,"AV06",3,"THPL",2,1,0,0,0,"",NA
+2019,"AV06",3,"TSHE",212,9,0,0,0,"",NA
+2019,"AV06",4,"ABAM",10,7,0,1,1,"1 cone scale with seeds",NA
+2019,"AV06",4,"PSME",7,1,0,0,0,"",NA
+2019,"AV06",4,"THPL",6,1,0,0,0,"",NA
+2019,"AV06",4,"TSHE",204,17,14,5,2,"",NA
+2019,"AV06",5,"ABAM",13,10,0,0,0,"",NA
+2019,"AV06",5,"CANO",1,0,0,0,0,"",NA
+2019,"AV06",5,"PSME",5,0,0,0,0,"",NA
+2019,"AV06",5,"THPL",8,4,0,0,0,"",NA
+2019,"AV06",5,"TSHE",197,20,0,0,0,"",NA
+2019,"AV06",6,"ABAM",9,7,0,0,0,"",NA
+2019,"AV06",6,"PSME",8,5,0,0,0,"",NA
+2019,"AV06",6,"THPL",2,4,0,0,0,"",NA
+2019,"AV06",6,"TSHE",106,4,0,0,0,"",NA
+2019,"AV14",1,"ABAM",3,5,0,0,1,"1 cone scale with seeds",NA
+2019,"AV14",1,"THPL",1,0,0,0,0,"",NA
+2019,"AV14",1,"TSHE",990,13,14,30,2,"",NA
+2019,"AV14",2,"ABAM",1,0,0,0,0,"",NA
+2019,"AV14",2,"CANO",1,1,0,0,0,"",NA
+2019,"AV14",2,"PSME",1,0,0,0,0,"",NA
+2019,"AV14",2,"THPL",1,0,0,0,0,"",NA
+2019,"AV14",2,"TSHE",1042,53,8,50,3,"5 cone scales with seeds, filled seeds estimated by weight",NA
+2019,"AV14",3,"ABAM",8,8,0,0,0,"",NA
+2019,"AV14",3,"TSHE",1238,237,134,263,88,"many cone scales with seeds, 2 filled seeds with seedling growing out of, filled seeds in 4 vials",NA
+2019,"AV14",4,"ABAM",6,2,0,0,0,"",NA
+2019,"AV14",4,"TSHE",1256,83,62,214,0,"143 cone scales with seeds",NA
+2019,"AV14",5,"ABAM",5,5,0,0,0,"3 cone scales but no attached seeds",NA
+2019,"AV14",5,"PSME",2,0,0,0,0,"PSME not expected at this stand",NA
+2019,"AV14",5,"TSHE",596,133,39,33,13,"filled seeds in 2 vials",NA
+2019,"AV14",6,"ABAM",8,0,0,0,0,"",NA
+2019,"AV14",6,"CANO",3,0,0,0,0,"",NA
+2019,"AV14",6,"TSHE",830,37,8,55,6,"30 cone scales with seeds",NA
+2019,"AX15",1,"PSME",2,0,0,0,0,"",NA
+2019,"AX15",1,"THPL",74,16,4,10,0,"",NA
+2019,"AX15",1,"TSHE",771,12,7,19,0,"",NA
+2019,"AX15",2,"PSME",2,0,0,0,0,"",NA
+2019,"AX15",2,"THPL",36,3,0,0,0,"broke some of the filled seeds in half",NA
+2019,"AX15",2,"TSHE",677,109,3,0,0,"",NA
+2019,"AX15",3,"PSME",1,0,0,0,0,"",NA
+2019,"AX15",3,"THPL",16,2,0,0,0,"",NA
+2019,"AX15",3,"TSHE",740,37,2,1,0,"filled seeds in 3 vials labeled A, B, and C",NA
+2019,"AX15",4,"PSME",1,5,0,0,0,"",NA
+2019,"AX15",4,"THPL",3,0,0,0,0,"",NA
+2019,"AX15",4,"TSHE",649,27,2,0,0,"filled seeds in 3 vials",NA
+2019,"AX15",5,"PSME",2,1,0,0,0,"",NA
+2019,"AX15",5,"THPL",6,0,0,0,0,"",NA
+2019,"AX15",5,"TSHE",817,32,9,5,2,"filled seeds in 4 vials",NA
+2019,"AX15",6,"PSME",4,2,0,0,0,"",NA
+2019,"AX15",6,"THPL",4,0,0,0,0,"",NA
+2019,"AX15",6,"TSHE",677,31,6,3,1,"filled seeds in 3 vials",NA
+2019,"PARA",1,"ABAM",8,0,0,0,0,"",NA
+2019,"PARA",1,"ABLA",5,0,0,0,0,"one got broken up…",NA
+2019,"PARA",1,"TSME",49,0,0,0,0,"",NA
+2019,"PARA",2,"ABAM",3,0,0,0,0,"",NA
+2019,"PARA",2,"ABLA",5,0,0,0,0,"",NA
+2019,"PARA",2,"TSME",98,0,0,0,0,"",NA
+2019,"PARA",3,"ABAM",3,0,0,0,0,"",NA
+2019,"PARA",3,"ABLA",27,0,0,0,0,"",NA
+2019,"PARA",3,"TSME",179,16,3,10,0,"8 cone scales with seeds",NA
+2019,"PARA",4,"ABAM",2,1,0,0,0,"",NA
+2019,"PARA",4,"ABLA",3,1,0,0,0,"",NA
+2019,"PARA",4,"CANO",1,0,0,0,0,"",NA
+2019,"PARA",4,"TSME",81,5,0,0,0,"",NA
+2019,"PARA",5,"ABAM",7,0,0,0,0,"",NA
+2019,"PARA",5,"ABLA",2,0,0,0,0,"",NA
+2019,"PARA",5,"CANO",3,0,0,0,0,"",NA
+2019,"PARA",5,"TSME",161,10,2,32,17,"28 cone scales with seeds",NA
+2019,"PARA",6,"ABAM",4,0,0,0,0,"",NA
+2019,"PARA",6,"ABLA",6,0,0,0,0,"",NA
+2019,"PARA",6,"CANO",34,1,0,0,0,"",NA
+2019,"PARA",6,"TSME",129,6,0,0,0,"",NA
+2019,"PP17",1,"ABLA",0,2,0,0,0,"",NA
+2019,"PP17",1,"ALRU",7,2,0,0,0,"",NA
+2019,"PP17",1,"PICO",6,0,0,0,0,"",NA
+2019,"PP17",1,"PIEN",7,0,0,0,0,"",NA
+2019,"PP17",1,"PIMO",2,0,0,0,0,"",NA
+2019,"PP17",1,"PSME",47,6,2,0,2,"1 cone scale with 1 seed",NA
+2019,"PP17",1,"TSHE",23,2,0,0,0,"",NA
+2019,"PP17",1,"TSME",5,0,0,0,0,"TSME determined by more triangular shape",NA
+2019,"PP17",2,"ABLA",3,0,0,0,0,"",NA
+2019,"PP17",2,"ALRU",5,0,0,0,0,"Broke 2 filled seeds in half",NA
+2019,"PP17",2,"PICO",17,1,0,0,0,"",NA
+2019,"PP17",2,"PIEN",5,0,0,0,0,"",NA
+2019,"PP17",2,"PIMO",4,0,0,0,0,"",NA
+2019,"PP17",2,"PSME",31,11,0,0,0,"",NA
+2019,"PP17",2,"THPL",1,0,0,0,0,"",NA
+2019,"PP17",2,"TSHE",24,0,0,0,0,"",NA
+2019,"PP17",3,"ABLA",3,1,0,0,0,"",NA
+2019,"PP17",3,"ABPR",0,1,0,0,0,"not expected at this stand but too small to be ABAM",NA
+2019,"PP17",3,"ALRU",32,0,0,0,0,"",NA
+2019,"PP17",3,"PICO",12,2,0,0,0,"",NA
+2019,"PP17",3,"PIEN",20,0,0,0,0,"",NA
+2019,"PP17",3,"PIMO",3,0,0,0,0,"",NA
+2019,"PP17",3,"PSME",33,21,0,0,0,"",NA
+2019,"PP17",3,"THPL",1,0,0,0,0,"",NA
+2019,"PP17",3,"TSHE",25,3,0,0,0,"",NA
+2019,"PP17",4,"ABLA",2,1,0,0,0,"",NA
+2019,"PP17",4,"ALRU",16,0,0,0,0,"",NA
+2019,"PP17",4,"PICO",2,0,0,0,0,"",NA
+2019,"PP17",4,"PIEN",10,3,0,0,0,"",NA
+2019,"PP17",4,"PSME",43,10,0,0,0,"",NA
+2019,"PP17",4,"TSHE",27,1,0,0,0,"",NA
+2019,"PP17",5,"ABLA",1,0,0,0,0,"",NA
+2019,"PP17",5,"ALRU",5,0,0,0,0,"",NA
+2019,"PP17",5,"PICO",1,0,0,0,0,"",NA
+2019,"PP17",5,"PIEN",6,0,0,0,0,"",NA
+2019,"PP17",5,"PIMO",1,0,0,0,0,"",NA
+2019,"PP17",5,"PSME",40,31,0,0,0,"",NA
+2019,"PP17",5,"TSHE",18,0,0,0,0,"",NA
+2019,"PP17",5,"TSME",2,0,0,0,0,"",NA
+2019,"PP17",6,"ABAM",0,2,0,0,0,"",NA
+2019,"PP17",6,"ABLA",0,1,0,0,0,"",NA
+2019,"PP17",6,"PICO",2,0,0,0,0,"",NA
+2019,"PP17",6,"PIEN",6,0,0,0,0,"",NA
+2019,"PP17",6,"PIMO",3,1,0,0,0,"",NA
+2019,"PP17",6,"PSME",60,128,2,6,18,"",NA
+2019,"PP17",6,"THPL",2,0,0,0,0,"",NA
+2019,"PP17",6,"TSHE",21,0,0,0,0,"",NA
+2019,"PP17",6,"TSME",2,0,0,0,0,"",NA
+2019,"SPRY",1,"ABAM",1,1,0,0,0,"",NA
+2019,"SPRY",1,"CANO",2,0,0,0,0,"",NA
+2019,"SPRY",1,"THPL",1,0,0,0,0,"",NA
+2019,"SPRY",1,"TSME",25,1,0,0,0,"",NA
+2019,"SPRY",2,"ABLA",7,0,0,0,0,"",NA
+2019,"SPRY",2,"CANO",6,0,0,0,0,"",NA
+2019,"SPRY",2,"THPL",0,7,0,0,0,"",NA
+2019,"SPRY",2,"TSME",34,5,7,40,15,"",NA
+2019,"SPRY",3,"ABAM",1,0,0,0,0,"",NA
+2019,"SPRY",3,"ABLA",0,2,0,0,0,"",NA
+2019,"SPRY",3,"CANO",18,0,1,5,0,"",NA
+2019,"SPRY",3,"TSME",41,1,0,0,0,"",NA
+2019,"SPRY",4,"ABAM",2,0,0,0,0,"",NA
+2019,"SPRY",4,"ABLA",1,0,0,0,0,"",NA
+2019,"SPRY",4,"CANO",17,0,1,0,0,"",NA
+2019,"SPRY",4,"TSME",48,0,0,0,0,"",NA
+2019,"SPRY",5,"ABLA",1,2,0,0,0,"",NA
+2019,"SPRY",5,"CANO",63,40,0,0,0,"",NA
+2019,"SPRY",5,"TSME",5,36,0,0,0,"",NA
+2019,"SPRY",6,"ABAM",1,0,0,0,0,"",NA
+2019,"SPRY",6,"CANO",40,20,5,6,0,"",NA
+2019,"SPRY",6,"TSME",37,0,1,34,19,"63 cone scales",NA
+2019,"SUNR",1,"ABAM",5,1,0,0,0,"",NA
+2019,"SUNR",1,"ABLA",2,0,0,0,0,"",NA
+2019,"SUNR",1,"CANO",59,7,0,0,0,"",NA
+2019,"SUNR",1,"PIMO",1,0,0,0,0,"",NA
+2019,"SUNR",1,"TSME",49,1,0,0,0,"",NA
+2019,"SUNR",2,"ABAM",1,0,0,0,0,"",NA
+2019,"SUNR",2,"ABLA",2,0,0,0,0,"",NA
+2019,"SUNR",2,"CANO",99,10,3,0,0,"",NA
+2019,"SUNR",2,"TSME",29,2,0,0,0,"",NA
+2019,"SUNR",3,"ABAM",2,0,0,0,0,"",NA
+2019,"SUNR",3,"ABLA",2,0,0,0,0,"",NA
+2019,"SUNR",3,"CANO",101,18,3,0,0,"filled seeds in 2 vials",NA
+2019,"SUNR",3,"TSME",34,6,0,0,0,"",NA
+2019,"SUNR",4,"ABAM",3,0,0,0,0,"",NA
+2019,"SUNR",4,"ABLA",1,1,0,0,0,"",NA
+2019,"SUNR",4,"CANO",211,33,2,7,0,"filled seeds in 3 vials",NA
+2019,"SUNR",4,"TSME",43,4,0,0,0,"",NA
+2019,"SUNR",5,"ABAM",6,1,0,0,0,"",NA
+2019,"SUNR",5,"ABLA",5,4,0,0,0,"",NA
+2019,"SUNR",5,"CANO",117,12,0,0,0,"",NA
+2019,"SUNR",5,"TSME",43,11,0,0,0,"",NA
+2019,"SUNR",6,"ABAM",5,2,0,0,0,"",NA
+2019,"SUNR",6,"ABLA",2,0,0,0,0,"",NA
+2019,"SUNR",6,"CANO",40,3,0,0,1,"",NA
+2019,"SUNR",6,"TSME",28,5,0,0,0,"",NA
+2019,"TA01",1,"PSME",1,2,0,0,0,"",NA
+2019,"TA01",1,"THPL",3,0,0,0,0,"",NA
+2019,"TA01",1,"TSHE",44,1,0,0,0,"",NA
+2019,"TA01",2,"PIMO",1,0,0,0,0,"",NA
+2019,"TA01",2,"PSME",3,3,3,4,11,"",NA
+2019,"TA01",2,"THPL",2,0,0,0,0,"",NA
+2019,"TA01",2,"TSHE",34,2,0,0,0,"",NA
+2019,"TA01",3,"PSME",3,3,0,0,0,"",NA
+2019,"TA01",3,"THPL",2,2,0,0,0,"broke 1 unfilled seed in half",NA
+2019,"TA01",3,"TSHE",52,2,0,0,0,"",NA
+2019,"TA01",4,"PSME",2,1,0,0,0,"",NA
+2019,"TA01",4,"THPL",5,4,0,0,0,"",NA
+2019,"TA01",4,"TSHE",59,4,0,0,0,"",NA
+2019,"TA01",5,"PSME",1,1,1,4,7,"",NA
+2019,"TA01",5,"THPL",9,2,0,0,0,"",NA
+2019,"TA01",5,"TSHE",61,11,0,0,0,"broke 1 unfilled seed in half",NA
+2019,"TA01",6,"PSME",1,0,0,0,0,"",NA
+2019,"TA01",6,"THPL",12,2,0,0,0,"",NA
+2019,"TA01",6,"TSHE",68,18,2,12,0,"",NA
+2019,"TB13",1,"PSME",2,0,0,0,0,"",NA
+2019,"TB13",1,"THPL",82,3,4,19,0,"",NA
+2019,"TB13",1,"TSHE",416,54,3,0,0,"filled seeds in 2 vials",NA
+2019,"TB13",2,"ALRU",1,0,0,0,0,"",NA
+2019,"TB13",2,"PSME",0,3,0,0,0,"",NA
+2019,"TB13",2,"THPL",80,2,0,0,0,"",NA
+2019,"TB13",2,"TSHE",425,33,7,1,0,"",NA
+2019,"TB13",3,"PSME",1,6,0,0,0,"",NA
+2019,"TB13",3,"THPL",112,4,0,0,0,"",NA
+2019,"TB13",3,"TSHE",331,61,4,2,0,"filled seeds in 2 vials",NA
+2019,"TB13",4,"ABAM",0,1,0,0,0,"",NA
+2019,"TB13",4,"PSME",0,2,0,0,0,"",NA
+2019,"TB13",4,"THPL",90,9,2,12,1,"",NA
+2019,"TB13",4,"TSHE",412,63,10,8,1,"filled seeds in 2 vials",NA
+2019,"TB13",5,"PSME",0,3,0,0,0,"",NA
+2019,"TB13",5,"THPL",29,31,1,0,1,"",NA
+2019,"TB13",5,"TSHE",237,297,10,11,24,"",NA
+2019,"TB13",6,"PSME",3,1,0,0,0,"",NA
+2019,"TB13",6,"THPL",100,3,17,60,21,"",NA
+2019,"TB13",6,"TSHE",350,126,18,97,33,"",NA
+2019,"TO04",1,"ABAM",0,1,0,0,0,"",NA
+2019,"TO04",1,"PSME",0,2,0,0,0,"",NA
+2019,"TO04",1,"THPL",534,134,2,1,2,"seeds in 5 vials, weighed / estimated, cone seeds underdeveloped",NA
+2019,"TO04",1,"TSHE",388,30,26,2,2,"many seeds from cones are very small (fell apart)",NA
+2019,"TO04",2,"ABAM",0,1,0,0,0,"",NA
+2019,"TO04",2,"PSME",2,4,0,0,0,"weighed / estimated",NA
+2019,"TO04",2,"THPL",770,154,2,0,0,"weighed / estimated, seeds in 6 vials",NA
+2019,"TO04",2,"TSHE",385,29,36,106,14,"weighed / estimated",NA
+2019,"TO04",3,"ABAM",2,3,0,0,0,"",NA
+2019,"TO04",3,"ALSI",1,0,0,0,0,"could also be ALRU?",NA
+2019,"TO04",3,"PSME",1,1,0,0,0,"",NA
+2019,"TO04",3,"THPL",799,290,4,0,0,"weighed / estimated, seeds in 6 vials",NA
+2019,"TO04",3,"TSHE",240,22,9,31,7,"",NA
+2019,"TO04",4,"ABAM",1,0,0,0,0,"",NA
+2019,"TO04",4,"PSME",0,5,0,0,0,"",NA
+2019,"TO04",4,"THPL",812,203,11,3,3,"weighed / estimated, seeds in 7 vials",NA
+2019,"TO04",4,"TSHE",281,51,10,10,9,"",NA
+2019,"TO04",5,"ABAM",3,3,0,0,0,"",NA
+2019,"TO04",5,"PSME",3,1,0,0,0,"",NA
+2019,"TO04",5,"THPL",1126,483,10,10,4,"weighed / estimated, seeds in 8 vials",NA
+2019,"TO04",5,"TSHE",223,27,4,15,7,"",NA
+2019,"TO04",6,"ABAM",1,3,0,0,0,"",NA
+2019,"TO04",6,"PSME",0,1,0,0,0,"",NA
+2019,"TO04",6,"THPL",1105,336,18,12,4,"weighed / estimated, seeds are in 9 vials",NA
+2019,"TO04",6,"TSHE",280,87,0,2,0,"1 cone scale with seeds",NA
+2019,"TO11",1,"ABAM",1,0,0,0,0,"",NA
+2019,"TO11",1,"PSME",12,2,0,0,1,"1 cone scale with seed",NA
+2019,"TO11",1,"THPL",19,2,0,0,0,"Broke 1 filled seed in half",NA
+2019,"TO11",1,"TSHE",399,23,8,27,5,"3 cone scales, filled seeds in 2 vials labeled A and B",NA
+2019,"TO11",2,"PSME",6,7,1,0,0,"",NA
+2019,"TO11",2,"THPL",12,8,0,0,0,"",NA
+2019,"TO11",2,"TSHE",364,22,12,36,8,"",NA
+2019,"TO11",3,"ALRU",2,0,0,0,0,"could also be ALSI?",NA
+2019,"TO11",3,"PISI",8,0,0,0,0,"",NA
+2019,"TO11",3,"PSME",3,4,0,0,2,"2 cone scales with seeds",NA
+2019,"TO11",3,"THPL",21,13,0,0,0,"Broke 1 filled seed in half",NA
+2019,"TO11",3,"TSHE",329,88,47,91,23,"many ACCI seedlings in this trap",NA
+2019,"TO11",4,"ALRU",0,1,0,0,0,"could also be ALSI?, broke unfilled seed apart",NA
+2019,"TO11",4,"PISI",4,1,0,0,0,"",NA
+2019,"TO11",4,"PSME",3,4,0,0,0,"Broke 1 filled seed in half",NA
+2019,"TO11",4,"THPL",10,9,0,0,0,"",NA
+2019,"TO11",4,"TSHE",284,41,39,15,6,"",NA
+2019,"TO11",5,"ALRU",2,0,0,0,0,"",NA
+2019,"TO11",5,"PSME",5,2,1,0,0,"",NA
+2019,"TO11",5,"THPL",12,18,0,0,0,"",NA
+2019,"TO11",5,"TSHE",388,41,47,46,7,"",NA
+2019,"TO11",6,"ALRU",2,0,0,0,0,"",NA
+2019,"TO11",6,"PSME",1,2,0,0,0,"",NA
+2019,"TO11",6,"THPL",15,9,0,0,0,"",NA
+2019,"TO11",6,"TSHE",378,30,1,0,0,"",NA
