@@ -35,7 +35,7 @@ C. Write the data over to the clean&notes folder. DONE
 A. Check NOSEEDS in Species, 2011 full data. SOLUTION - this is for trap 1, SPRY. The bag exists and was sorted, according to notes. Remove the NOSEEDS row, as we will replace 0's with NAs based on the stand trap inventory (which will mean SPRY 1 is included with zeros).
 B. Fall data. seems like it has already been summed? SOLUTION - remove fall data from github to avoid conclusion DONE BUT NEEDS CHECK
 D. No traps missing. Create a 2011 inventory file to indicate this. DONE
-E.  Write the data over to the clean&notes folder. 
+E.  Write the data over to the clean&notes folder. DONE
 
 4. 2012 data. No obvious issues. 
 A. Create a 2012 trap inventory data that indicates no missing traps. DONE
@@ -49,7 +49,7 @@ D. Write the data over to the clean&notes folder. DONE
 
 
 6. 2014 data. 
-A. Check MYST in Species. SOLUTION - likely seeds that could not be identified (1 in AGO5 trap 4, 1 in AV02 trap 1, 12 in AV02 trap 2, 4 in PARA trap 4, 2 in TOO4 trap 3, 1 in TO04 trap 4). SOLUTION - remove.
+A. Check MYST in Species. SOLUTION - likely seeds that could not be identified (1 in AGO5 trap 4, 1 in AV02 trap 1, 12 in AV02 trap 2, 4 in PARA trap 4, 2 in TOO4 trap 3, 1 in TO04 trap 4). SOLUTION - remove. DONE
 B. No traps missing. Create a 2014 inventory file to indiciate this. DONE
 C. Write the data over to the clean&notes folder. DONE
 
