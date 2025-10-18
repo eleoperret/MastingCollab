@@ -1,5 +1,5 @@
 ####################################################################
-### script to clean data files from 2009-2024                    ###
+### script to clean seed files from 2009-2024                    ###
 ### also used to generate 2009-2019 StandTrapInventory Files     ###
 ### created by Janneke Hille Ris Lambers, 17.10.2025             ###
 ####################################################################
@@ -572,7 +572,3 @@ Raw2024data$spp[Raw2024data$spp[]=="Tsuga mertensiana"] <- "TSME"
 write.csv(Raw2024data, file = paste(seed_path,"clean&notes/",
                                     "SortedSeeds_MORA_2024.csv", sep=""), 
                                     row.names=FALSE, col.names=TRUE)
-
-############
-##Germinants in traps data files
-##Note - 2009 - 2017 data in one format, 2018 onwards in another
