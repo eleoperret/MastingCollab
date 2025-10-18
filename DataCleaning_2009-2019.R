@@ -4,9 +4,13 @@
 ### created by Janneke Hille Ris Lambers, 17.10.2025             ###
 ####################################################################
 
-###Read in 2009 - 2019 seed trap data
+###Read in 2009 - 2024 seed trap data
+###Check species, missing traps, etc
+###creates errorcheck file
+###seperate text file provides info on solutions
 ## names of data files
 
+##Sorted seed data
 seed_files <- list.files(path="./data/rawdata/sortedseeds")
 seed_files <- seed_files[-1]
 seed_path <- "./data/rawdata/sortedseeds/"
@@ -57,4 +61,58 @@ for(i in 1:length(seed_files)){
   }
 }
 
-##Now make corrections to each file, and write out.
+##Now make corrections to individual sorted seed data, write to clean folder
+##
+
+##2009 DATA
+Raw2009data <- read.csv(paste(seed_path,
+                              "SortedSeeds_raw_MORA_2009.csv",sep=""), header=TRUE)
+hdr <- dimnames(Raw2009data)[[2]]
+hdr2 <- hdr
+hdr2[hdr=="Year"]<-"year"
+hdr2[hdr=="Stand"]<-"stand"
+hdr2[hdr=="Trapno"]<-"trapno"
+hdr2[hdr=="Species"]<-"spp"
+hdr2[hdr=="Whole_seeds"]<-"loose_sds_filled"
+hdr2[hdr=="Unfilled_seeds"]<-"loose_sds_unfilled"
+hdr2[hdr=="Cones"]<-"cones"
+hdr2[hdr=="WholeSeeds_Cones"]<-"cones_sds_filled"
+hdr2[hdr=="UnfilledSeeds_Cones"]<-"cones_sds_unfilled"
+hdr2[hdr=="SeedsInCones"]<-"cones_sds_all"
+hdr2[hdr=="Notes"]<-"standardized_notes"
+dimnames(Raw2009data)[[2]] <- c(hdr2)
+Raw2009data <- Raw2009data[,-(which(hdr2=="Date"))]
+
+##now write out
+write.csv(Raw2009data, file = paste(seed_path,"clean&notes/",
+                             "SortedSeeds_MORA_2009.csv", sep=""), 
+                              row.names=FALSE, col.names=TRUE)
+
+##2010 DATA
+Raw2010data <- read.csv(paste(seed_path,
+                              "SortedSeeds_raw_MORA_2010.csv",sep=""), header=TRUE)
+hdr <- dimnames(Raw2010data)[[2]]
+hdr2 <- hdr
+hdr2[hdr=="Year"]<-"year"
+hdr2[hdr=="Stand"]<-"stand"
+hdr2[hdr=="Trapno"]<-"trapno"
+hdr2[hdr=="Species"]<-"spp"
+hdr2[hdr=="Whole_seeds"]<-"loose_sds_filled"
+hdr2[hdr=="Unfilled_seeds"]<-"loose_sds_unfilled"
+hdr2[hdr=="Cones"]<-"cones"
+hdr2[hdr=="WholeSeeds_Cones"]<-"cones_sds_filled"
+hdr2[hdr=="UnfilledSeeds_Cones"]<-"cones_sds_unfilled"
+hdr2[hdr=="SeedsInCones"]<-"cones_sds_all"
+hdr2[hdr=="Notes"]<-"standardized_notes"
+dimnames(Raw2010data)[[2]] <- c(hdr2)
+Raw2010data <- Raw2010data[,-(which(hdr2=="Date"))]
+
+##now write out
+write.csv(Raw2010data, file = paste(seed_path,"clean&notes/",
+                                    "SortedSeeds_MORA_2010.csv", sep=""), 
+          row.names=FALSE, col.names=TRUE)
+
+
+############
+##Germinants in traps data files
+##Note - 2009 - 2017 data in one format, 2018 onwards in another
