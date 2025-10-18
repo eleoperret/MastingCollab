@@ -107,10 +107,14 @@ hdr2[hdr=="Notes"]<-"standardized_notes"
 dimnames(Raw2010data)[[2]] <- c(hdr2)
 Raw2010data <- Raw2010data[,-(which(hdr2=="Date"))]
 
+#Remove row with MISSING in species
+rmrow <- which(Raw2010data$spp=="MISSING") #remove row with MISSING as species
+Raw2010data <- Raw2010data[-rmrow,]
+
 ##now write out
 write.csv(Raw2010data, file = paste(seed_path,"clean&notes/",
                                     "SortedSeeds_MORA_2010.csv", sep=""), 
-          row.names=FALSE, col.names=TRUE)
+                                     row.names=FALSE, col.names=TRUE)
 
 
 ############

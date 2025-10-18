@@ -3,45 +3,73 @@ October 17, 2025
 Things to do / check
 
 OVERALL 
-- 2009-2019 have different headers than 2020-2024. In writing files over, I will change the 2009 - 2019 headers.
-- 2009-2019 have the 4 letter codes while the 2020-2024 have full species names. Change to 2020 - 2024 species names to 4 letter codes. Maybe check with Camille?
+- 2009-2019 have different headers than 2020-2024. In writing files over, I will change the following 2009 - 2019 headers:
+	Year to year (add this column if needed)
+	Stand to stand
+	Trapno to trapno
+	Species to spp
+	Whole_seeds to loose_sds_filled
+	Unfilled_seeds to loose_sds_unfilled
+	Cones to cones
+	WholeSeeds_Cones to cones_sds_filled
+	UnfilledSeeds_Cones to cones_sds_unfilled
+	SeedsInCones to cones_sds_all
+- before reading out, I will remove the country and Date columns
+
+- 2009-2019 have the 4 letter codes while the 2020-2024 have full species names. Change to 2020 - 2024 species names to 4 letter codes. CHECK WITH CAMILLE ON THIS.
+
+NOTES to add to read me
+- note seeds in cones only counted, not sorted to filled and unfilled 2009 - 2012
 
 YEAR SPECIFIC
-1. 2009 data. No obvious issues.
+1. 2009 data. No obvious issues. 
+A. Create a 2009 trap inventory data that indicates no missing traps. DONE
+B. Write the data over to the clean&notes folder. DONE
 
-2. 2010 data. Check MISSING in Species. SOLUTION - This is for trap 3, PP17 (missing for that year), according to notes. Add this information to trap inventory csv file, remove that row from the 2010 raw data when moving to cleaned data.
+2. 2010 data. Check MISSING in Species. SOLUTION - This is for trap 3, PP17 (missing for that year), according to notes. 
+A. Add this information to trap inventory csv file - DONE.
+B. Remove that row from the 2010 raw data when moving to cleaned data. 
 
 3. 2011 data. 
-A. Check NOSEEDS in Species, 2011 full data. SOLUTION - this is for trap 1, SPRY. The bag exists and was sorted, according to notes. Keep this row in the data, and make sure to add zeroes to the matrix for this trap (true zeros).
+A. Check NOSEEDS in Species, 2011 full data. SOLUTION - this is for trap 1, SPRY. The bag exists and was sorted, according to notes. Remove the NOSEEDS row, as we will replace 0's with NAs based on the stand trap inventory (which will mean SPRY 1 is included with zeros).
 B. Fall data. Check only 2 stands (TB13, TO04). Check NA in years.
+C. No traps missing. Create a 2011 inventory file to indiciate this. DONE
 
-4. 2012 data. No obvious issues.
+4. 2012 data. No obvious issues. Create a 2012 trap inventory data that indicates no missing traps. DONE
 
 5. 2013 data. 
 A. Check MYST in Species. SOLUTION - likely seeds that could not be identified (2 in ABO8 trap 3, 13 in AM16 trap 6, 7 and 12 in TO04 trap 3, ). remove that row from the 2010 raw data when moving to cleaned data, check in WA.
-B. Check NOSEEDS in Species. This is for trap 2, SPRY. Probably this bag was collected and sorted but there were no seeds (true zeroes). Check the field notes, Keep this row in the data, and make sure to add zeroes to the matrix for this trap (true zeros).
+B. Check NOSEEDS in Species. This is for trap 2, SPRY. Probably this bag was collected and sorted but there were no seeds (true zeroes). Check the field notes, if correct, remove the NOSEEDS row, as we will replace 0's with NAs based on the stand trap inventory (which will mean SPRY 1 is included with zeros).
+C. No traps missing. Create a 2013 inventory file to indiciate this. DONE
 
-6. 2014 data. Check MYST in Species. SOLUTION - likely seeds that could not be identified (1 in AGO5 trap 4, 1 in AV02 trap 1, 12 in AV02 trap 2, 4 in PARA trap 4, 2 in TOO4 trap 3, 1 in TO04 trap 4)
 
-7. 2015 data. No obvious issues 
+6. 2014 data. 
+A. Check MYST in Species. SOLUTION - likely seeds that could not be identified (1 in AGO5 trap 4, 1 in AV02 trap 1, 12 in AV02 trap 2, 4 in PARA trap 4, 2 in TOO4 trap 3, 1 in TO04 trap 4). SOLUTION - remove.
+B. No traps missing. Create a 2014 inventory file to indiciate this. DONE
+
+
+7. 2015 data. No obvious issues. Create a 2015 trap inventory data that indicates no missing traps. DONE
+
 
 8. 2016 data.
-A. Check MISSING in species. EXPLANATION - AGO5 trap 4 AND PARA trap 2, these traps were not collected (tree fell down on it). NA (not zeros). Remove this line, and add this information to the stand inventory trap file. TAO1 trap 1 - collected but the bag was lost and not sorted. This is also an NA, not zero. SOLUTION - change to NOSEEDS in Species, check with Camille as to what is generally done.
+A. Check MISSING in species. EXPLANATION - AGO5 trap 4 AND PARA trap 2, these traps were not collected (tree fell down on it). NA (not zeros). Remove this line, and add this information to the stand inventory trap file. TAO1 trap 1 - collected but the bag was lost and not sorted. This is also an NA, not zero. SOLUTION - add these three traps to the 2016 stand trap inventory file when creating it. DONE
 B. Check NA in trapno in TB13. SOLUTION - these seeds were sorted, but the trap and stand identity were lost (notes indicate it is likely from TB13, but all other traps have values). Remove from the data file, make a note to add for any yearly values.
 
 9. 2017 data.
-A. Check MISSING in species. SOLUTION - this was TA01 trap 6, trap collected but lost. Add to seed trap inventory.
-B. Check NOSEEDS in species. SOLUTION - this is SPRY trap 2, this bag existed and was sorted, but no seeds. SOLUTION - keep this row in the data, make sure to add zeroes to the matrix for this trap (true zeroes).
+A. Check MISSING in species. SOLUTION - this was TA01 trap 6, trap collected but lost. Add to seed trap inventory. DONE.
+B. Check NOSEEDS in species. SOLUTION - this is SPRY trap 2, this bag existed and was sorted, but no seeds. Remove the NOSEEDS row, as we will replace 0's with NAs based on the stand trap inventory (which will mean SPRY 1 is included with zeros).
 
-10. 2018 data. Check NA in species - SOLUTION - this is SPRY trap5. sorted but no seeds found. SOLUTION - change to NOSEEDS in Species, check with Camille as to what is generally done.
+10. 2018 data. 
+A. Check NA in species - SOLUTION - this is SPRY trap5. sorted but no seeds found. SOLUTION - remove from data file, as the zeros will be added.
+B. No traps missing. Create a 2018 inventory file to indicate this. DONE
 
 11. 2019 data
-A. Stand AO03 - 3 traps missing? Check notes, add info to seed trap file inventory.
+A. Stand AO03 - 3 traps missing (traps 1, 2, 3)? Check notes, add info to seed trap file inventory. DONE
 
 12. 2020 data 
-A. Check - AB08 trap 4 is missing? Not listed in Stand trap inventory. Solution - ask Camille about stand trap inventory file for this year, check field notes to see what happened (sorted but no seeds, or missing).
-B. Check AM15 trap 5 is missing? Not listed in Stand trap inventory. Solution - ask Camille about stand trap inventory, check field notes to see what happened (sorted but no seeds, or missing)
-C. TO04 trap 2 is missing (but not trap 4 and 5 as in Stand trap inventory). Solution - ask Camille about stand trap inventory, check field notes to see what happened (sorted but no seeds, or missing)
+A. Check - AB08 trap 4 is missing? Not listed in Stand trap inventory. Solution - ask Camille about stand trap inventory file for this year, check field notes to see what happened (sorted but no seeds, or missing). For now, modified stand trap inventory file on github to include this (DONE BUT NEEDS CHECK).
+B. Check AM16 trap 5 is missing? Not listed in Stand trap inventory. Solution - ask Camille about stand trap inventory, check field notes to see what happened (sorted but no seeds, or missing). For now, modified stand trap inventory file to include this (on github) (DONE BUT NEEDS CHECK).
+C. TO04 trap 2 is missing (but not trap 4 and 5 as in Stand trap inventory). Solution - ask Camille about stand trap inventory, check field notes to see what happened (sorted but no seeds, or missing) For now, modified stand trap inventory file to include this (on github) (DONE BUT NEEDS CHECK)
 
 13. 2021 data 
 A. There are 2 A003's, one with 2 zeros, and one with a O and a 0. SOLUTION - these reflect duplicate entries of traps 5 and 6, so delete the incorrect one. Tell Camille.
@@ -50,7 +78,7 @@ C. There are 2 TO04's, one with 2 zeros, and one with a O and a 0. Solution - th
 D. There are duplicate entries of TO04, traps 2-6. SOLUTION - remove, tell Camille.
 #. There is an Abies amabilis   ?. This was in the duplicate entry of AO03, so should be removed once issue A. is resolved.
 E. There is an Abies sp. Solution - remove from data for now, ask Camille about this.
-F. Duplicate entries for each trap - stands AB08, 
+F. Duplicate entries for all stands?
 F. No trap 1 for AO03? Listed in stand trap inventory file correctly.
 
 14. 2022 data.
@@ -61,17 +89,17 @@ D. Acer sp. listed in species. AO03, trap 4 1 seed listed. List as ACCI? Check s
 E. Abies listed in species. To04, trap 11, 1 seed. SOlution - remove.
 F. NA listed in species. TO04, trap 15, 2 seeds - Solution - remove
 G. AO03 - traps 9 and 13 missing. Solution - check field notes.
-H. AV06, trap 6 missing. Solution - let Camille know not in stand inventory? Check field notes.
+H. AV06, trap 6 missing. Solution - let Camille know not in stand inventory? Check field notes. For now, modified stand trap inventory file to include this (on github) (DONE BUT NEEDS CHECK)
 
 15. 2023 data.
-A. No 2024 (lost in the field). Bags for these stands lost this year (verify with field notes). Add to stand inventory. Let Camille know to add.
+A. No SUNR 2024 (lost in the field). Bags for these stands lost this year (verify with field notes). Add to stand inventory. Let Camille know to add to PLEC. MODIFIED ON GIT, needs additional.
 
 16. 2024 data.
 A. Mistletoe - remove
 B. Abies amabilis? Found in AB08 trap 13, AM16 trap 9. Solution - change to Abies amabilis.
 C. Abies lasiocarpa? Found in PARA trap 15. Solution - change to Abies lasiocarpa
 D. Acer? TA01 trap 8. Change to vine maple.
-E. No traps missing!
+E. No traps missing! Stand inventory file correct
 
 
 
