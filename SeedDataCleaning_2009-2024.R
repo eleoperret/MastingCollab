@@ -7,8 +7,7 @@
 ###Read in 2009 - 2024 seed trap data
 ###Check species, missing traps, etc
 ###creates errorcheck file
-###seperate text file provides info on solutions
-## names of data files
+###separate text file provides info on solutions
 
 ##Sorted seed data
 seed_files <- list.files(path="./data/rawdata/sortedseeds")

@@ -1,0 +1,2322 @@
+December 2, 2025 ERROR CHECK
+
+NEW FILE CHECK
+Germinants_2009.csv
+
+years
+2009
+
+stands
+AE10
+AG05
+AM16
+AR07
+AV06
+AX15
+TB13
+TO04
+
+Check traps per stand
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+
+
+NEW FILE CHECK
+Germinants_2010.csv
+
+years
+2010
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1 16 41
+56 13 47 31
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1 10 13
+4
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 4 2 7 3
+1 5 18 96 24
+35 37
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5 13 16
+12 14 7
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+3 6 1 5 0
+38 57 24 8 31
+2
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 3
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 3
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 NA 1
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5 13 16
+12 14 7
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 6 2 1 33
+13 5
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 16 51 5 2
+1 18 35 25
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 3 1 4 5
+
+
+
+NEW FILE CHECK
+Germinants_2011.csv
+
+years
+2011
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+
+
+NEW FILE CHECK
+Germinants_2012.csv
+
+years
+2012
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+1 0 3
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 5
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1 3
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2 3
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+NA
+
+
+
+NEW FILE CHECK
+Germinants_2013.csv
+
+years
+2013
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+
+
+NEW FILE CHECK
+Germinants_2014.csv
+
+years
+2014
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 3 5 4
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 3 1
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 4 2 10
+3 28 6 46
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2 4
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 4
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5 8 2
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 3 2 1
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5
+
+
+
+NEW FILE CHECK
+Germinants_2015.csv
+
+years
+2015
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 4 1
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 5
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 19
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2
+
+
+
+NEW FILE CHECK
+Germinants_2016.csv
+
+years
+2016
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 14 2 11
+15
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+1 0 4
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1 5
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1
+
+
+
+NEW FILE CHECK
+Germinants_2017.csv
+
+years
+2017
+
+stands
+AB08
+AE10
+AG05
+AM16
+AO03
+AR07
+AV02
+AV06
+AV14
+AX15
+PARA
+PP17
+SPRY
+SUNR
+TA01
+TB13
+TO04
+TO11
+
+Check traps per stand
+AB08
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 2 1
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 5 11
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 11 4 1 2
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 5 3 1
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 4 2 1 6
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 3 1 4
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1 2 6
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 3 1
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 4 2 8 1
+3 13
+
+
+
+NEW FILE CHECK
+Germinants_2018.csv
+
+years
+2018 NA
+
+stands
+AO03
+AV02
+TA01
+SPRY
+SUNR
+PARA
+AV14
+AE10
+AR07
+AG05
+AX15
+TO04
+TB13
+AV06
+TO11
+TO12
+TO13
+TO14
+TO15
+TO16
+AB08
+PP17
+AM16
+
+
+species
+TSHE
+NA
+PSME
+
+
+Check traps per stand
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+1 0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1
+germinant entries
+0
+
+TO12
+traps present
+2
+germinant entries
+0
+
+TO13
+traps present
+3
+germinant entries
+0
+
+TO14
+traps present
+4
+germinant entries
+0
+
+TO15
+traps present
+5
+germinant entries
+0
+
+TO16
+traps present
+6
+germinant entries
+0
+
+AB08
+traps present
+1 2 3 4 5
+6 NA
+germinant entries
+0 1 NA
+
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 NA
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+
+traps present
+NA
+germinant entries
+NA
+
+
+
+NEW FILE CHECK
+Germinants_2019.csv
+
+years
+2019 NA
+
+stands
+SPRY
+SUNR
+TO11
+AV14
+AE10
+AM16
+PARA 
+PP17
+AO03
+AV02
+TA01
+AG05
+AX15
+AR07
+TO04
+AV06
+
+AB08
+
+species
+ABAM
+-
+TSHE
+CANO
+NA
+unknown
+TSME
+PSME
+THPL
+
+
+Check traps per stand
+SPRY
+traps present
+2
+germinant entries
+1
+
+SUNR
+traps present
+4
+germinant entries
+-
+
+TO11
+traps present
+2 3
+germinant entries
+1
+6
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+3
+16
+1
+29
+2
+25
+-
+15
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+6
+15
+1
+9
+
+AM16
+traps present
+4 5
+germinant entries
+0
+2
+
+PARA 
+traps present
+1 3
+germinant entries
+1
+
+PP17
+traps present
+6
+germinant entries
+2
+
+AO03
+traps present
+4 5 6 1 2
+3
+germinant entries
+4
+40
+2
+18
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+1
+2
+4
+
+TA01
+traps present
+2
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+4
+2
+1
+5
+6
+3
+
+AX15
+traps present
+6
+germinant entries
+1
+
+AR07
+traps present
+4
+germinant entries
+1
+
+TO04
+traps present
+1 2 6
+germinant entries
+1
+0
+
+AV06
+traps present
+1 2 3 4 6
+germinant entries
+2
+0
+17
+1
+
+
+traps present
+NA
+germinant entries
+
+
+AB08
+traps present
+NA
+germinant entries
+
+
+
+
+NEW FILE CHECK
+Germinants_2020.csv
+
+years
+2020 NA
+
+stands
+PP17
+AB08
+TA01
+AM16
+AR07
+AE10
+SUNR
+AO03
+AV02
+AV14
+SPRY
+PARA
+AG05
+TO04
+AV06
+TB13
+AX15
+TO11
+
+
+species
+NA
+CANO
+THPL
+TSHE
+
+
+Check traps per stand
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AB08
+traps present
+1 2 3 4 5
+6 NA
+germinant entries
+0 NA
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 NA
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+
+traps present
+NA
+germinant entries
+NA
+
+
+
+NEW FILE CHECK
+Germinants_2021.csv
+
+years
+2021 NA
+
+stands
+AO03
+TA01
+AB08
+TO04
+AV06
+AG05
+AE10
+AM16
+PARA
+SUNR
+
+
+species
+none
+TSHE
+ABAM
+THPL
+
+
+Check traps per stand
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+n/a
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+2
+0
+
+AB08
+traps present
+1 2 3 4 5
+6 NA
+germinant entries
+0
+
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+1
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+1
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+1
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+
+traps present
+NA
+germinant entries
+
+
+
+
+NEW FILE CHECK
+Germinants_2022.csv
+
+years
+2022 NA
+
+stands
+TA01
+AO03
+AB08
+TO04
+AG05
+AV06
+AM16
+AE10
+SUNR
+PARA
+
+
+species
+
+PSME
+TSHE
+THPL
+ABAM
+ABGR
+Ab. sp.
+CANO
+AB SP.
+ABLA
+
+Check traps per stand
+TA01
+traps present
+
+germinant entries
+0
+2
+1
+10
+5
+20
+6
+
+AO03
+traps present
+
+germinant entries
+0
+7
+29
+1
+N/A
+
+AB08
+traps present
+
+germinant entries
+4
+1
+9
+10
+8
+3
+2
+6
+11
+5
+7
+21
+0
+
+TO04
+traps present
+
+germinant entries
+1
+2
+5
+6
+4
+11
+3
+22
+38
+16
+14
+18
+13
+55
+222
+8
+24
+17
+31
+
+AG05
+traps present
+
+germinant entries
+3
+25
+2
+5
+13
+9
+1
+10
+6
+4
+48
+16
+33
+18
+40
+14
+37
+8
+32
+20
+51
+
+AV06
+traps present
+
+germinant entries
+3
+1
+2
+4
+8
+10
+
+AM16
+traps present
+
+germinant entries
+0
+
+AE10
+traps present
+
+germinant entries
+0
+1
+2
+
+SUNR
+traps present
+
+germinant entries
+0
+
+PARA
+traps present
+
+germinant entries
+1
+2
+
+
+traps present
+
+germinant entries
+
+
+
+
+NEW FILE CHECK
+Germinants_2023.csv
+
+years
+2023
+
+stands
+AB08
+AO03
+TA01
+TO04
+AG05
+AV06
+AM16
+AE10
+PARA
+SUNR
+
+species
+NA
+ABAM
+TSHE
+PSME
+TSME
+THPL
+TSSP
+
+Check traps per stand
+AB08
+traps present
+
+germinant entries
+0
+
+AO03
+traps present
+
+germinant entries
+1 0
+
+TA01
+traps present
+
+germinant entries
+0
+
+TO04
+traps present
+
+germinant entries
+1 6 2 0 17
+34 5
+
+AG05
+traps present
+
+germinant entries
+1 2 0
+
+AV06
+traps present
+
+germinant entries
+1 0 2 4
+
+AM16
+traps present
+
+germinant entries
+0 1 2
+
+AE10
+traps present
+
+germinant entries
+8 1 0 5 3
+
+PARA
+traps present
+
+germinant entries
+24 40 17 21 3
+13 0
+
+SUNR
+traps present
+
+germinant entries
+1 0
+
+
+
+NEW FILE CHECK
+Germinants_2024.csv
+
+years
+2024
+
+stands
+AB08
+AO03
+TA01
+TO04
+AG05
+AV06
+AM16
+AE10
+SUNR
+PARA
+
+species
+0
+TSHE
+
+Check traps per stand
+AB08
+traps present
+
+germinant entries
+0 2
+
+AO03
+traps present
+
+germinant entries
+0
+
+TA01
+traps present
+
+germinant entries
+0
+
+TO04
+traps present
+
+germinant entries
+0 2 1
+
+AG05
+traps present
+
+germinant entries
+2 0 1
+
+AV06
+traps present
+
+germinant entries
+0
+
+AM16
+traps present
+
+germinant entries
+0
+
+AE10
+traps present
+
+germinant entries
+0
+
+SUNR
+traps present
+
+germinant entries
+0
+
+PARA
+traps present
+
+germinant entries
+0
+
+
+
