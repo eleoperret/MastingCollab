@@ -1979,7 +1979,7 @@ NEW FILE CHECK
 Germinants_2022.csv
 
 years
-2022 NA
+2022
 
 stands
 TA01
@@ -1992,7 +1992,6 @@ AM16
 AE10
 SUNR
 PARA
-
 
 species
 
@@ -2009,7 +2008,9 @@ ABLA
 Check traps per stand
 TA01
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 0
 2
@@ -2021,7 +2022,9 @@ germinant entries
 
 AO03
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 0
 7
@@ -2031,7 +2034,9 @@ N/A
 
 AB08
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 4
 1
@@ -2049,7 +2054,9 @@ germinant entries
 
 TO04
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 1
 2
@@ -2073,7 +2080,9 @@ germinant entries
 
 AG05
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 3
 25
@@ -2099,7 +2108,8 @@ germinant entries
 
 AV06
 traps present
-
+1 4 5 7 11
+12 13 14 15
 germinant entries
 3
 1
@@ -2110,13 +2120,17 @@ germinant entries
 
 AM16
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 0
 
 AE10
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 0
 1
@@ -2124,22 +2138,17 @@ germinant entries
 
 SUNR
 traps present
-
+1 2 3 4 5
+6
 germinant entries
 0
 
 PARA
 traps present
-
+1 2 3 5
 germinant entries
 1
 2
-
-
-traps present
-
-germinant entries
-
 
 
 
@@ -2173,63 +2182,73 @@ TSSP
 Check traps per stand
 AB08
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 AO03
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 1 0
 
 TA01
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 TO04
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 1 6 2 0 17
 34 5
 
 AG05
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 1 2 0
 
 AV06
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 1 0 2 4
 
 AM16
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0 1 2
 
 AE10
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 8 1 0 5 3
 
 PARA
 traps present
-
+1 2 3 4 5
+6
 germinant entries
 24 40 17 21 3
 13 0
 
 SUNR
 traps present
-
+1 2 3 4 5
+6
 germinant entries
 1 0
 
@@ -2260,61 +2279,72 @@ TSHE
 Check traps per stand
 AB08
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0 2
 
 AO03
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 TA01
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 TO04
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0 2 1
 
 AG05
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 2 0 1
 
 AV06
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 AM16
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 AE10
 traps present
-
+7 8 9 10 11
+12 13 14 15
 germinant entries
 0
 
 SUNR
 traps present
-
+1 2 3 4 5
+6
 germinant entries
 0
 
 PARA
 traps present
-
+1 2 3 4 5
+6 7 8 9 10
+11 12 13 14 15
 germinant entries
 0
 
