@@ -58,7 +58,8 @@ YEAR SPECIFIC
 - There was an unknown germinant, remove this row
 - not clear why there is an NA entry for years and a blank entry for stand...? remove bottom few rows of .csv file. DONE
 
-
+11. 2020 data
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
 
 
 
