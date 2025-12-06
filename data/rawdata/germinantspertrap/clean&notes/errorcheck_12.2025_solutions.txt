@@ -1,0 +1,690 @@
+December 2, 2025 ERROR CHECK
+
+Overall:
+1. Goal: 1 file per year for germinants, like seed sorted
+     A. Headers: year stand trapno spp germintrap (spp = 4 letter code)
+     B. If zero, no entry
+     C. If not collected, assume zero (no entry) - see point 2
+2. Add to readme indicate for which stands / traps / years the germinants in trap census not done
+3. Question - what to do about cones on trap lid? Notes were taken about this...
+
+
+YEAR SPECIFIC
+1. 2009 data
+- Write a file with no entries (0 rows, 5 columns)
+
+2. 2010 data
+- reconfigure file (species in row rather than column)
+- note PP17 trap 3 has NA entries, destroyed (correctly identified in StandTrapInventory)
+
+3. 2011 data
+- reconfigure file (species in row rather than column)
+- note AM16, AR07, AV02, SPRY, PARA datasheet missing (mentioned in readme)
+
+4. 2012 data
+- reconfigure file (species in row rather than column)
+- note AR07, PARA, SUNR, TO11 missing (mentioned in readme)
+
+5. 2013 data
+- reconfigure file (species in row rather than column)
+
+6. 2014 data
+- reconfigure file (species in row rather than column)
+
+7. 2015 data
+- reconfigure file (species in row rather than column)
+
+8. 2016 data
+- reconfigure file (species in row rather than column)
+
+9. 2017 data
+- reconfigure file (species in row rather than column)
+
+10. 2018 data
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
+- remove columns Date, Field Notes and Data Entry Notes
+- remove rows with NA for species (no germinants in trap)
+- remove rows with blank for Species and Germinants
+- rename TO12, TO13, TO14, TO15, TO16 to TO11
+- PP17 trap 6 no germinants recorded - add to readme DONE
+- not clear why there is an NA entry for years, NA for AB08 germs and traps, and for an empty stand? remove bottom few rows of .csv file. DONE
+
+11. 2019 data
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
+- remove columns Date, Field Notes and Data Entry Notes
+- no entry for TB13 - check data entry sheet
+- The entry '-' for Species and Germinants was used when there was a note about the seed trap, but no germinants to note. Remove all these rows.
+- The entry NA for Species was used when there was a note about the seed trap, but no germinants to note. Remove all these rows. 
+- There was an unknown germinant, remove this row
+- not clear why there is an NA entry for years and a blank entry for stand...? remove bottom few rows of .csv file. DONE
+
+
+
+
+
+
+NEW FILE CHECK
+Germinants_2020.csv
+
+years
+2020 NA
+
+stands
+PP17
+AB08
+TA01
+AM16
+AR07
+AE10
+SUNR
+AO03
+AV02
+AV14
+SPRY
+PARA
+AG05
+TO04
+AV06
+TB13
+AX15
+TO11
+
+
+species
+NA
+CANO
+THPL
+TSHE
+
+
+Check traps per stand
+PP17
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AB08
+traps present
+1 2 3 4 5
+6 NA
+germinant entries
+0 NA
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+AR07
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV02
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AV14
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SPRY
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 NA
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TB13
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AX15
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+TO11
+traps present
+1 2 3 4 5
+6
+germinant entries
+0 1
+
+
+traps present
+NA
+germinant entries
+NA
+
+
+
+NEW FILE CHECK
+Germinants_2021.csv
+
+years
+2021 NA
+
+stands
+AO03
+TA01
+AB08
+TO04
+AV06
+AG05
+AE10
+AM16
+PARA
+SUNR
+
+
+species
+none
+TSHE
+ABAM
+THPL
+
+
+Check traps per stand
+AO03
+traps present
+1 2 3 4 5
+6
+germinant entries
+n/a
+0
+
+TA01
+traps present
+1 2 3 4 5
+6
+germinant entries
+2
+0
+
+AB08
+traps present
+1 2 3 4 5
+6 NA
+germinant entries
+0
+
+
+TO04
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+1
+
+AV06
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+1
+
+AG05
+traps present
+1 2 3 4 5
+6
+germinant entries
+1
+0
+
+AE10
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+AM16
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+PARA
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+SUNR
+traps present
+1 2 3 4 5
+6
+germinant entries
+0
+
+
+traps present
+NA
+germinant entries
+
+
+
+
+NEW FILE CHECK
+Germinants_2022.csv
+
+years
+2022 NA
+
+stands
+TA01
+AO03
+AB08
+TO04
+AG05
+AV06
+AM16
+AE10
+SUNR
+PARA
+
+
+species
+
+PSME
+TSHE
+THPL
+ABAM
+ABGR
+Ab. sp.
+CANO
+AB SP.
+ABLA
+
+Check traps per stand
+TA01
+traps present
+
+germinant entries
+0
+2
+1
+10
+5
+20
+6
+
+AO03
+traps present
+
+germinant entries
+0
+7
+29
+1
+N/A
+
+AB08
+traps present
+
+germinant entries
+4
+1
+9
+10
+8
+3
+2
+6
+11
+5
+7
+21
+0
+
+TO04
+traps present
+
+germinant entries
+1
+2
+5
+6
+4
+11
+3
+22
+38
+16
+14
+18
+13
+55
+222
+8
+24
+17
+31
+
+AG05
+traps present
+
+germinant entries
+3
+25
+2
+5
+13
+9
+1
+10
+6
+4
+48
+16
+33
+18
+40
+14
+37
+8
+32
+20
+51
+
+AV06
+traps present
+
+germinant entries
+3
+1
+2
+4
+8
+10
+
+AM16
+traps present
+
+germinant entries
+0
+
+AE10
+traps present
+
+germinant entries
+0
+1
+2
+
+SUNR
+traps present
+
+germinant entries
+0
+
+PARA
+traps present
+
+germinant entries
+1
+2
+
+
+traps present
+
+germinant entries
+
+
+
+
+NEW FILE CHECK
+Germinants_2023.csv
+
+years
+2023
+
+stands
+AB08
+AO03
+TA01
+TO04
+AG05
+AV06
+AM16
+AE10
+PARA
+SUNR
+
+species
+NA
+ABAM
+TSHE
+PSME
+TSME
+THPL
+TSSP
+
+Check traps per stand
+AB08
+traps present
+
+germinant entries
+0
+
+AO03
+traps present
+
+germinant entries
+1 0
+
+TA01
+traps present
+
+germinant entries
+0
+
+TO04
+traps present
+
+germinant entries
+1 6 2 0 17
+34 5
+
+AG05
+traps present
+
+germinant entries
+1 2 0
+
+AV06
+traps present
+
+germinant entries
+1 0 2 4
+
+AM16
+traps present
+
+germinant entries
+0 1 2
+
+AE10
+traps present
+
+germinant entries
+8 1 0 5 3
+
+PARA
+traps present
+
+germinant entries
+24 40 17 21 3
+13 0
+
+SUNR
+traps present
+
+germinant entries
+1 0
+
+
+
+NEW FILE CHECK
+Germinants_2024.csv
+
+years
+2024
+
+stands
+AB08
+AO03
+TA01
+TO04
+AG05
+AV06
+AM16
+AE10
+SUNR
+PARA
+
+species
+0
+TSHE
+
+Check traps per stand
+AB08
+traps present
+
+germinant entries
+0 2
+
+AO03
+traps present
+
+germinant entries
+0
+
+TA01
+traps present
+
+germinant entries
+0
+
+TO04
+traps present
+
+germinant entries
+0 2 1
+
+AG05
+traps present
+
+germinant entries
+2 0 1
+
+AV06
+traps present
+
+germinant entries
+0
+
+AM16
+traps present
+
+germinant entries
+0
+
+AE10
+traps present
+
+germinant entries
+0
+
+SUNR
+traps present
+
+germinant entries
+0
+
+PARA
+traps present
+
+germinant entries
+0
+
+
+
