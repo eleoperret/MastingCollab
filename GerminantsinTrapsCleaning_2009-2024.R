@@ -70,5 +70,26 @@ for(i in 1:length(germ_files)){
 }
 
 ##Now make corrections to individual germinants data, write to clean folder
+##Now make corrections to individual sorted seed data, write to clean folder
 ##
+
+#############################
+##2009 DATA
+Raw2009data <- read.csv(paste(germ_path,
+                              "Germinants_2009.csv",sep=""), header=TRUE)
+#change headers
+hdr <- dimnames(Raw2009data)[[2]]
+hdr2 <- hdr
+hdr2[hdr=="Year"]<-"year"
+hdr2[hdr=="Stand"]<-"stand"
+hdr2[hdr=="Trapno"]<-"trapno"
+hdr2[hdr=="Species"]<-"spp"
+############GOT TO HERE
+
+Raw2009data <- Raw2009data[,-(which(hdr2=="Date"))]
+
+##now write out
+write.csv(Raw2009data, file = paste(seed_path,"clean&notes/",
+                                    "SortedSeeds_MORA_2009.csv", sep=""), 
+          row.names=FALSE, col.names=TRUE)
 
