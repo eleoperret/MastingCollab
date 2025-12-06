@@ -3,10 +3,11 @@ December 2, 2025 ERROR CHECK
 Overall:
 1. Goal: 1 file per year for germinants, like seed sorted
      A. Headers: year stand trapno spp germintrap (spp = 4 letter code)
-     B. If zero, no entry
+     B. If zero OR data not collected (assume zero), no entry
      C. If not collected, assume zero (no entry) - see point 2
-2. Add to readme indicate for which stands / traps / years the germinants in trap census not done
-3. Question - what to do about cones on trap lid? Notes were taken about this...
+2. Indicate for which stands / traps / years the germinants in trap census not done. 
+3. Question - what to do about cones on trap lid? Notes were taken about this.
+4. Question - notes about traps being broken even if sample collected, which could affect results. Not consistently collected. Should this be noted?
 
 
 YEAR SPECIFIC
@@ -15,7 +16,7 @@ YEAR SPECIFIC
 
 2. 2010 data
 - reconfigure file (species in row rather than column)
-- note PP17 trap 3 has NA entries, destroyed (correctly identified in StandTrapInventory)
+- note PP17 trap 3 has NA entries, destroyed (correctly identified in StandTrapInventory), DONE
 
 3. 2011 data
 - reconfigure file (species in row rather than column)
@@ -60,289 +61,26 @@ YEAR SPECIFIC
 
 11. 2020 data
 - rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
+- remove columns Date, Field Notes and Data Entry Notes
+- remove rows with NA for species (no germinants in trap)
+- check Stand inventory file for AB08 trap 4, TO04 trap 2 - should be NAs (not collected). DONE - indeed missing, but so was AM16 trap 5 (not in germinants file). 
+- not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. DONE
 
+12. 2021 data
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
+- remove columns Date, Field Notes and Data Entry Notes
+- remove rows with none for species (no germinants in trap), also a row with n/a (also has none)
+- not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. DONE
 
-
-
-NEW FILE CHECK
-Germinants_2020.csv
-
-years
-2020 NA
-
-stands
-PP17
-AB08
-TA01
-AM16
-AR07
-AE10
-SUNR
-AO03
-AV02
-AV14
-SPRY
-PARA
-AG05
-TO04
-AV06
-TB13
-AX15
-TO11
-
-
-species
-NA
-CANO
-THPL
-TSHE
-
-
-Check traps per stand
-PP17
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AB08
-traps present
-1 2 3 4 5
-6 NA
-germinant entries
-0 NA
-
-TA01
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AM16
-traps present
-1 2 3 4 5
-6
-germinant entries
-0 1
-
-AR07
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AE10
-traps present
-1 2 3 4 5
-6
-germinant entries
-0 1
-
-SUNR
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AO03
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AV02
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AV14
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-SPRY
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-PARA
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AG05
-traps present
-1 2 3 4 5
-6
-germinant entries
-0 1
-
-TO04
-traps present
-1 2 3 4 5
-6
-germinant entries
-0 NA
-
-AV06
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-TB13
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AX15
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-TO11
-traps present
-1 2 3 4 5
-6
-germinant entries
-0 1
-
-
-traps present
-NA
-germinant entries
-NA
-
-
-
-NEW FILE CHECK
-Germinants_2021.csv
-
-years
-2021 NA
-
-stands
-AO03
-TA01
-AB08
-TO04
-AV06
-AG05
-AE10
-AM16
-PARA
-SUNR
-
-
-species
-none
-TSHE
-ABAM
-THPL
-
-
-Check traps per stand
-AO03
-traps present
-1 2 3 4 5
-6
-germinant entries
-n/a
-0
-
-TA01
-traps present
-1 2 3 4 5
-6
-germinant entries
-2
-0
-
-AB08
-traps present
-1 2 3 4 5
-6 NA
-germinant entries
-0
-
-
-TO04
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-1
-
-AV06
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-1
-
-AG05
-traps present
-1 2 3 4 5
-6
-germinant entries
-1
-0
-
-AE10
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-AM16
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-PARA
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-SUNR
-traps present
-1 2 3 4 5
-6
-germinant entries
-0
-
-
-traps present
-NA
-germinant entries
-
-
-
+13. 2022 data
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
+- remove columns Date, Field Notes and Data Entry Notes
+- remove rows with no entry (blank) in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants).
+- remove rows with no entry (blank) in Species column and N/A in Germinant column (indicates trap was destroyed and could not be collected).
+- check Stand inventory file for AO03 trap 9 and 13, was not collected. 
+- replace Ab. sp. in AE10 with ABAM
+- remove AB. SP in PARA (could be either ABLA or ABAM, both were spotted)
+- not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. 
 
 NEW FILE CHECK
 Germinants_2022.csv
