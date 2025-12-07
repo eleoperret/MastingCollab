@@ -12,52 +12,71 @@ Overall:
 
 YEAR SPECIFIC
 1. 2009 data
-- Write a file with no entries (0 rows, 5 columns)
+- Write a file with no entries DONE
 
 2. 2010 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove zeroes and NAs DONE
 - note PP17 trap 3 has NA entries, destroyed (correctly identified in StandTrapInventory), DONE
+- write file DONE
 
 3. 2011 data
-- reconfigure file (species in row rather than column)
-- note AM16, AR07, AV02, SPRY, PARA datasheet missing (mentioned in readme)
+- reconfigure file (species in row rather than column) DONE
+- note AM16, AR07, AV02, SPRY, PARA datasheet missing (mentioned in readme) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 4. 2012 data
-- reconfigure file (species in row rather than column)
-- note AR07, PARA, SUNR, TO11 missing (mentioned in readme)
+- reconfigure file (species in row rather than column) DONE
+- note AR07, PARA, SUNR, TO11 missing (mentioned in readme) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 5. 2013 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 6. 2014 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 7. 2015 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 8. 2016 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove NAs and zero entries DONE
+- write file DONE
 
 9. 2017 data
-- reconfigure file (species in row rather than column)
+- reconfigure file (species in row rather than column) DONE
+- remove NAs and zero entries DONE
+- write file DONE 
 
 10. 2018 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- remove rows with NA for species (no germinants in trap)
-- remove rows with blank for Species and Germinants
-- rename TO12, TO13, TO14, TO15, TO16 to TO11
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- remove rows with NA for species (no germinants in trap) DONE
+- remove rows with blank for Species and Germinants DONE
+- rename TO12, TO13, TO14, TO15, TO16 to TO11 NOT NEEDED - no germinants
 - PP17 trap 6 no germinants recorded - add to readme DONE
-- not clear why there is an NA entry for years, NA for AB08 germs and traps, and for an empty stand? remove bottom few rows of .csv file. DONE
+- not clear why there is an NA entry for years, NA for AB08 germs and traps, and for an empty stand? remove bottom few rows of .csv file. DONE (update - needed to add this in the script, for some reason these files have thousands of NA entries...) DONE2
+- write file DONE
 
 11. 2019 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- no entry for TB13 - check data entry sheet
-- The entry '-' for Species and Germinants was used when there was a note about the seed trap, but no germinants to note. Remove all these rows.
-- The entry NA for Species was used when there was a note about the seed trap, but no germinants to note. Remove all these rows. 
-- There was an unknown germinant, remove this row
-- not clear why there is an NA entry for years and a blank entry for stand...? remove bottom few rows of .csv file. DONE
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- no entry for TB13 - check data entry sheet (LATER)
+- The entry '-' for Species and Germinants was used when there was a note about the seed trap, but no germinants to note. Remove all these rows. DONE
+- The entry NA for Species was used when there was a note about the seed trap, but no germinants to note. Remove all these rows. DONE
+- There was an unknown germinant (spp = 'unknown), remove this row DONE
+- not clear why there is an NA entry for years and a blank entry for stand...? remove bottom few rows of .csv file. DONE (update - needed to add this in the script, for some reason these files have thousands of NA entries...) DONE2
+- write file DONE
+
 
 11. 2020 data
 - rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
@@ -65,36 +84,42 @@ YEAR SPECIFIC
 - remove rows with NA for species (no germinants in trap)
 - check Stand inventory file for AB08 trap 4, TO04 trap 2 - should be NAs (not collected). DONE - indeed missing, but so was AM16 trap 5 (not in germinants file). 
 - not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. DONE
+- write file DONE
 
 12. 2021 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- remove rows with none for species (no germinants in trap), also a row with n/a (also has none)
-- not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. DONE
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- remove rows with none for species (no germinants in trap), also a row with n/a (also has none) DONE
+- not clear why there is an NA entry in years column, and an NA entry for trapno for AB08 (file doesn't look incorrect), and a few more. Remove bottom few rows of .csv file. DONE (update - needed to add this in the script, for some reason these files have thousands of NA entries...) DONE2
+- write file DONE
 
 13. 2022 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- remove rows with no entry (blank) in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants).
-- remove rows with no entry (blank) in Species column and N/A in Germinant column (indicates trap was destroyed and could not be collected).
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- remove rows with no entry (blank) in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants). DONE
+- remove rows with no entry (blank) in Species column and N/A in Germinant column (indicates trap was destroyed and could not be collected). DONE
 - check Stand inventory file for AO03 trap 9 and 13, was not collected. DONE - correctly listed. 
-- replace Ab. sp. in AE10 with ABAM
-- remove AB. SP in PARA (could be either ABLA or ABAM, both were spotted)
+- replace Ab. sp. in AE10 with ABAM DONE
+- remove AB. SP in PARA (could be either ABLA or ABAM, both were spotted) DONE
 - not clear why there is an NA entry in years column. Remove bottom few rows of .csv file. DONE
+- write file DONE
+
  
 14. 2023 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- remove rows with NA in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants).
-- replace species name TSSP with TSHE (notes indicates its probably this species)
-- note SUNR germinants counted,but traps lost.
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- remove rows with NA in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants). DONE
+- replace species name TSSP with TSHE (notes indicates its probably this species) DONE
+- note SUNR germinants counted,but traps lost. OK
 - not clear why there is an NA entry in years column. Remove bottom few rows of .csv file. DONE
+- write file DONE
 
 15. 2024 data
-- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap)
-- remove columns Date, Field Notes and Data Entry Notes
-- remove rows with 0 in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants).
+- rename columns (Year = year, Stand = stand, Trapno = trapno, Species = spp, Germinants = germintrap) DONE
+- remove columns Date, Field Notes and Data Entry Notes DONE
+- remove rows with 0 in Species column and a zero in Germinant column (indicates trap was surveyed but no germinants). DONE
 - not clear why there is an NA entry in years column. Remove bottom few rows of .csv file. DONE
+- write file DONE
 
 
 
