@@ -350,10 +350,10 @@ rmrow <- which(is.na(Raw2018data$spp)==TRUE) #remove NA species- means 0 seeds
 Raw2018data <- Raw2018data[-rmrow,]
 
 #create cone seeds filled
-cone_sds_all <- Raw2018data$cones_sds_filled + Raw2018data$cones_sds_unfilled
+cones_sds_all <- Raw2018data$cones_sds_filled + Raw2018data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2018data <- cbind(Raw2018data, cone_sds_all) #add column
+Raw2018data <- cbind(Raw2018data, cones_sds_all) #add column
 Raw2018data <- Raw2018data[,c(1:9,11,10)]
 
 ##now write out
@@ -387,10 +387,10 @@ Raw2019data <- Raw2019data[,-(which(hdr2=="Data.Entry.Notes"))]
 Raw2019data$spp[Raw2019data$spp[]=="ALSI"] <- "ALVI"
 
 #create cone seeds filled
-cone_sds_all <- Raw2019data$cones_sds_filled + Raw2019data$cones_sds_unfilled
+cones_sds_all <- Raw2019data$cones_sds_filled + Raw2019data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2019data <- cbind(Raw2019data, cone_sds_all) #add column
+Raw2019data <- cbind(Raw2019data, cones_sds_all) #add column
 Raw2019data <- Raw2019data[,c(1:9,11,10)]
 
 ##now write out
@@ -419,10 +419,10 @@ Raw2020data$spp[Raw2020data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2020data$spp[Raw2020data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
 #create cone seeds filled
-cone_sds_all <- Raw2020data$cones_sds_filled + Raw2020data$cones_sds_unfilled
+cones_sds_all <- Raw2020data$cones_sds_filled + Raw2020data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2020data <- cbind(Raw2020data, cone_sds_all) #add column
+Raw2020data <- cbind(Raw2020data, cones_sds_all) #add column
 Raw2020data <- Raw2020data[,c(1:9,11,10)]
 
 ##now write out
@@ -477,10 +477,10 @@ Raw2021data$spp[Raw2021data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2021data$spp[Raw2021data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
 #create cone seeds filled
-cone_sds_all <- Raw2021data$cones_sds_filled + Raw2021data$cones_sds_unfilled
+cones_sds_all <- Raw2021data$cones_sds_filled + Raw2021data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2021data <- cbind(Raw2021data, cone_sds_all) #add column
+Raw2021data <- cbind(Raw2021data, cones_sds_all) #add column
 Raw2021data <- Raw2021data[,c(1:9,11,10)]
 
 ##now write out
@@ -536,10 +536,10 @@ Raw2022data$spp[Raw2022data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2022data$spp[Raw2022data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
 #create cone seeds filled
-cone_sds_all <- Raw2022data$cones_sds_filled + Raw2022data$cones_sds_unfilled
+cones_sds_all <- Raw2022data$cones_sds_filled + Raw2022data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2022data <- cbind(Raw2022data, cone_sds_all) #add column
+Raw2022data <- cbind(Raw2022data, cones_sds_all) #add column
 Raw2022data <- Raw2022data[,c(1:9,11,10)]
 
 ##now write out
@@ -573,10 +573,10 @@ Raw2023data$spp[Raw2023data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2023data$spp[Raw2023data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
 #create cone seeds filled
-cone_sds_all <- Raw2023data$cones_sds_filled + Raw2023data$cones_sds_unfilled
+cones_sds_all <- Raw2023data$cones_sds_filled + Raw2023data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2023data <- cbind(Raw2023data, cone_sds_all) #add column
+Raw2023data <- cbind(Raw2023data, cones_sds_all) #add column
 Raw2023data <- Raw2023data[,c(1:9,11,10)]
 
 ##now write out
@@ -615,10 +615,10 @@ Raw2024data$spp[Raw2024data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2024data$spp[Raw2024data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
 #create cone seeds filled
-cone_sds_all <- Raw2024data$cones_sds_filled + Raw2024data$cones_sds_unfilled
+cones_sds_all <- Raw2024data$cones_sds_filled + Raw2024data$cones_sds_unfilled
 
 #add cone seeds filled to data frame
-Raw2024data <- cbind(Raw2024data, cone_sds_all) #add column
+Raw2024data <- cbind(Raw2024data, cones_sds_all) #add column
 Raw2024data <- Raw2024data[,c(1:9,11,10)]
 
 ##now write out
