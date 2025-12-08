@@ -1,176 +1,176 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","standardized_notes"
-2021,"TO04",1,"PSME",1,0,0,0,0,NA
-2021,"TO04",1,"THPL",23,0,3,0,0,NA
-2021,"TO04",1,"TSHE",95,44,12,7,10,NA
-2021,"AV06",4,"ABAM",2,0,0,0,0,NA
-2021,"AV06",4,"ALVI",0,1,0,0,0,"uncertain species ID"
-2021,"AV06",4,"TSHE",4,0,13,3,0,NA
-2021,"AV06",4,"THPL",1,0,0,0,0,"uncertain with filled/unfilled"
-2021,"AE10",4,"CANO",7,1,0,0,0,"Species not expected for this stand"
-2021,"AO03",6,"TSHE",22,1,2,0,0,NA
-2021,"AO03",6,"ABAM",1,0,0,0,0,NA
-2021,"AO03",6,"PSME",1,0,5,7,3,NA
-2021,"AO03",6,"THPL",7,2,3,6,0,NA
-2021,"AM16",2,"CANO",2,2,1,2,0,"Species not expected for this stand"
-2021,"AM16",2,"PSME",1,0,0,0,0,NA
-2021,"TA01",6,"TSHE",63,2,0,0,0,NA
-2021,"TA01",6,"THPL",0,1,0,0,0,NA
-2021,"TA01",6,"ABPR",1,0,0,0,0,"uncertain species ID (ABPR/ABAM)"
-2021,"TA01",6,"PSME",0,1,0,0,0,NA
-2021,"TA01",2,"THPL",1,0,0,0,0,NA
-2021,"TA01",2,"PSME",3,0,0,0,0,NA
-2021,"TA01",2,"TSHE",26,3,0,0,0,NA
-2021,"TA01",5,"TSHE",43,3,0,0,0,NA
-2021,"TA01",5,"PSME",2,0,2,2,16,NA
-2021,"AO03",5,"PSME",0,3,3,7,18,NA
-2021,"AO03",5,"TSHE",27,12,6,2,2,NA
-2021,"AO03",5,"THPL",3,4,9,55,5,NA
-2021,"AO03",5,"ABAM",0,2,0,0,0,"uncertain species ID"
-2021,"AB08",4,"TSHE",20,2,7,0,0,NA
-2021,"AB08",4,"PSME",0,1,0,0,0,NA
-2021,"AB08",4,"CANO",1,4,0,0,0,NA
-2021,"AB08",4,"THPL",1,0,0,0,0,NA
-2021,"TA01",4,"TSHE",64,2,0,0,0,NA
-2021,"AM16",5,"TSHE",3,1,0,0,0,NA
-2021,"AM16",5,"TSME",3,0,0,0,0,"Species not expected for this stand"
-2021,"AM16",5,"CANO",14,11,4,1,0,"Species not expected for this stand"
-2021,"AM16",5,"ABAM",0,1,0,0,0,"uncertain species ID (ABLA/ABAM)"
-2021,"AB08",6,"TSHE",19,0,22,0,0,NA
-2021,"AB08",6,"THPL",2,1,1,4,6,NA
-2021,"AB08",6,"PSME",0,2,0,0,0,NA
-2021,"AB08",6,"ALVI",1,0,0,0,0,"Species not expected for this stand; uncertain species ID (Alnus)"
-2021,"PARA",4,"TSME",1,0,1,0,0,NA
-2021,"PARA",4,"ABAM",1,0,0,0,0,"uncertain species ID"
-2021,"PARA",4,"ABLA",0,1,0,0,0,"uncertain species ID"
-2021,"AO03",2,"THPL",15,4,15,33,14,NA
-2021,"AO03",2,"TSHE",19,6,11,0,0,NA
-2021,"AO03",2,"ABAM",1,0,0,0,0,NA
-2021,"SUNR",5,"TSME",0,0,1,39,0,NA
-2021,"SUNR",5,"CANO",1,1,0,0,0,"Species not expected for this stand"
-2021,"SUNR",5,"ABLA",0,1,0,0,0,"Species not expected for this stand"
-2021,"AB08",5,"TSHE",23,5,9,4,0,NA
-2021,"AB08",5,"THPL",2,0,0,0,0,NA
-2021,"AB08",5,"CANO",1,0,0,0,0,NA
-2021,"PARA",3,"THPL",2,0,0,0,0,NA
-2021,"PARA",3,"TSME",1,0,0,0,0,NA
-2021,"PARA",3,"PIEN",1,0,0,0,0,"uncertain species ID"
-2021,"PARA",3,"CANO",0,1,0,0,0,NA
-2021,"PARA",3,"ABAM",2,0,0,0,0,NA
-2021,"PARA",5,"TSME",1,0,0,0,0,NA
-2021,"PARA",1,"TSME",2,0,0,0,0,NA
-2021,"PARA",1,"ABAM",2,0,0,0,0,NA
-2021,"PARA",6,"TSME",1,0,0,0,0,NA
-2021,"PARA",6,"CANO",1,0,0,0,0,NA
-2021,"PARA",2,"TSME",2,0,1,0,0,NA
-2021,"SUNR",6,"CANO",2,0,0,0,0,"Species not expected for this stand"
-2021,"SUNR",3,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2021,"SUNR",3,"TSME",1,0,0,0,0,NA
-2021,"SUNR",1,"CANO",3,0,0,0,0,"Species not expected for this stand"
-2021,"SUNR",1,"ABPR",0,1,0,0,0,"uncertain species ID"
-2021,"SUNR",4,"ABAM",0,1,0,0,0,"uncertain species ID"
-2021,"SUNR",4,"CANO",6,0,2,0,0,"Species not expected for this stand"
-2021,"AB08",1,"PSME",1,0,0,0,0,NA
-2021,"AB08",1,"TSHE",13,0,7,0,0,NA
-2021,"AB08",3,"CANO",1,0,0,0,0,NA
-2021,"AB08",3,"THPL",1,0,0,0,0,NA
-2021,"AB08",3,"TSME",12,0,2,0,0,"Species not expected for this stand"
-2021,"AG05",6,"ABAM",0,2,0,0,0,NA
-2021,"AG05",6,"ABLA",1,0,0,0,0,"Species not expected for this stand"
-2021,"AG05",6,"TSHE",4,1,0,0,0,NA
-2021,"AG05",6,"THPL",11,0,3,3,0,NA
-2021,"AG05",6,"PSME",0,0,1,0,5,"uncertain with filled/unfilled"
-2021,"AO03",4,"THPL",9,11,20,25,23,"uncertain with filled/unfilled"
-2021,"AO03",4,"TSHE",16,6,27,3,2,NA
-2021,"AO03",4,"PSME",4,1,0,0,0,NA
-2021,"AE10",2,"CANO",6,4,1,0,0,"Species not expected for this stand"
-2021,"AE10",2,"ABPR",1,0,0,0,0,NA
-2021,"AV06",2,"PSME",1,0,0,0,0,NA
-2021,"AV06",2,"TSHE",6,2,25,2,0,NA
-2021,"AV06",2,"ALRU",1,0,0,0,0,"uncertain species ID (ALNU/ALSI)"
-2021,"AG05",4,"ABAM",1,0,0,0,0,NA
-2021,"AG05",4,"PSME",1,0,0,0,0,NA
-2021,"AG05",4,"THPL",11,3,13,21,15,"uncertain species ID"
-2021,"AG05",4,"TSHE",5,2,0,0,0,NA
-2021,"AG05",1,"TSHE",2,1,0,0,0,NA
-2021,"AG05",1,"THPL",64,62,2,0,6,"uncertain species ID"
-2021,"AG05",1,"ABAM",1,1,0,0,0,NA
-2021,"SUNR",2,"CANO",3,2,0,0,0,"Species not expected for this stand"
-2021,"TO04",6,"PSME",1,0,0,0,0,"uncertain species ID"
-2021,"TO04",6,"TSHE",79,11,1,0,0,"uncertain species ID (cones)"
-2021,"TO04",6,"THPL",35,8,11,14,6,NA
-2021,"AM16",4,"CANO",9,9,0,0,0,"Species not expected for this stand"
-2021,"AM16",4,"ABAM",1,0,0,0,0,NA
-2021,"AM16",4,"TSHE",2,1,0,0,0,NA
-2021,"AM16",4,"TSHE",5,0,0,0,0,NA
-2021,"AO03",3,"PSME",2,0,0,0,0,NA
-2021,"AO03",3,"ABAM",1,0,0,0,0,NA
-2021,"AO03",3,"TSHE",27,10,32,17,5,NA
-2021,"AO03",3,"THPL",10,0,23,43,35,NA
-2021,"TO04",3,"PSME",2,0,0,0,0,NA
-2021,"TO04",3,"ABAM",1,0,0,0,0,NA
-2021,"TO04",3,"TSHE",72,49,49,1,33,NA
-2021,"TO04",3,"THPL",34,34,5,3,0,NA
-2021,"TA01",3,"TSHE",33,0,0,0,0,NA
-2021,"AB08",2,"CANO",0,1,0,0,0,NA
-2021,"AB08",2,"TSHE",25,2,8,1,0,NA
-2021,"AG05",3,"PSME",1,1,0,0,0,NA
-2021,"AG05",3,"PICO",0,1,0,0,0,NA
-2021,"AG05",3,"ABAM",0,1,0,0,0,"uncertain species ID"
-2021,"AG05",3,"TSHE",4,2,4,1,0,NA
-2021,"AG05",3,"THPL",22,5,5,40,13,NA
-2021,"AM16",6,"TSHE",6,1,0,0,0,NA
-2021,"AM16",6,"TSME",4,0,1,0,0,"Species not expected for this stand"
-2021,"AM16",6,"PIEN",1,0,0,0,0,"Species not expected for this stand"
-2021,"AM16",6,"CANO",29,20,8,0,0,"Species not expected for this stand"
-2021,"AG05",2,"ABAM",1,0,0,0,0,NA
-2021,"AG05",2,"PSME",1,0,0,0,0,NA
-2021,"AG05",2,"TSHE",3,0,0,0,0,NA
-2021,"AG05",2,"THPL",30,28,2,0,0,NA
-2021,"TA01",1,"TSHE",50,0,0,0,0,NA
-2021,"TO04",4,"TSHE",119,14,6,46,0,NA
-2021,"TO04",4,"THPL",27,8,1,0,0,NA
-2021,"AV06",6,"ABAM",1,0,0,0,0,NA
-2021,"AE10",6,"CANO",5,1,2,0,0,"Species not expected for this stand; uncertain speices ID"
-2021,"AE10",6,"TSME",1,0,0,0,0,NA
-2021,"AV06",5,"TSHE",1,0,1,0,0,NA
-2021,"AV06",5,"ABAM",1,0,0,0,0,"uncertain species ID"
-2021,"AV06",5,"PSME",2,0,0,0,0,NA
-2021,"AG05",5,"PSME",1,0,2,2,0,NA
-2021,"AG05",5,"TSHE",3,1,0,0,0,NA
-2021,"AG05",5,"ABAM",4,1,0,0,0,"uncertain species ID"
-2021,"AG05",5,"THPL",12,3,21,55,12,NA
-2021,"AV06",3,"ABAM",3,0,0,0,0,NA
-2021,"AV06",3,"TSHE",2,0,14,15,0,NA
-2021,"AM16",1,"TSHE",1,0,0,0,0,NA
-2021,"AM16",1,"TSME",1,0,0,0,0,"Species not expected for this stand"
-2021,"AM16",1,"CANO",28,2,2,1,0,"Species not expected for this stand"
-2021,"AM16",3,"TSHE",2,0,2,0,0,NA
-2021,"AM16",3,"TSME",3,0,1,14,5,"Species not expected for this stand"
-2021,"AM16",3,"CANO",4,3,0,0,0,"Species not expected for this stand"
-2021,"AV06",1,"TSHE",9,1,2,1,0,NA
-2021,"AV06",1,"THPL",1,0,0,0,0,NA
-2021,"TO04",2,"TSHE",91,9,18,29,0,NA
-2021,"TO04",2,"THPL",19,3,0,0,0,NA
-2021,"TO04",2,"PSME",1,0,0,0,0,NA
-2021,"TO04",5,"TSHE",69,6,1,4,0,NA
-2021,"TO04",5,"THPL",33,5,6,0,0,NA
-2021,"TO04",5,"PSME",2,0,0,0,0,NA
-2021,"AE10",1,"TSME",1,0,0,0,0,NA
-2021,"AE10",1,"CANO",9,10,0,0,0,"Species not expected for this stand"
-2021,"AE10",1,"ABAM",1,1,0,0,0,"uncertain species ID"
-2021,"AE10",3,"CANO",1,1,2,0,0,"Species not expected for this stand"
-2021,"AE10",3,"ABAM",1,0,0,0,0,"uncertain species ID"
-2021,"AE10",5,"CANO",3,1,1,0,0,"Species not expected for this stand"
-2021,"AE10",5,"ABAM",1,0,0,0,0,NA
-2021,"AV06",4,"ALRU",0,1,0,0,0,"uncertain species ID"
-2021,"TA01",6,"ABPR",1,0,0,0,0,"uncertain species ID (ABPR/ABAMI)"
-2021,"AM16",5,"ABAM",0,1,0,0,0,"uncertain species ID (ABLA/ABAMI)"
-2021,"AB08",6,"ALRU",1,0,0,0,0,"uncertain species ID (ALNU/ALSI)"
-2021,"PARA",4,"ABAM",1,0,0,0,0,"uncertain species ID (ABLA/ABAMI)"
-2021,"PARA",4,"ABLA",0,1,0,0,0,"uncertain species ID (ABLA/ABAMI)"
-2021,"PARA",3,"PIEN",1,0,0,0,0,NA
-2021,"SUNR",4,"ABAM",0,1,0,0,0,NA
-2021,"AE10",2,"ABPR",1,0,0,0,0,"uncertain species ID"
-2021,"AG05",4,"THPL",11,3,13,21,15,"uncertain with filled/unfilled"
-2021,"AG05",1,"THPL",64,62,2,0,6,"uncertain with filled/unfilled"
-2021,"TO04",6,"PSME",1,0,0,0,0,NA
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+2021,"TO04",1,"PSME",1,0,0,0,0,0,NA
+2021,"TO04",1,"THPL",23,0,3,0,0,0,NA
+2021,"TO04",1,"TSHE",95,44,12,7,10,17,NA
+2021,"AV06",4,"ABAM",2,0,0,0,0,0,NA
+2021,"AV06",4,"ALVI",0,1,0,0,0,0,"uncertain species ID"
+2021,"AV06",4,"TSHE",4,0,13,3,0,3,NA
+2021,"AV06",4,"THPL",1,0,0,0,0,0,"uncertain with filled/unfilled"
+2021,"AE10",4,"CANO",7,1,0,0,0,0,"Species not expected for this stand"
+2021,"AO03",6,"TSHE",22,1,2,0,0,0,NA
+2021,"AO03",6,"ABAM",1,0,0,0,0,0,NA
+2021,"AO03",6,"PSME",1,0,5,7,3,10,NA
+2021,"AO03",6,"THPL",7,2,3,6,0,6,NA
+2021,"AM16",2,"CANO",2,2,1,2,0,2,"Species not expected for this stand"
+2021,"AM16",2,"PSME",1,0,0,0,0,0,NA
+2021,"TA01",6,"TSHE",63,2,0,0,0,0,NA
+2021,"TA01",6,"THPL",0,1,0,0,0,0,NA
+2021,"TA01",6,"ABPR",1,0,0,0,0,0,"uncertain species ID (ABPR/ABAM)"
+2021,"TA01",6,"PSME",0,1,0,0,0,0,NA
+2021,"TA01",2,"THPL",1,0,0,0,0,0,NA
+2021,"TA01",2,"PSME",3,0,0,0,0,0,NA
+2021,"TA01",2,"TSHE",26,3,0,0,0,0,NA
+2021,"TA01",5,"TSHE",43,3,0,0,0,0,NA
+2021,"TA01",5,"PSME",2,0,2,2,16,18,NA
+2021,"AO03",5,"PSME",0,3,3,7,18,25,NA
+2021,"AO03",5,"TSHE",27,12,6,2,2,4,NA
+2021,"AO03",5,"THPL",3,4,9,55,5,60,NA
+2021,"AO03",5,"ABAM",0,2,0,0,0,0,"uncertain species ID"
+2021,"AB08",4,"TSHE",20,2,7,0,0,0,NA
+2021,"AB08",4,"PSME",0,1,0,0,0,0,NA
+2021,"AB08",4,"CANO",1,4,0,0,0,0,NA
+2021,"AB08",4,"THPL",1,0,0,0,0,0,NA
+2021,"TA01",4,"TSHE",64,2,0,0,0,0,NA
+2021,"AM16",5,"TSHE",3,1,0,0,0,0,NA
+2021,"AM16",5,"TSME",3,0,0,0,0,0,"Species not expected for this stand"
+2021,"AM16",5,"CANO",14,11,4,1,0,1,"Species not expected for this stand"
+2021,"AM16",5,"ABAM",0,1,0,0,0,0,"uncertain species ID (ABLA/ABAM)"
+2021,"AB08",6,"TSHE",19,0,22,0,0,0,NA
+2021,"AB08",6,"THPL",2,1,1,4,6,10,NA
+2021,"AB08",6,"PSME",0,2,0,0,0,0,NA
+2021,"AB08",6,"ALVI",1,0,0,0,0,0,"Species not expected for this stand; uncertain species ID (Alnus)"
+2021,"PARA",4,"TSME",1,0,1,0,0,0,NA
+2021,"PARA",4,"ABAM",1,0,0,0,0,0,"uncertain species ID"
+2021,"PARA",4,"ABLA",0,1,0,0,0,0,"uncertain species ID"
+2021,"AO03",2,"THPL",15,4,15,33,14,47,NA
+2021,"AO03",2,"TSHE",19,6,11,0,0,0,NA
+2021,"AO03",2,"ABAM",1,0,0,0,0,0,NA
+2021,"SUNR",5,"TSME",0,0,1,39,0,39,NA
+2021,"SUNR",5,"CANO",1,1,0,0,0,0,"Species not expected for this stand"
+2021,"SUNR",5,"ABLA",0,1,0,0,0,0,"Species not expected for this stand"
+2021,"AB08",5,"TSHE",23,5,9,4,0,4,NA
+2021,"AB08",5,"THPL",2,0,0,0,0,0,NA
+2021,"AB08",5,"CANO",1,0,0,0,0,0,NA
+2021,"PARA",3,"THPL",2,0,0,0,0,0,NA
+2021,"PARA",3,"TSME",1,0,0,0,0,0,NA
+2021,"PARA",3,"PIEN",1,0,0,0,0,0,"uncertain species ID"
+2021,"PARA",3,"CANO",0,1,0,0,0,0,NA
+2021,"PARA",3,"ABAM",2,0,0,0,0,0,NA
+2021,"PARA",5,"TSME",1,0,0,0,0,0,NA
+2021,"PARA",1,"TSME",2,0,0,0,0,0,NA
+2021,"PARA",1,"ABAM",2,0,0,0,0,0,NA
+2021,"PARA",6,"TSME",1,0,0,0,0,0,NA
+2021,"PARA",6,"CANO",1,0,0,0,0,0,NA
+2021,"PARA",2,"TSME",2,0,1,0,0,0,NA
+2021,"SUNR",6,"CANO",2,0,0,0,0,0,"Species not expected for this stand"
+2021,"SUNR",3,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2021,"SUNR",3,"TSME",1,0,0,0,0,0,NA
+2021,"SUNR",1,"CANO",3,0,0,0,0,0,"Species not expected for this stand"
+2021,"SUNR",1,"ABPR",0,1,0,0,0,0,"uncertain species ID"
+2021,"SUNR",4,"ABAM",0,1,0,0,0,0,"uncertain species ID"
+2021,"SUNR",4,"CANO",6,0,2,0,0,0,"Species not expected for this stand"
+2021,"AB08",1,"PSME",1,0,0,0,0,0,NA
+2021,"AB08",1,"TSHE",13,0,7,0,0,0,NA
+2021,"AB08",3,"CANO",1,0,0,0,0,0,NA
+2021,"AB08",3,"THPL",1,0,0,0,0,0,NA
+2021,"AB08",3,"TSME",12,0,2,0,0,0,"Species not expected for this stand"
+2021,"AG05",6,"ABAM",0,2,0,0,0,0,NA
+2021,"AG05",6,"ABLA",1,0,0,0,0,0,"Species not expected for this stand"
+2021,"AG05",6,"TSHE",4,1,0,0,0,0,NA
+2021,"AG05",6,"THPL",11,0,3,3,0,3,NA
+2021,"AG05",6,"PSME",0,0,1,0,5,5,"uncertain with filled/unfilled"
+2021,"AO03",4,"THPL",9,11,20,25,23,48,"uncertain with filled/unfilled"
+2021,"AO03",4,"TSHE",16,6,27,3,2,5,NA
+2021,"AO03",4,"PSME",4,1,0,0,0,0,NA
+2021,"AE10",2,"CANO",6,4,1,0,0,0,"Species not expected for this stand"
+2021,"AE10",2,"ABPR",1,0,0,0,0,0,NA
+2021,"AV06",2,"PSME",1,0,0,0,0,0,NA
+2021,"AV06",2,"TSHE",6,2,25,2,0,2,NA
+2021,"AV06",2,"ALRU",1,0,0,0,0,0,"uncertain species ID (ALNU/ALSI)"
+2021,"AG05",4,"ABAM",1,0,0,0,0,0,NA
+2021,"AG05",4,"PSME",1,0,0,0,0,0,NA
+2021,"AG05",4,"THPL",11,3,13,21,15,36,"uncertain species ID"
+2021,"AG05",4,"TSHE",5,2,0,0,0,0,NA
+2021,"AG05",1,"TSHE",2,1,0,0,0,0,NA
+2021,"AG05",1,"THPL",64,62,2,0,6,6,"uncertain species ID"
+2021,"AG05",1,"ABAM",1,1,0,0,0,0,NA
+2021,"SUNR",2,"CANO",3,2,0,0,0,0,"Species not expected for this stand"
+2021,"TO04",6,"PSME",1,0,0,0,0,0,"uncertain species ID"
+2021,"TO04",6,"TSHE",79,11,1,0,0,0,"uncertain species ID (cones)"
+2021,"TO04",6,"THPL",35,8,11,14,6,20,NA
+2021,"AM16",4,"CANO",9,9,0,0,0,0,"Species not expected for this stand"
+2021,"AM16",4,"ABAM",1,0,0,0,0,0,NA
+2021,"AM16",4,"TSHE",2,1,0,0,0,0,NA
+2021,"AM16",4,"TSHE",5,0,0,0,0,0,NA
+2021,"AO03",3,"PSME",2,0,0,0,0,0,NA
+2021,"AO03",3,"ABAM",1,0,0,0,0,0,NA
+2021,"AO03",3,"TSHE",27,10,32,17,5,22,NA
+2021,"AO03",3,"THPL",10,0,23,43,35,78,NA
+2021,"TO04",3,"PSME",2,0,0,0,0,0,NA
+2021,"TO04",3,"ABAM",1,0,0,0,0,0,NA
+2021,"TO04",3,"TSHE",72,49,49,1,33,34,NA
+2021,"TO04",3,"THPL",34,34,5,3,0,3,NA
+2021,"TA01",3,"TSHE",33,0,0,0,0,0,NA
+2021,"AB08",2,"CANO",0,1,0,0,0,0,NA
+2021,"AB08",2,"TSHE",25,2,8,1,0,1,NA
+2021,"AG05",3,"PSME",1,1,0,0,0,0,NA
+2021,"AG05",3,"PICO",0,1,0,0,0,0,NA
+2021,"AG05",3,"ABAM",0,1,0,0,0,0,"uncertain species ID"
+2021,"AG05",3,"TSHE",4,2,4,1,0,1,NA
+2021,"AG05",3,"THPL",22,5,5,40,13,53,NA
+2021,"AM16",6,"TSHE",6,1,0,0,0,0,NA
+2021,"AM16",6,"TSME",4,0,1,0,0,0,"Species not expected for this stand"
+2021,"AM16",6,"PIEN",1,0,0,0,0,0,"Species not expected for this stand"
+2021,"AM16",6,"CANO",29,20,8,0,0,0,"Species not expected for this stand"
+2021,"AG05",2,"ABAM",1,0,0,0,0,0,NA
+2021,"AG05",2,"PSME",1,0,0,0,0,0,NA
+2021,"AG05",2,"TSHE",3,0,0,0,0,0,NA
+2021,"AG05",2,"THPL",30,28,2,0,0,0,NA
+2021,"TA01",1,"TSHE",50,0,0,0,0,0,NA
+2021,"TO04",4,"TSHE",119,14,6,46,0,46,NA
+2021,"TO04",4,"THPL",27,8,1,0,0,0,NA
+2021,"AV06",6,"ABAM",1,0,0,0,0,0,NA
+2021,"AE10",6,"CANO",5,1,2,0,0,0,"Species not expected for this stand; uncertain speices ID"
+2021,"AE10",6,"TSME",1,0,0,0,0,0,NA
+2021,"AV06",5,"TSHE",1,0,1,0,0,0,NA
+2021,"AV06",5,"ABAM",1,0,0,0,0,0,"uncertain species ID"
+2021,"AV06",5,"PSME",2,0,0,0,0,0,NA
+2021,"AG05",5,"PSME",1,0,2,2,0,2,NA
+2021,"AG05",5,"TSHE",3,1,0,0,0,0,NA
+2021,"AG05",5,"ABAM",4,1,0,0,0,0,"uncertain species ID"
+2021,"AG05",5,"THPL",12,3,21,55,12,67,NA
+2021,"AV06",3,"ABAM",3,0,0,0,0,0,NA
+2021,"AV06",3,"TSHE",2,0,14,15,0,15,NA
+2021,"AM16",1,"TSHE",1,0,0,0,0,0,NA
+2021,"AM16",1,"TSME",1,0,0,0,0,0,"Species not expected for this stand"
+2021,"AM16",1,"CANO",28,2,2,1,0,1,"Species not expected for this stand"
+2021,"AM16",3,"TSHE",2,0,2,0,0,0,NA
+2021,"AM16",3,"TSME",3,0,1,14,5,19,"Species not expected for this stand"
+2021,"AM16",3,"CANO",4,3,0,0,0,0,"Species not expected for this stand"
+2021,"AV06",1,"TSHE",9,1,2,1,0,1,NA
+2021,"AV06",1,"THPL",1,0,0,0,0,0,NA
+2021,"TO04",2,"TSHE",91,9,18,29,0,29,NA
+2021,"TO04",2,"THPL",19,3,0,0,0,0,NA
+2021,"TO04",2,"PSME",1,0,0,0,0,0,NA
+2021,"TO04",5,"TSHE",69,6,1,4,0,4,NA
+2021,"TO04",5,"THPL",33,5,6,0,0,0,NA
+2021,"TO04",5,"PSME",2,0,0,0,0,0,NA
+2021,"AE10",1,"TSME",1,0,0,0,0,0,NA
+2021,"AE10",1,"CANO",9,10,0,0,0,0,"Species not expected for this stand"
+2021,"AE10",1,"ABAM",1,1,0,0,0,0,"uncertain species ID"
+2021,"AE10",3,"CANO",1,1,2,0,0,0,"Species not expected for this stand"
+2021,"AE10",3,"ABAM",1,0,0,0,0,0,"uncertain species ID"
+2021,"AE10",5,"CANO",3,1,1,0,0,0,"Species not expected for this stand"
+2021,"AE10",5,"ABAM",1,0,0,0,0,0,NA
+2021,"AV06",4,"ALRU",0,1,0,0,0,0,"uncertain species ID"
+2021,"TA01",6,"ABPR",1,0,0,0,0,0,"uncertain species ID (ABPR/ABAMI)"
+2021,"AM16",5,"ABAM",0,1,0,0,0,0,"uncertain species ID (ABLA/ABAMI)"
+2021,"AB08",6,"ALRU",1,0,0,0,0,0,"uncertain species ID (ALNU/ALSI)"
+2021,"PARA",4,"ABAM",1,0,0,0,0,0,"uncertain species ID (ABLA/ABAMI)"
+2021,"PARA",4,"ABLA",0,1,0,0,0,0,"uncertain species ID (ABLA/ABAMI)"
+2021,"PARA",3,"PIEN",1,0,0,0,0,0,NA
+2021,"SUNR",4,"ABAM",0,1,0,0,0,0,NA
+2021,"AE10",2,"ABPR",1,0,0,0,0,0,"uncertain species ID"
+2021,"AG05",4,"THPL",11,3,13,21,15,36,"uncertain with filled/unfilled"
+2021,"AG05",1,"THPL",64,62,2,0,6,6,"uncertain with filled/unfilled"
+2021,"TO04",6,"PSME",1,0,0,0,0,0,NA

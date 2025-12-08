@@ -1,271 +1,271 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","standardized_notes"
-2020,"AB08",1,"TSHE",26,4,7,2,0,NA
-2020,"AB08",1,"THPL",3,0,0,0,0,NA
-2020,"AB08",1,"PSME",1,0,0,0,0,NA
-2020,"AB08",2,"THPL",2,3,0,0,0,NA
-2020,"AB08",2,"TSHE",32,10,10,4,0,NA
-2020,"AB08",3,"TSHE",21,1,6,1,0,NA
-2020,"AB08",5,"TSHE",24,0,13,2,0,NA
-2020,"AB08",6,"TSHE",16,6,31,0,0,NA
-2020,"AB08",6,"THPL",5,0,2,11,0,NA
-2020,"AB08",6,"TSME",1,0,0,0,0,"Species not expected for this stand"
-2020,"AE10",1,"ABPR",3,0,0,0,0,NA
-2020,"AE10",1,"ABAM",0,2,0,0,0,NA
-2020,"AE10",2,"CANO",6,0,0,0,0,"Species not expected for this stand"
-2020,"AE10",2,"TSME",1,1,0,0,0,NA
-2020,"AE10",2,"ABAM",2,1,0,0,0,NA
-2020,"AE10",3,"CANO",7,0,0,0,0,"Species not expected for this stand"
-2020,"AE10",3,"ABAM",0,2,0,0,0,NA
-2020,"AE10",3,"ABLA",0,2,0,0,0,NA
-2020,"AE10",4,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"AE10",4,"ABPR",2,0,0,0,0,NA
-2020,"AE10",5,"TSME",3,0,0,0,0,NA
-2020,"AE10",5,"ABAM",3,7,0,0,0,NA
-2020,"AE10",6,"TSME",3,1,0,0,0,NA
-2020,"AG05",1,"THPL",20,0,4,10,0,NA
-2020,"AG05",1,"PSME",2,1,0,0,0,NA
-2020,"AG05",1,"TSHE",2,3,0,0,0,NA
-2020,"AG05",2,"THPL",10,12,5,9,31,NA
-2020,"AG05",2,"TSHE",6,3,0,0,0,NA
-2020,"AG05",2,"PSME",2,2,0,0,0,NA
-2020,"AG05",3,"THPL",26,0,8,23,6,NA
-2020,"AG05",3,"TSHE",1,1,3,0,0,NA
-2020,"AG05",3,"PSME",0,2,0,0,0,NA
-2020,"AG05",3,"ABAM",0,1,0,0,0,NA
-2020,"AG05",4,"TSHE",6,1,1,0,8,NA
-2020,"AG05",4,"THPL",43,6,15,23,5,NA
-2020,"AG05",4,"PSME",4,2,0,0,0,NA
-2020,"AG05",4,"ABAM",2,0,0,0,0,NA
-2020,"AG05",5,"PSME",2,0,1,0,0,NA
-2020,"AG05",5,"THPL",64,0,54,122,26,NA
-2020,"AG05",5,"ABAM",1,2,0,0,0,NA
-2020,"AG05",5,"TABR",1,0,0,0,0,NA
-2020,"AG05",6,"THPL",22,0,14,61,0,NA
-2020,"AG05",6,"PSME",4,4,3,3,1,NA
-2020,"AG05",6,"TSHE",6,0,1,0,0,NA
-2020,"AG05",6,"ABAM",1,2,0,0,0,NA
-2020,"AM16",1,"TSME",34,0,0,0,0,"Species not expected for this stand"
-2020,"AM16",1,"CANO",2,3,0,0,0,"Species not expected for this stand"
-2020,"AM16",1,"TSHE",4,19,0,0,0,NA
-2020,"AM16",2,"TSME",39,6,0,0,0,"Species not expected for this stand"
-2020,"AM16",2,"CANO",6,0,2,0,0,"Species not expected for this stand"
-2020,"AM16",3,"TSME",2,25,0,0,0,"Species not expected for this stand"
-2020,"AM16",3,"TSHE",12,4,0,0,0,NA
-2020,"AM16",4,"TSME",26,2,4,12,1,"Species not expected for this stand"
-2020,"AM16",6,"CANO",9,0,23,2,0,"Species not expected for this stand"
-2020,"AM16",6,"TSME",30,2,0,0,0,"Species not expected for this stand"
-2020,"AM16",6,"ABAM",0,1,0,0,0,NA
-2020,"AO03",1,"THPL",6,22,32,45,50,"issue in field: seed trap found on side"
-2020,"AO03",1,"TSHE",10,6,12,3,2,NA
-2020,"AO03",2,"PSME",0,6,0,0,0,NA
-2020,"AO03",2,"TSHE",14,17,9,1,0,NA
-2020,"AO03",2,"THPL",76,0,65,178,0,NA
-2020,"AO03",2,"ABAM",1,1,0,0,0,NA
-2020,"AO03",3,"THPL",84,0,85,233,31,NA
-2020,"AO03",3,"TSHE",46,15,51,6,6,NA
-2020,"AO03",3,"ABAM",1,0,0,0,0,NA
-2020,"AO03",3,"PSME",3,2,0,0,0,NA
-2020,"AO03",4,"THPL",360,249,54,76,164,NA
-2020,"AO03",4,"TSHE",179,45,13,17,6,NA
-2020,"AO03",4,"PSME",69,50,7,0,0,NA
-2020,"AO03",5,"TSHE",20,4,13,0,0,NA
-2020,"AO03",5,"PSME",3,3,5,4,4,NA
-2020,"AO03",5,"THPL",167,0,18,17,0,NA
-2020,"AO03",6,"THPL",28,85,7,19,10,NA
-2020,"AO03",6,"TSHE",17,4,3,1,0,NA
-2020,"AO03",6,"PSME",10,2,9,39,37,NA
-2020,"AR07",1,"CANO",3,0,5,9,0,"Species not expected for this stand"
-2020,"AR07",1,"ABAM",0,1,0,0,0,NA
-2020,"AR07",1,"TSME",18,1,19,49,29,"Species not expected for this stand"
-2020,"AR07",2,"TSME",2,1,1,2,0,"Species not expected for this stand"
-2020,"AR07",2,"CANO",2,0,18,16,0,"Species not expected for this stand"
-2020,"AR07",3,"TSME",13,3,0,0,0,"Species not expected for this stand"
-2020,"AR07",3,"CANO",6,0,9,1,0,"Species not expected for this stand"
-2020,"AR07",4,"TSME",19,0,1,1,2,"Species not expected for this stand"
-2020,"AR07",4,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"AR07",5,"ABPR",0,2,0,0,0,"Species not expected for this stand"
-2020,"AR07",5,"TSME",13,10,0,0,0,"Species not expected for this stand"
-2020,"AR07",5,"CANO",2,0,0,0,0,"Species not expected for this stand"
-2020,"AR07",6,"CANO",0,0,1,0,0,"Species not expected for this stand"
-2020,"AR07",6,"TSME",20,1,0,0,0,"Species not expected for this stand"
-2020,"AV02",1,"TSHE",20,16,5,0,4,NA
-2020,"AV02",1,"THPL",3,0,0,0,0,NA
-2020,"AV02",1,"PSME",1,0,0,0,0,NA
-2020,"AV02",2,"TSHE",45,7,12,8,2,NA
-2020,"AV02",2,"ABAM",2,0,0,0,0,NA
-2020,"AV02",2,"THPL",1,0,0,0,0,NA
-2020,"AV02",3,"TSHE",17,36,8,0,0,NA
-2020,"AV02",3,"THPL",1,0,0,0,0,NA
-2020,"AV02",3,"ABAM",4,3,0,0,0,NA
-2020,"AV02",4,"TSHE",48,17,19,21,6,NA
-2020,"AV02",4,"THPL",2,0,0,0,0,NA
-2020,"AV02",5,"ABAM",2,1,0,0,0,NA
-2020,"AV02",5,"THPL",2,0,0,0,0,NA
-2020,"AV02",5,"PSME",0,2,0,0,0,NA
-2020,"AV02",5,"TSHE",45,33,7,1,0,NA
-2020,"AV02",6,"THPL",5,0,0,0,0,NA
-2020,"AV02",6,"TSHE",40,50,3,0,2,NA
-2020,"AV02",6,"ABAM",4,5,0,0,0,NA
-2020,"AV02",6,"PSME",2,1,0,0,0,NA
-2020,"AV06",1,"TSHE",7,4,2,0,0,NA
-2020,"AV06",2,"PSME",1,1,0,0,0,NA
-2020,"AV06",2,"TSHE",13,17,37,0,0,NA
-2020,"AV06",3,"TSHE",3,11,24,0,0,NA
-2020,"AV06",3,"ABAM",1,0,0,0,0,NA
-2020,"AV06",4,"TSHE",7,5,8,3,0,NA
-2020,"AV06",4,"PSME",0,2,0,0,0,NA
-2020,"AV06",4,"ABAM",1,0,0,0,0,NA
-2020,"AV06",5,"ABAM",1,2,0,0,0,NA
-2020,"AV06",5,"TSHE",10,15,0,0,0,NA
-2020,"AV06",5,"PSME",0,1,0,0,0,NA
-2020,"AV06",6,"TSHE",5,1,0,0,0,NA
-2020,"AV06",6,"ABAM",2,1,0,0,0,NA
-2020,"AV14",1,"ABAM",1,0,0,0,0,NA
-2020,"AV14",1,"TSHE",171,17,14,20,6,NA
-2020,"AV14",2,"TSHE",199,23,20,0,0,NA
-2020,"AV14",2,"THPL",1,0,0,0,0,NA
-2020,"AV14",2,"CANO",0,1,0,0,0,"Species not expected for this stand"
-2020,"AV14",2,"ABAM",0,1,0,0,0,NA
-2020,"AV14",3,"TSHE",79,7,336,27,360,"lab note: Random pick of 4x25 cones scaled up to 336 cones"
-2020,"AV14",4,"TSHE",52,14,168,15,11,"issue in lab: cone debris mixed with duff"
-2020,"AV14",4,"ABAM",1,0,0,0,0,"issue in lab: cone debris mixed with duff"
-2020,"AV14",4,"CANO",0,1,0,0,0,"Species not expected for this stand; Issue in lab: Cone debris mixed with duff"
-2020,"AV14",5,"TSHE",39,0,87,0,0,NA
-2020,"AV14",6,"TSHE",85,9,69,5,0,NA
-2020,"AX15",1,"THPL",12,4,22,46,29,NA
-2020,"AX15",1,"TSHE",38,5,6,3,2,NA
-2020,"AX15",2,"THPL",2,0,7,12,0,NA
-2020,"AX15",2,"TSHE",20,6,4,0,0,NA
-2020,"AX15",3,"TSHE",3,0,1,0,0,NA
-2020,"AX15",3,"THPL",2,0,0,0,0,NA
-2020,"AX15",3,"TSME",6,2,0,0,0,"Species not expected for this stand"
-2020,"AX15",4,"TSHE",15,3,3,2,3,NA
-2020,"AX15",4,"THPL",1,0,0,0,0,NA
-2020,"AX15",5,"TSHE",17,3,4,0,0,NA
-2020,"AX15",6,"TSHE",27,8,3,2,0,NA
-2020,"PARA",1,"TSME",17,3,0,0,0,NA
-2020,"PARA",1,"ABAM",2,0,0,0,0,NA
-2020,"PARA",2,"ABLA",0,2,0,0,0,NA
-2020,"PARA",2,"TSME",14,2,0,0,0,NA
-2020,"PARA",2,"PICO",1,0,0,0,0,NA
-2020,"PARA",2,"CANO",0,1,0,0,0,NA
-2020,"PARA",3,"TSME",21,0,3,9,7,NA
-2020,"PARA",3,"ABAM",1,0,0,0,0,NA
-2020,"PARA",4,"TSME",26,3,0,0,0,NA
-2020,"PARA",4,"ABAM",1,0,0,0,0,NA
-2020,"PARA",5,"TSME",10,3,1,0,0,NA
-2020,"PARA",6,"TSME",9,0,5,2,1,NA
-2020,"PP17",1,"CANO",0,3,0,0,0,"Species not expected for this stand"
-2020,"PP17",1,"PSME",8,8,0,0,0,NA
-2020,"PP17",2,"PSME",4,1,0,0,0,NA
-2020,"PP17",2,"CANO",0,1,0,0,0,"Species not expected for this stand"
-2020,"PP17",2,"TSHE",1,0,0,0,0,NA
-2020,"PP17",2,"PICO",0,0,4,0,0,NA
-2020,"PP17",3,"CANO",4,0,0,0,0,"Species not expected for this stand"
-2020,"PP17",3,"PSME",1,0,0,0,0,NA
-2020,"PP17",3,"TSME",0,1,0,0,0,NA
-2020,"PP17",4,"TSME",1,0,0,0,0,NA
-2020,"PP17",4,"TSHE",4,0,0,0,0,NA
-2020,"PP17",4,"PICO",3,0,0,0,0,"issue in identification: unsure species ID (PICO/PSME)"
-2020,"PP17",5,"PSME",2,1,2,0,0,NA
-2020,"PP17",6,"TSHE",1,0,0,0,0,NA
-2020,"PP17",6,"PSME",7,5,0,0,0,NA
-2020,"PP17",6,"THPL",1,0,0,0,0,NA
-2020,"SPRY",1,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"SPRY",1,"TSME",2,0,0,0,0,NA
-2020,"SPRY",2,"TSME",6,0,0,0,0,NA
-2020,"SPRY",3,"CANO",0,0,3,12,0,"Species not expected for this stand"
-2020,"SPRY",3,"PSME",2,1,0,0,0,"Species not expected for this stand"
-2020,"SPRY",3,"TSME",1,0,0,0,0,NA
-2020,"SPRY",4,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"SPRY",4,"TSME",3,0,0,0,0,NA
-2020,"SPRY",5,"CANO",1,0,1,0,0,"Species not expected for this stand"
-2020,"SPRY",5,"TSME",4,0,0,0,0,NA
-2020,"SPRY",6,"CANO",0,3,7,0,9,"Species not expected for this stand"
-2020,"SPRY",6,"TSME",2,1,0,0,0,NA
-2020,"SUNR",1,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"SUNR",1,"TSME",3,0,1,7,3,NA
-2020,"SUNR",1,"ABAM",0,1,0,0,0,NA
-2020,"SUNR",2,"TSME",2,0,0,0,0,NA
-2020,"SUNR",2,"CANO",0,0,9,1,0,"Species not expected for this stand"
-2020,"SUNR",3,"CANO",2,0,9,0,0,"Species not expected for this stand"
-2020,"SUNR",3,"ABAM",1,0,0,0,0,NA
-2020,"SUNR",3,"TSME",4,1,0,0,0,NA
-2020,"SUNR",4,"CANO",9,0,10,2,0,"Species not expected for this stand"
-2020,"SUNR",4,"TSME",2,0,0,0,0,NA
-2020,"SUNR",5,"CANO",6,1,6,0,0,"Species not expected for this stand"
-2020,"SUNR",5,"ABLA",0,2,0,0,0,"Species not expected for this stand"
-2020,"SUNR",5,"ABAM",0,2,0,0,0,NA
-2020,"SUNR",5,"TSHE",3,0,0,0,0,NA
-2020,"SUNR",6,"TSME",1,0,0,0,0,NA
-2020,"SUNR",6,"CANO",1,0,0,0,0,"Species not expected for this stand"
-2020,"TA01",1,"PSME",0,0,3,3,0,NA
-2020,"TA01",1,"THPL",1,0,0,0,0,NA
-2020,"TA01",1,"TSHE",1,0,0,0,0,NA
-2020,"TA01",2,"PSME",1,0,0,0,0,NA
-2020,"TA01",2,"TSHE",4,0,0,0,0,NA
-2020,"TA01",3,"THPL",3,0,0,0,0,NA
-2020,"TA01",3,"PSME",3,0,0,0,0,NA
-2020,"TA01",3,"CANO",1,0,0,0,0,NA
-2020,"TA01",3,"TSHE",2,0,0,0,0,NA
-2020,"TA01",4,"TSHE",4,2,0,0,0,NA
-2020,"TA01",4,"PSME",3,0,0,0,0,NA
-2020,"TA01",4,"THPL",4,0,0,0,0,NA
-2020,"TA01",5,"TSHE",2,0,0,0,0,NA
-2020,"TA01",5,"PSME",2,3,0,0,0,NA
-2020,"TA01",5,"THPL",2,0,0,0,0,NA
-2020,"TA01",6,"TSHE",2,0,1,0,0,NA
-2020,"TA01",6,"PSME",1,0,0,0,0,NA
-2020,"TB13",1,"TSHE",7,0,11,4,0,NA
-2020,"TB13",1,"THPL",1,0,0,0,0,NA
-2020,"TB13",1,"PSME",2,3,0,0,0,NA
-2020,"TB13",1,"ABAM",1,0,0,0,0,NA
-2020,"TB13",2,"THPL",1,0,0,0,0,"lab note: #1 cone is very small"
-2020,"TB13",2,"TSHE",8,11,6,0,1,NA
-2020,"TB13",2,"PSME",1,0,0,2,4,NA
-2020,"TB13",3,"THPL",5,0,2,8,0,NA
-2020,"TB13",3,"TSHE",13,3,9,2,0,NA
-2020,"TB13",3,"PSME",0,3,0,0,0,NA
-2020,"TB13",4,"THPL",2,1,1,4,5,NA
-2020,"TB13",4,"PSME",2,1,2,76,7,NA
-2020,"TB13",4,"TSHE",13,7,12,0,7,NA
-2020,"TB13",5,"TSHE",16,28,9,0,25,NA
-2020,"TB13",5,"THPL",4,0,4,20,0,NA
-2020,"TB13",5,"PSME",0,4,0,0,0,NA
-2020,"TB13",6,"TSHE",9,6,30,108,14,NA
-2020,"TB13",6,"THPL",0,0,13,32,13,NA
-2020,"TB13",6,"PSME",2,0,0,0,0,NA
-2020,"TO04",1,"TSHE",40,32,28,2,31,NA
-2020,"TO04",1,"THPL",46,1,4,2,0,NA
-2020,"TO04",3,"TSHE",51,9,34,47,20,NA
-2020,"TO04",3,"THPL",22,39,10,15,0,NA
-2020,"TO04",3,"PSME",0,0,0,1,0,NA
-2020,"TO04",4,"TSHE",58,8,7,27,3,"issue in identification: #2 unidentified species"
-2020,"TO04",4,"THPL",67,0,22,25,0,NA
-2020,"TO04",5,"TSHE",93,27,4,6,2,NA
-2020,"TO04",5,"THPL",141,4,24,26,0,NA
-2020,"TO04",5,"PSME",2,2,0,0,0,NA
-2020,"TO04",5,"ABPR",1,0,0,0,0,NA
-2020,"TO04",5,"PICO",6,14,0,0,0,"Species not expected for this stand"
-2020,"TO04",6,"PICO",0,1,0,0,0,"Species not expected for this stand"
-2020,"TO04",6,"TSHE",43,6,1,2,0,NA
-2020,"TO04",6,"PSME",4,1,0,0,0,NA
-2020,"TO04",6,"THPL",96,2,42,26,0,NA
-2020,"TO11",1,"TSHE",44,65,9,4,11,NA
-2020,"TO11",1,"PSME",5,2,0,0,0,NA
-2020,"TO11",1,"THPL",4,0,0,0,0,NA
-2020,"TO11",2,"TSHE",50,70,11,10,11,NA
-2020,"TO11",2,"THPL",1,2,0,0,0,NA
-2020,"TO11",2,"PSME",6,4,0,0,0,NA
-2020,"TO11",3,"TSHE",50,48,37,51,30,NA
-2020,"TO11",3,"PSME",9,1,0,0,0,NA
-2020,"TO11",3,"THPL",5,0,0,0,0,NA
-2020,"TO11",4,"TSHE",28,52,21,0,0,NA
-2020,"TO11",4,"PSME",4,1,0,0,0,NA
-2020,"TO11",4,"THPL",1,0,0,0,0,NA
-2020,"TO11",5,"TSHE",122,181,32,7,9,NA
-2020,"TO11",5,"THPL",5,0,0,0,0,NA
-2020,"TO11",5,"PSME",8,6,0,0,0,NA
-2020,"TO11",6,"PSME",5,2,1,9,8,NA
-2020,"TO11",6,"TSHE",32,17,8,2,0,NA
-2020,"TO11",6,"ABAM",1,0,0,0,0,NA
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+2020,"AB08",1,"TSHE",26,4,7,2,0,2,NA
+2020,"AB08",1,"THPL",3,0,0,0,0,0,NA
+2020,"AB08",1,"PSME",1,0,0,0,0,0,NA
+2020,"AB08",2,"THPL",2,3,0,0,0,0,NA
+2020,"AB08",2,"TSHE",32,10,10,4,0,4,NA
+2020,"AB08",3,"TSHE",21,1,6,1,0,1,NA
+2020,"AB08",5,"TSHE",24,0,13,2,0,2,NA
+2020,"AB08",6,"TSHE",16,6,31,0,0,0,NA
+2020,"AB08",6,"THPL",5,0,2,11,0,11,NA
+2020,"AB08",6,"TSME",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"AE10",1,"ABPR",3,0,0,0,0,0,NA
+2020,"AE10",1,"ABAM",0,2,0,0,0,0,NA
+2020,"AE10",2,"CANO",6,0,0,0,0,0,"Species not expected for this stand"
+2020,"AE10",2,"TSME",1,1,0,0,0,0,NA
+2020,"AE10",2,"ABAM",2,1,0,0,0,0,NA
+2020,"AE10",3,"CANO",7,0,0,0,0,0,"Species not expected for this stand"
+2020,"AE10",3,"ABAM",0,2,0,0,0,0,NA
+2020,"AE10",3,"ABLA",0,2,0,0,0,0,NA
+2020,"AE10",4,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"AE10",4,"ABPR",2,0,0,0,0,0,NA
+2020,"AE10",5,"TSME",3,0,0,0,0,0,NA
+2020,"AE10",5,"ABAM",3,7,0,0,0,0,NA
+2020,"AE10",6,"TSME",3,1,0,0,0,0,NA
+2020,"AG05",1,"THPL",20,0,4,10,0,10,NA
+2020,"AG05",1,"PSME",2,1,0,0,0,0,NA
+2020,"AG05",1,"TSHE",2,3,0,0,0,0,NA
+2020,"AG05",2,"THPL",10,12,5,9,31,40,NA
+2020,"AG05",2,"TSHE",6,3,0,0,0,0,NA
+2020,"AG05",2,"PSME",2,2,0,0,0,0,NA
+2020,"AG05",3,"THPL",26,0,8,23,6,29,NA
+2020,"AG05",3,"TSHE",1,1,3,0,0,0,NA
+2020,"AG05",3,"PSME",0,2,0,0,0,0,NA
+2020,"AG05",3,"ABAM",0,1,0,0,0,0,NA
+2020,"AG05",4,"TSHE",6,1,1,0,8,8,NA
+2020,"AG05",4,"THPL",43,6,15,23,5,28,NA
+2020,"AG05",4,"PSME",4,2,0,0,0,0,NA
+2020,"AG05",4,"ABAM",2,0,0,0,0,0,NA
+2020,"AG05",5,"PSME",2,0,1,0,0,0,NA
+2020,"AG05",5,"THPL",64,0,54,122,26,148,NA
+2020,"AG05",5,"ABAM",1,2,0,0,0,0,NA
+2020,"AG05",5,"TABR",1,0,0,0,0,0,NA
+2020,"AG05",6,"THPL",22,0,14,61,0,61,NA
+2020,"AG05",6,"PSME",4,4,3,3,1,4,NA
+2020,"AG05",6,"TSHE",6,0,1,0,0,0,NA
+2020,"AG05",6,"ABAM",1,2,0,0,0,0,NA
+2020,"AM16",1,"TSME",34,0,0,0,0,0,"Species not expected for this stand"
+2020,"AM16",1,"CANO",2,3,0,0,0,0,"Species not expected for this stand"
+2020,"AM16",1,"TSHE",4,19,0,0,0,0,NA
+2020,"AM16",2,"TSME",39,6,0,0,0,0,"Species not expected for this stand"
+2020,"AM16",2,"CANO",6,0,2,0,0,0,"Species not expected for this stand"
+2020,"AM16",3,"TSME",2,25,0,0,0,0,"Species not expected for this stand"
+2020,"AM16",3,"TSHE",12,4,0,0,0,0,NA
+2020,"AM16",4,"TSME",26,2,4,12,1,13,"Species not expected for this stand"
+2020,"AM16",6,"CANO",9,0,23,2,0,2,"Species not expected for this stand"
+2020,"AM16",6,"TSME",30,2,0,0,0,0,"Species not expected for this stand"
+2020,"AM16",6,"ABAM",0,1,0,0,0,0,NA
+2020,"AO03",1,"THPL",6,22,32,45,50,95,"issue in field: seed trap found on side"
+2020,"AO03",1,"TSHE",10,6,12,3,2,5,NA
+2020,"AO03",2,"PSME",0,6,0,0,0,0,NA
+2020,"AO03",2,"TSHE",14,17,9,1,0,1,NA
+2020,"AO03",2,"THPL",76,0,65,178,0,178,NA
+2020,"AO03",2,"ABAM",1,1,0,0,0,0,NA
+2020,"AO03",3,"THPL",84,0,85,233,31,264,NA
+2020,"AO03",3,"TSHE",46,15,51,6,6,12,NA
+2020,"AO03",3,"ABAM",1,0,0,0,0,0,NA
+2020,"AO03",3,"PSME",3,2,0,0,0,0,NA
+2020,"AO03",4,"THPL",360,249,54,76,164,240,NA
+2020,"AO03",4,"TSHE",179,45,13,17,6,23,NA
+2020,"AO03",4,"PSME",69,50,7,0,0,0,NA
+2020,"AO03",5,"TSHE",20,4,13,0,0,0,NA
+2020,"AO03",5,"PSME",3,3,5,4,4,8,NA
+2020,"AO03",5,"THPL",167,0,18,17,0,17,NA
+2020,"AO03",6,"THPL",28,85,7,19,10,29,NA
+2020,"AO03",6,"TSHE",17,4,3,1,0,1,NA
+2020,"AO03",6,"PSME",10,2,9,39,37,76,NA
+2020,"AR07",1,"CANO",3,0,5,9,0,9,"Species not expected for this stand"
+2020,"AR07",1,"ABAM",0,1,0,0,0,0,NA
+2020,"AR07",1,"TSME",18,1,19,49,29,78,"Species not expected for this stand"
+2020,"AR07",2,"TSME",2,1,1,2,0,2,"Species not expected for this stand"
+2020,"AR07",2,"CANO",2,0,18,16,0,16,"Species not expected for this stand"
+2020,"AR07",3,"TSME",13,3,0,0,0,0,"Species not expected for this stand"
+2020,"AR07",3,"CANO",6,0,9,1,0,1,"Species not expected for this stand"
+2020,"AR07",4,"TSME",19,0,1,1,2,3,"Species not expected for this stand"
+2020,"AR07",4,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"AR07",5,"ABPR",0,2,0,0,0,0,"Species not expected for this stand"
+2020,"AR07",5,"TSME",13,10,0,0,0,0,"Species not expected for this stand"
+2020,"AR07",5,"CANO",2,0,0,0,0,0,"Species not expected for this stand"
+2020,"AR07",6,"CANO",0,0,1,0,0,0,"Species not expected for this stand"
+2020,"AR07",6,"TSME",20,1,0,0,0,0,"Species not expected for this stand"
+2020,"AV02",1,"TSHE",20,16,5,0,4,4,NA
+2020,"AV02",1,"THPL",3,0,0,0,0,0,NA
+2020,"AV02",1,"PSME",1,0,0,0,0,0,NA
+2020,"AV02",2,"TSHE",45,7,12,8,2,10,NA
+2020,"AV02",2,"ABAM",2,0,0,0,0,0,NA
+2020,"AV02",2,"THPL",1,0,0,0,0,0,NA
+2020,"AV02",3,"TSHE",17,36,8,0,0,0,NA
+2020,"AV02",3,"THPL",1,0,0,0,0,0,NA
+2020,"AV02",3,"ABAM",4,3,0,0,0,0,NA
+2020,"AV02",4,"TSHE",48,17,19,21,6,27,NA
+2020,"AV02",4,"THPL",2,0,0,0,0,0,NA
+2020,"AV02",5,"ABAM",2,1,0,0,0,0,NA
+2020,"AV02",5,"THPL",2,0,0,0,0,0,NA
+2020,"AV02",5,"PSME",0,2,0,0,0,0,NA
+2020,"AV02",5,"TSHE",45,33,7,1,0,1,NA
+2020,"AV02",6,"THPL",5,0,0,0,0,0,NA
+2020,"AV02",6,"TSHE",40,50,3,0,2,2,NA
+2020,"AV02",6,"ABAM",4,5,0,0,0,0,NA
+2020,"AV02",6,"PSME",2,1,0,0,0,0,NA
+2020,"AV06",1,"TSHE",7,4,2,0,0,0,NA
+2020,"AV06",2,"PSME",1,1,0,0,0,0,NA
+2020,"AV06",2,"TSHE",13,17,37,0,0,0,NA
+2020,"AV06",3,"TSHE",3,11,24,0,0,0,NA
+2020,"AV06",3,"ABAM",1,0,0,0,0,0,NA
+2020,"AV06",4,"TSHE",7,5,8,3,0,3,NA
+2020,"AV06",4,"PSME",0,2,0,0,0,0,NA
+2020,"AV06",4,"ABAM",1,0,0,0,0,0,NA
+2020,"AV06",5,"ABAM",1,2,0,0,0,0,NA
+2020,"AV06",5,"TSHE",10,15,0,0,0,0,NA
+2020,"AV06",5,"PSME",0,1,0,0,0,0,NA
+2020,"AV06",6,"TSHE",5,1,0,0,0,0,NA
+2020,"AV06",6,"ABAM",2,1,0,0,0,0,NA
+2020,"AV14",1,"ABAM",1,0,0,0,0,0,NA
+2020,"AV14",1,"TSHE",171,17,14,20,6,26,NA
+2020,"AV14",2,"TSHE",199,23,20,0,0,0,NA
+2020,"AV14",2,"THPL",1,0,0,0,0,0,NA
+2020,"AV14",2,"CANO",0,1,0,0,0,0,"Species not expected for this stand"
+2020,"AV14",2,"ABAM",0,1,0,0,0,0,NA
+2020,"AV14",3,"TSHE",79,7,336,27,360,387,"lab note: Random pick of 4x25 cones scaled up to 336 cones"
+2020,"AV14",4,"TSHE",52,14,168,15,11,26,"issue in lab: cone debris mixed with duff"
+2020,"AV14",4,"ABAM",1,0,0,0,0,0,"issue in lab: cone debris mixed with duff"
+2020,"AV14",4,"CANO",0,1,0,0,0,0,"Species not expected for this stand; Issue in lab: Cone debris mixed with duff"
+2020,"AV14",5,"TSHE",39,0,87,0,0,0,NA
+2020,"AV14",6,"TSHE",85,9,69,5,0,5,NA
+2020,"AX15",1,"THPL",12,4,22,46,29,75,NA
+2020,"AX15",1,"TSHE",38,5,6,3,2,5,NA
+2020,"AX15",2,"THPL",2,0,7,12,0,12,NA
+2020,"AX15",2,"TSHE",20,6,4,0,0,0,NA
+2020,"AX15",3,"TSHE",3,0,1,0,0,0,NA
+2020,"AX15",3,"THPL",2,0,0,0,0,0,NA
+2020,"AX15",3,"TSME",6,2,0,0,0,0,"Species not expected for this stand"
+2020,"AX15",4,"TSHE",15,3,3,2,3,5,NA
+2020,"AX15",4,"THPL",1,0,0,0,0,0,NA
+2020,"AX15",5,"TSHE",17,3,4,0,0,0,NA
+2020,"AX15",6,"TSHE",27,8,3,2,0,2,NA
+2020,"PARA",1,"TSME",17,3,0,0,0,0,NA
+2020,"PARA",1,"ABAM",2,0,0,0,0,0,NA
+2020,"PARA",2,"ABLA",0,2,0,0,0,0,NA
+2020,"PARA",2,"TSME",14,2,0,0,0,0,NA
+2020,"PARA",2,"PICO",1,0,0,0,0,0,NA
+2020,"PARA",2,"CANO",0,1,0,0,0,0,NA
+2020,"PARA",3,"TSME",21,0,3,9,7,16,NA
+2020,"PARA",3,"ABAM",1,0,0,0,0,0,NA
+2020,"PARA",4,"TSME",26,3,0,0,0,0,NA
+2020,"PARA",4,"ABAM",1,0,0,0,0,0,NA
+2020,"PARA",5,"TSME",10,3,1,0,0,0,NA
+2020,"PARA",6,"TSME",9,0,5,2,1,3,NA
+2020,"PP17",1,"CANO",0,3,0,0,0,0,"Species not expected for this stand"
+2020,"PP17",1,"PSME",8,8,0,0,0,0,NA
+2020,"PP17",2,"PSME",4,1,0,0,0,0,NA
+2020,"PP17",2,"CANO",0,1,0,0,0,0,"Species not expected for this stand"
+2020,"PP17",2,"TSHE",1,0,0,0,0,0,NA
+2020,"PP17",2,"PICO",0,0,4,0,0,0,NA
+2020,"PP17",3,"CANO",4,0,0,0,0,0,"Species not expected for this stand"
+2020,"PP17",3,"PSME",1,0,0,0,0,0,NA
+2020,"PP17",3,"TSME",0,1,0,0,0,0,NA
+2020,"PP17",4,"TSME",1,0,0,0,0,0,NA
+2020,"PP17",4,"TSHE",4,0,0,0,0,0,NA
+2020,"PP17",4,"PICO",3,0,0,0,0,0,"issue in identification: unsure species ID (PICO/PSME)"
+2020,"PP17",5,"PSME",2,1,2,0,0,0,NA
+2020,"PP17",6,"TSHE",1,0,0,0,0,0,NA
+2020,"PP17",6,"PSME",7,5,0,0,0,0,NA
+2020,"PP17",6,"THPL",1,0,0,0,0,0,NA
+2020,"SPRY",1,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"SPRY",1,"TSME",2,0,0,0,0,0,NA
+2020,"SPRY",2,"TSME",6,0,0,0,0,0,NA
+2020,"SPRY",3,"CANO",0,0,3,12,0,12,"Species not expected for this stand"
+2020,"SPRY",3,"PSME",2,1,0,0,0,0,"Species not expected for this stand"
+2020,"SPRY",3,"TSME",1,0,0,0,0,0,NA
+2020,"SPRY",4,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"SPRY",4,"TSME",3,0,0,0,0,0,NA
+2020,"SPRY",5,"CANO",1,0,1,0,0,0,"Species not expected for this stand"
+2020,"SPRY",5,"TSME",4,0,0,0,0,0,NA
+2020,"SPRY",6,"CANO",0,3,7,0,9,9,"Species not expected for this stand"
+2020,"SPRY",6,"TSME",2,1,0,0,0,0,NA
+2020,"SUNR",1,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"SUNR",1,"TSME",3,0,1,7,3,10,NA
+2020,"SUNR",1,"ABAM",0,1,0,0,0,0,NA
+2020,"SUNR",2,"TSME",2,0,0,0,0,0,NA
+2020,"SUNR",2,"CANO",0,0,9,1,0,1,"Species not expected for this stand"
+2020,"SUNR",3,"CANO",2,0,9,0,0,0,"Species not expected for this stand"
+2020,"SUNR",3,"ABAM",1,0,0,0,0,0,NA
+2020,"SUNR",3,"TSME",4,1,0,0,0,0,NA
+2020,"SUNR",4,"CANO",9,0,10,2,0,2,"Species not expected for this stand"
+2020,"SUNR",4,"TSME",2,0,0,0,0,0,NA
+2020,"SUNR",5,"CANO",6,1,6,0,0,0,"Species not expected for this stand"
+2020,"SUNR",5,"ABLA",0,2,0,0,0,0,"Species not expected for this stand"
+2020,"SUNR",5,"ABAM",0,2,0,0,0,0,NA
+2020,"SUNR",5,"TSHE",3,0,0,0,0,0,NA
+2020,"SUNR",6,"TSME",1,0,0,0,0,0,NA
+2020,"SUNR",6,"CANO",1,0,0,0,0,0,"Species not expected for this stand"
+2020,"TA01",1,"PSME",0,0,3,3,0,3,NA
+2020,"TA01",1,"THPL",1,0,0,0,0,0,NA
+2020,"TA01",1,"TSHE",1,0,0,0,0,0,NA
+2020,"TA01",2,"PSME",1,0,0,0,0,0,NA
+2020,"TA01",2,"TSHE",4,0,0,0,0,0,NA
+2020,"TA01",3,"THPL",3,0,0,0,0,0,NA
+2020,"TA01",3,"PSME",3,0,0,0,0,0,NA
+2020,"TA01",3,"CANO",1,0,0,0,0,0,NA
+2020,"TA01",3,"TSHE",2,0,0,0,0,0,NA
+2020,"TA01",4,"TSHE",4,2,0,0,0,0,NA
+2020,"TA01",4,"PSME",3,0,0,0,0,0,NA
+2020,"TA01",4,"THPL",4,0,0,0,0,0,NA
+2020,"TA01",5,"TSHE",2,0,0,0,0,0,NA
+2020,"TA01",5,"PSME",2,3,0,0,0,0,NA
+2020,"TA01",5,"THPL",2,0,0,0,0,0,NA
+2020,"TA01",6,"TSHE",2,0,1,0,0,0,NA
+2020,"TA01",6,"PSME",1,0,0,0,0,0,NA
+2020,"TB13",1,"TSHE",7,0,11,4,0,4,NA
+2020,"TB13",1,"THPL",1,0,0,0,0,0,NA
+2020,"TB13",1,"PSME",2,3,0,0,0,0,NA
+2020,"TB13",1,"ABAM",1,0,0,0,0,0,NA
+2020,"TB13",2,"THPL",1,0,0,0,0,0,"lab note: #1 cone is very small"
+2020,"TB13",2,"TSHE",8,11,6,0,1,1,NA
+2020,"TB13",2,"PSME",1,0,0,2,4,6,NA
+2020,"TB13",3,"THPL",5,0,2,8,0,8,NA
+2020,"TB13",3,"TSHE",13,3,9,2,0,2,NA
+2020,"TB13",3,"PSME",0,3,0,0,0,0,NA
+2020,"TB13",4,"THPL",2,1,1,4,5,9,NA
+2020,"TB13",4,"PSME",2,1,2,76,7,83,NA
+2020,"TB13",4,"TSHE",13,7,12,0,7,7,NA
+2020,"TB13",5,"TSHE",16,28,9,0,25,25,NA
+2020,"TB13",5,"THPL",4,0,4,20,0,20,NA
+2020,"TB13",5,"PSME",0,4,0,0,0,0,NA
+2020,"TB13",6,"TSHE",9,6,30,108,14,122,NA
+2020,"TB13",6,"THPL",0,0,13,32,13,45,NA
+2020,"TB13",6,"PSME",2,0,0,0,0,0,NA
+2020,"TO04",1,"TSHE",40,32,28,2,31,33,NA
+2020,"TO04",1,"THPL",46,1,4,2,0,2,NA
+2020,"TO04",3,"TSHE",51,9,34,47,20,67,NA
+2020,"TO04",3,"THPL",22,39,10,15,0,15,NA
+2020,"TO04",3,"PSME",0,0,0,1,0,1,NA
+2020,"TO04",4,"TSHE",58,8,7,27,3,30,"issue in identification: #2 unidentified species"
+2020,"TO04",4,"THPL",67,0,22,25,0,25,NA
+2020,"TO04",5,"TSHE",93,27,4,6,2,8,NA
+2020,"TO04",5,"THPL",141,4,24,26,0,26,NA
+2020,"TO04",5,"PSME",2,2,0,0,0,0,NA
+2020,"TO04",5,"ABPR",1,0,0,0,0,0,NA
+2020,"TO04",5,"PICO",6,14,0,0,0,0,"Species not expected for this stand"
+2020,"TO04",6,"PICO",0,1,0,0,0,0,"Species not expected for this stand"
+2020,"TO04",6,"TSHE",43,6,1,2,0,2,NA
+2020,"TO04",6,"PSME",4,1,0,0,0,0,NA
+2020,"TO04",6,"THPL",96,2,42,26,0,26,NA
+2020,"TO11",1,"TSHE",44,65,9,4,11,15,NA
+2020,"TO11",1,"PSME",5,2,0,0,0,0,NA
+2020,"TO11",1,"THPL",4,0,0,0,0,0,NA
+2020,"TO11",2,"TSHE",50,70,11,10,11,21,NA
+2020,"TO11",2,"THPL",1,2,0,0,0,0,NA
+2020,"TO11",2,"PSME",6,4,0,0,0,0,NA
+2020,"TO11",3,"TSHE",50,48,37,51,30,81,NA
+2020,"TO11",3,"PSME",9,1,0,0,0,0,NA
+2020,"TO11",3,"THPL",5,0,0,0,0,0,NA
+2020,"TO11",4,"TSHE",28,52,21,0,0,0,NA
+2020,"TO11",4,"PSME",4,1,0,0,0,0,NA
+2020,"TO11",4,"THPL",1,0,0,0,0,0,NA
+2020,"TO11",5,"TSHE",122,181,32,7,9,16,NA
+2020,"TO11",5,"THPL",5,0,0,0,0,0,NA
+2020,"TO11",5,"PSME",8,6,0,0,0,0,NA
+2020,"TO11",6,"PSME",5,2,1,9,8,17,NA
+2020,"TO11",6,"TSHE",32,17,8,2,0,2,NA
+2020,"TO11",6,"ABAM",1,0,0,0,0,0,NA
