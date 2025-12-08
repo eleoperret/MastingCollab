@@ -8,7 +8,7 @@ Year,Stand,Trapno,Species,Filled_seeds,Unfilled_seeds,Cones,FilledSeeds_Cones,Un
 2019,AB08,2,CANO,1,0,0,0,0,,
 2019,AB08,2,PSME,2,4,0,0,0,,
 2019,AB08,2,THPL,4,0,0,0,0,,
-2019,AB08,2,TSHE,745,39,6,15,,filled seeds in 3 vials,
+2019,AB08,2,TSHE,745,39,6,15,0,filled seeds in 3 vials,
 2019,AB08,3,ABAM,1,0,0,0,0,,
 2019,AB08,3,PSME,4,3,0,0,0,,
 2019,AB08,3,THPL,9,0,0,0,0,,
