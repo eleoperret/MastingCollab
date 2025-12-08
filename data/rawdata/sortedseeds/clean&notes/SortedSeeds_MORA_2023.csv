@@ -1,4 +1,4 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cones_sds_all","standardized_notes"
 2023,"AM16",9,"PSME",1,0,0,0,0,0,NA
 2023,"AM16",9,"ABAM",15,5,0,0,0,0,NA
 2023,"AB08",8,"TSHE",507,93,4,1,1,2,NA

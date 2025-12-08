@@ -1,4 +1,4 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cones_sds_all","standardized_notes"
 2022,"AG05",1,"THPL",95,131,0,0,0,0,"uncertain stand (need to be checked)"
 2022,"AG05",1,"PSME",58,8,0,0,0,0,NA
 2022,"AG05",1,"ABAM",0,3,0,0,0,0,NA

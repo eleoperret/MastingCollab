@@ -1,4 +1,4 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cones_sds_all","standardized_notes"
 2024,"AB08",7,"PSME",1,0,0,0,0,0,"Species not expected for this stand"
 2024,"AB08",7,"THPL",0,1,0,0,0,0,NA
 2024,"AB08",7,"TSHE",21,35,2,0,9,9,NA

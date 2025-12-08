@@ -1,4 +1,4 @@
-"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cone_sds_all","standardized_notes"
+"year","stand","trapno","spp","loose_sds_filled","loose_sds_unfilled","cones","cones_sds_filled","cones_sds_unfilled","cones_sds_all","standardized_notes"
 2021,"TO04",1,"PSME",1,0,0,0,0,0,NA
 2021,"TO04",1,"THPL",23,0,3,0,0,0,NA
 2021,"TO04",1,"TSHE",95,44,12,7,10,17,NA
