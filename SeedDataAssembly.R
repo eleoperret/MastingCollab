@@ -147,5 +147,8 @@ for(i in 1:length(allspp)){
   SeedData_all <- rbind(SeedData_all, tmpsppdat)
 }
 
-
+###To Do
+#NAs for cone filled and unfilled (years where not separated)
+#graph 1: for TSHE and ABAM (all stands, years)
+#graph 2: for TO04, AM16 (all species, all years)
 
