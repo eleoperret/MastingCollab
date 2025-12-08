@@ -235,7 +235,7 @@ write.csv(Raw2014data, file = paste(seed_path,"clean&notes/",
 ##2015 DATA
 Raw2015data <- read.csv(paste(seed_path,
                               "SortedSeeds_raw_MORA_2015.csv",sep=""), header=TRUE)
-hdr <- dimnames(Raw2014data)[[2]]
+hdr <- dimnames(Raw2015data)[[2]]
 hdr2 <- hdr
 hdr2[hdr=="Year"]<-"year"
 hdr2[hdr=="Stand"]<-"stand"
@@ -333,18 +333,28 @@ hdr2[hdr=="Year"]<-"year"
 hdr2[hdr=="Stand"]<-"stand"
 hdr2[hdr=="Trapno"]<-"trapno"
 hdr2[hdr=="Species"]<-"spp"
-hdr2[hdr=="Whole_seeds"]<-"loose_sds_filled"
+hdr2[hdr=="Filled_seeds"]<-"loose_sds_filled"
 hdr2[hdr=="Unfilled_seeds"]<-"loose_sds_unfilled"
 hdr2[hdr=="Cones"]<-"cones"
-hdr2[hdr=="WholeSeeds_Cones"]<-"cones_sds_filled"
+hdr2[hdr=="FilledSeeds_Cones"]<-"cones_sds_filled"
 hdr2[hdr=="UnfilledSeeds_Cones"]<-"cones_sds_unfilled"
 hdr2[hdr=="SeedsInCones"]<-"cones_sds_all"
-hdr2[hdr=="Notes"]<-"standardized_notes"
+hdr2[hdr=="Field.Notes"]<-"standardized_notes"
 dimnames(Raw2018data)[[2]] <- c(hdr2)
+
+#rm data entry notes (no entries)
+Raw2018data <- Raw2018data[,-(which(hdr2=="Data.Entry.Notes"))]
 
 #Remove row with MISSING in species
 rmrow <- which(is.na(Raw2018data$spp)==TRUE) #remove NA species- means 0 seeds
 Raw2018data <- Raw2018data[-rmrow,]
+
+#create cone seeds filled
+cone_sds_all <- Raw2018data$cones_sds_filled + Raw2018data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2018data <- cbind(Raw2018data, cone_sds_all) #add column
+Raw2018data <- Raw2018data[,c(1:9,11,10)]
 
 ##now write out
 write.csv(Raw2018data, file = paste(seed_path,"clean&notes/",
@@ -361,17 +371,27 @@ hdr2[hdr=="Year"]<-"year"
 hdr2[hdr=="Stand"]<-"stand"
 hdr2[hdr=="Trapno"]<-"trapno"
 hdr2[hdr=="Species"]<-"spp"
-hdr2[hdr=="Whole_seeds"]<-"loose_sds_filled"
+hdr2[hdr=="Filled_seeds"]<-"loose_sds_filled"
 hdr2[hdr=="Unfilled_seeds"]<-"loose_sds_unfilled"
 hdr2[hdr=="Cones"]<-"cones"
-hdr2[hdr=="WholeSeeds_Cones"]<-"cones_sds_filled"
+hdr2[hdr=="FilledSeeds_Cones"]<-"cones_sds_filled"
 hdr2[hdr=="UnfilledSeeds_Cones"]<-"cones_sds_unfilled"
 hdr2[hdr=="SeedsInCones"]<-"cones_sds_all"
-hdr2[hdr=="Notes"]<-"standardized_notes"
+hdr2[hdr=="Field.Notes"]<-"standardized_notes"
 dimnames(Raw2019data)[[2]] <- c(hdr2)
+
+#rm data entry notes (no entries)
+Raw2019data <- Raw2019data[,-(which(hdr2=="Data.Entry.Notes"))]
 
 #Change ALSI, Alnus sitchensis, to ALVI
 Raw2019data$spp[Raw2019data$spp[]=="ALSI"] <- "ALVI"
+
+#create cone seeds filled
+cone_sds_all <- Raw2019data$cones_sds_filled + Raw2019data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2019data <- cbind(Raw2019data, cone_sds_all) #add column
+Raw2019data <- Raw2019data[,c(1:9,11,10)]
 
 ##now write out
 write.csv(Raw2019data, file = paste(seed_path,"clean&notes/",
@@ -397,6 +417,13 @@ Raw2020data$spp[Raw2020data$spp[]=="Taxus brevifolia"] <- "TABR"
 Raw2020data$spp[Raw2020data$spp[]=="Thuja plicata"] <- "THPL"
 Raw2020data$spp[Raw2020data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2020data$spp[Raw2020data$spp[]=="Tsuga mertensiana"] <- "TSME"
+
+#create cone seeds filled
+cone_sds_all <- Raw2020data$cones_sds_filled + Raw2020data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2020data <- cbind(Raw2020data, cone_sds_all) #add column
+Raw2020data <- Raw2020data[,c(1:9,11,10)]
 
 ##now write out
 write.csv(Raw2020data, file = paste(seed_path,"clean&notes/",
@@ -448,6 +475,13 @@ Raw2021data$spp[Raw2021data$spp[]=="Taxus brevifolia"] <- "TABR"
 Raw2021data$spp[Raw2021data$spp[]=="Thuja plicata"] <- "THPL"
 Raw2021data$spp[Raw2021data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2021data$spp[Raw2021data$spp[]=="Tsuga mertensiana"] <- "TSME"
+
+#create cone seeds filled
+cone_sds_all <- Raw2021data$cones_sds_filled + Raw2021data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2021data <- cbind(Raw2021data, cone_sds_all) #add column
+Raw2021data <- Raw2021data[,c(1:9,11,10)]
 
 ##now write out
 write.csv(Raw2021data, file = paste(seed_path,"clean&notes/",
@@ -501,6 +535,13 @@ Raw2022data$spp[Raw2022data$spp[]=="Thuja plicata"] <- "THPL"
 Raw2022data$spp[Raw2022data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2022data$spp[Raw2022data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
+#create cone seeds filled
+cone_sds_all <- Raw2022data$cones_sds_filled + Raw2022data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2022data <- cbind(Raw2022data, cone_sds_all) #add column
+Raw2022data <- Raw2022data[,c(1:9,11,10)]
+
 ##now write out
 write.csv(Raw2022data, file = paste(seed_path,"clean&notes/",
                                     "SortedSeeds_MORA_2022.csv", sep=""), 
@@ -531,6 +572,13 @@ Raw2023data$spp[Raw2023data$spp[]=="Thuja plicata"] <- "THPL"
 Raw2023data$spp[Raw2023data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2023data$spp[Raw2023data$spp[]=="Tsuga mertensiana"] <- "TSME"
 
+#create cone seeds filled
+cone_sds_all <- Raw2023data$cones_sds_filled + Raw2023data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2023data <- cbind(Raw2023data, cone_sds_all) #add column
+Raw2023data <- Raw2023data[,c(1:9,11,10)]
+
 ##now write out
 write.csv(Raw2023data, file = paste(seed_path,"clean&notes/",
                                     "SortedSeeds_MORA_2023.csv", sep=""), 
@@ -546,7 +594,6 @@ Raw2024data <- Raw2024data[,-(which(hdr=="country"))]
 #remove Mistletoe
 rmrow <- which(Raw2024data$spp=="Mistletoe") #remove this species
 Raw2024data <- Raw2024data[-rmrow,]
-
 
 #now change species to codes
 Raw2024data$spp[Raw2024data$spp[]=="Abies amabalis"] <- "ABAM"
@@ -566,6 +613,13 @@ Raw2024data$spp[Raw2024data$spp[]=="Taxus brevifolia"] <- "TABR"
 Raw2024data$spp[Raw2024data$spp[]=="Thuja plicata"] <- "THPL"
 Raw2024data$spp[Raw2024data$spp[]=="Tsuga heterophylla"] <- "TSHE"
 Raw2024data$spp[Raw2024data$spp[]=="Tsuga mertensiana"] <- "TSME"
+
+#create cone seeds filled
+cone_sds_all <- Raw2024data$cones_sds_filled + Raw2024data$cones_sds_unfilled
+
+#add cone seeds filled to data frame
+Raw2024data <- cbind(Raw2024data, cone_sds_all) #add column
+Raw2024data <- Raw2024data[,c(1:9,11,10)]
 
 ##now write out
 write.csv(Raw2024data, file = paste(seed_path,"clean&notes/",
