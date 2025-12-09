@@ -121,6 +121,10 @@ for(i in 1:length(allspp)){
   tmpsppdat <- cbind(tmpsize, spid, zeroes)
   dimnames(tmpsppdat)[[2]] <- hdr1
   
+  #replace zeroes with NAs for cone seeds filled and unfilled from 2009-2012
+  tmpsppdat$cones_sds_filled <- replace(tmpsppdat$cones_sds_filled, tmpsppdat$year<2013,NA)
+  tmpsppdat$cones_sds_unfilled <- replace(tmpsppdat$cones_sds_filled, tmpsppdat$year<2013,NA)
+  
   #extract species specific seed data, germination data
   tmpseed <- SortedSeeds_all[SortedSeeds_all$spp==allspp[i],]
 
@@ -150,7 +154,10 @@ for(i in 1:length(allspp)){
 ##Sorted seeds plus germinants
 total_viable_sds <- SeedData_all$loose_sds_filled + SeedData_all$germintrap
 mean(total_viable_sds)
-SeedData_all <- Cbind(SeedData_all, total_viable_sds)
+SeedData_all <- cbind(SeedData_all, total_viable_sds)
+
+#Write data
+
 
 #Create year and stand and species specific means
 SeedMeans <- tapply(total_viable_sds, list(as.factor(SeedData_all$spp), 
