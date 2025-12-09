@@ -157,7 +157,8 @@ mean(total_viable_sds)
 SeedData_all <- cbind(SeedData_all, total_viable_sds)
 
 #Write data
-
+write.csv(SeedData_all, file = "SeedData_all.csv", 
+          row.names=FALSE, col.names=TRUE)
 
 #Create year and stand and species specific means
 SeedMeans <- tapply(total_viable_sds, list(as.factor(SeedData_all$spp), 
@@ -238,7 +239,4 @@ legend(x="topleft", c("ABAM", "CANO", "TSHE", "TSME"),
        cex=0.65, pch=21, pt.bg=pltcols, horiz=TRUE, pt.cex = 1.15) 
 
 
-###To Do
-#NAs for cone filled and unfilled (years where not separated)
-#read out data
 
