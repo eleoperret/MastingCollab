@@ -37,7 +37,7 @@ for(i in 1:length(seed_files)){
 #Combine all germinant files
 TrapGerms_all <- c()
 
-for(i in 1:length(seed_files)){
+for(i in 1:length(germ_files)){
   tmpgerm <- read.csv(paste(germ_path,germ_files[i],sep=""), header=TRUE)
   TrapGerms_all <- rbind(TrapGerms_all, tmpgerm)
 }
@@ -147,8 +147,91 @@ for(i in 1:length(allspp)){
   SeedData_all <- rbind(SeedData_all, tmpsppdat)
 }
 
+##Sorted seeds plus germinants
+total_viable_sds <- SeedData_all$loose_sds_filled + SeedData_all$germintrap
+mean(total_viable_sds)
+SeedData_all <- Cbind(SeedData_all, total_viable_sds)
+
+#Create year and stand and species specific means
+SeedMeans <- tapply(total_viable_sds, list(as.factor(SeedData_all$spp), 
+                                        as.factor(SeedData_all$stand),
+                                        as.factor(SeedData_all$year)), FUN=mean)
+
+#make graphs
+par(mfrow=c(2,1), omi=c(0.2,0.2,0.2,0.2), mai=c(0.4,0.4,0.4,0.3), 
+    mgp=c(1.25,0.3,0), xpd=FALSE, tck=-0.01)
+
+#Abam
+Abamseeds <- SeedMeans[1,,] + 0.08
+mx <- max(Abamseeds, na.rm=TRUE)*1.05
+yrs <- as.numeric(dimnames(Abamseeds)[[2]])
+
+plot(yrs, Abamseeds[1,], xlim=c(2008.5,2024.5), ylim=c(0.08, mx), type="b",
+     pch=21, bg="lightgreen", log="y", ylab="Log(seeds)", xlab="")
+
+for(i in 2:dim(Abamseeds)[1]){
+  lines(yrs, Abamseeds[i,])  
+  points(yrs, Abamseeds[i,], pch=21, bg="lightgreen")
+}
+title("ABAM")
+
+#Tshe
+Tsheseeds <- SeedMeans[16,,] + 0.08
+mx <- max(Tsheseeds, na.rm=TRUE)*1.05
+yrs <- as.numeric(dimnames(Tsheseeds)[[2]])
+
+plot(yrs, Tsheseeds[1,], xlim=c(2008.5,2024.5), ylim=c(0.08, mx), type="b",
+     pch=21, bg="tan", log="y", ylab="Log(seeds)", xlab="")
+
+for(i in 2:dim(Tsheseeds)[1]){
+  lines(yrs, Tsheseeds[i,])  
+  points(yrs, Tsheseeds[i,], pch=21, bg="tan")
+}
+title("TSHE")
+
+##Stand Graphs - TO04, AM16
+#
+par(mfrow=c(2,1), omi=c(0.2,0.2,0.2,0.2), mai=c(0.4,0.4,0.4,0.3), 
+    mgp=c(1.25,0.3,0), xpd=FALSE, tck=-0.01)
+
+#TO04
+TO04seeds <- SeedMeans[c(1,13,15,16),17,] + 0.08
+mx <- max(TO04seeds, na.rm=TRUE)*1.5
+yrs <- as.numeric(dimnames(TO04seeds)[[2]])
+
+plot(yrs, TO04seeds[1,], xlim=c(2008.5,2024.5), ylim=c(0.08, mx), type="b",
+     pch=21, bg="lightgreen", log="y", ylab="Log(seeds)", xlab="")
+
+pltcols <- c("lightgreen", "darkgreen", "orange", "tan")
+
+for(i in 2:dim(TO04seeds)[1]){
+  lines(yrs, TO04seeds[i,])  
+  points(yrs, TO04seeds[i,], pch=21, bg=pltcols[i])
+}
+title("TO04")
+legend(x="topleft", c("ABAM", "PSME", "THPL", "TSHE"), 
+       cex=0.65, pch=21, pt.bg=pltcols, horiz=TRUE, pt.cex = 1.15)
+
+#AM16
+AM16seeds <- SeedMeans[c(1,8,16,17),4,] + 0.08
+mx <- max(AM16seeds, na.rm=TRUE)*2.5
+yrs <- as.numeric(dimnames(AM16seeds)[[2]])
+
+plot(yrs, AM16seeds[1,], xlim=c(2008.5,2024.5), ylim=c(0.08, mx), type="b",
+     pch=21, bg="lightgreen", log="y", ylab="Log(seeds)", xlab="")
+
+pltcols <- c("lightgreen", "lightblue", "tan", "plum")
+
+for(i in 2:dim(AM16seeds)[1]){
+  lines(yrs, AM16seeds[i,])  
+  points(yrs, AM16seeds[i,], pch=21, bg=pltcols[i])
+}
+title("AM16")
+legend(x="topleft", c("ABAM", "CANO", "TSHE", "TSME"), 
+       cex=0.65, pch=21, pt.bg=pltcols, horiz=TRUE, pt.cex = 1.15) 
+
+
 ###To Do
 #NAs for cone filled and unfilled (years where not separated)
-#graph 1: for TSHE and ABAM (all stands, years)
-#graph 2: for TO04, AM16 (all species, all years)
+#read out data
 
