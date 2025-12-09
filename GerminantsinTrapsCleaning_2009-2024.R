@@ -509,7 +509,7 @@ dimnames(Raw2020data)[[2]] <- hdr2
 Clean2020data <- Raw2020data[is.na(Raw2020data$spp)==FALSE,]
 
 #Write out file
-write.csv(Clean2019data, file = paste(germ_path,"clean&notes/",
+write.csv(Clean2020data, file = paste(germ_path,"clean&notes/",
           "Germinants_MORA_2020.csv", sep=""), 
           row.names=FALSE, col.names=TRUE)
 
