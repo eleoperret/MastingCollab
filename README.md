@@ -13,7 +13,8 @@ The folder called data has rawdata, and a few old cleaned versions of the data (
 
 Some additional notes and caveats about the data
 
-1. Sorted seed data: seeds from cones were counted from 2009-2012, and starting in 2013 (until today) sorted to filled and unfilled.
-2. Germinants in traps were counted only starting in 2010. There were some years / stands in the early years were datasheets are missing - likely this was because there were no germinants, but this is not clear. Some digging around in the field notes would help verify this. In general, I am assuming that if there is no datasheet there were no germinants in traps. This is for: the following stands / years: All stands collected 2009; PARA 2010, AM16, AR07, AV02, SPRY, PARA 2011, AR07, PARA, SUNR, TO11 2012. 
+1. Note trap size varied over the years
+2. Sorted seed data: seeds from cones were counted from 2009-2012, and starting in 2013 (until today) sorted to filled and unfilled.
+3. Germinants in traps were counted only starting in 2010. There were some years / stands in the early years were datasheets are missing - likely this was because there were no germinants, but this is not clear. Some digging around in the field notes would help verify this. In general, I am assuming that if there is no datasheet there were no germinants in traps. This is for: the following stands / years: All stands collected 2009; PARA 2010, AM16, AR07, AV02, SPRY, PARA 2011, AR07, PARA, SUNR, TO11 2012. 
    
 
