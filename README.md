@@ -18,6 +18,7 @@ The folder called data has a folder in it called rawdata, and a few old cleaned 
 - Trapsizes by year (files called TrapSize_2009.csv, TrapSize_2010.csv, etc).
 - StandTrapInventory files (one per year). This includes information on which traps, of the ones collected, are missing because the sample was lost or the seed trap was destroyed.
 - MORAtrapUTM.csv. This includes the X,Y locations of traps 1-6 (within the MORA PSP files), for the 15 stands that are PSP stands.
+- Note this folder also contains a file called Checkall.csv - this was created during the cleaning / assembly from the trapsize files and can be ignored.
   
 4. treedata. This includes information on trees in the 3 high elevation stands that are not PSP stands. In 2012 we surveyed the trees around the 6 traps at high elevation. This provides information on the likely trees providing seeds. The data is in an excel file and the protocol is in this folder - which should allow someone to create a .csv file.
    
