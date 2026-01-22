@@ -1,0 +1,120 @@
+% Research stay plan + Gantt chart for my research stay at UBC (Winter 2026). Eléonore Perret 
+% There is a lot of comments as it is my first offical latex document and I'm trying to learn with it. 
+
+\documentclass[11pt,a4paper]{article}  % Not sure if this is the best format but let's try
+
+% ------------------ Packages ------------------
+% Not sure also about all those packages. Need to check
+\usepackage[margin=2.5cm]{geometry} % Controls page layout with a margin of 2.5 cm
+\usepackage{graphicx} % For inserting images  or a figure into my document. Not sure it is necessary o
+\usepackage{booktabs} % apparently a package to make beautiful tables with proper spacing and rules  (Professional tables)
+\usepackage{hyperref} % can create clickable links in the pdf for example for the table of content or section or URLS. 
+\usepackage{enumitem} % gives me control about lists spacing and labels because latex waste a lot of vertical space by default
+\usepackage{xcolor} % to use colors
+\usepackage{tabularx} % to make the table go on the next line
+
+
+\usepackage{pgfgantt} % Gantt chart package
+\usepackage{setspace}  % COntorls the line spacing in my document. So now it is set at 1,5x normal height. 
+\onehalfspacing
+
+% ------------------ Title Info ------------------
+\title{Research Stay Plan and Timeline}
+\author{El\'eonore Perret}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% ------------------ Section: Overview ------------------
+\section{Research Stay Overview}
+
+\textbf{Host institution: UBC} \\
+\textbf{Supervisors: Prof. Elizabeth Wolkovich and PhD Victor Van de Meersch} \\
+\textbf{Goal: First draft of a joint paper on Masting at Mt. Rainier National Park} \\
+\textbf{Duration:} January -- March 2026 \\
+
+\vspace{0.5cm} % Adds vertical space (Like pressing Enter)
+
+\noindent % Forces it to align to the left margin (which otherwise would not be the case with the default mode)
+\textbf{General objective:}\\
+
+The objectives of this research stay are to : 1) Developp a model to measure synchrony of seed production at the species and stand level at Mt. Rainier National Park and 2) Developp a manuscript or a first draft for publication. 
+
+% ------------------ Section: Scientific Goals ------------------
+\section{Scientific Goals}
+
+\begin{enumerate}[label=\textbf{G\arabic*:}]
+    \item Implement a Bayesian model to quantify interspecific synchrony in seed production.
+    \item Quantify intraspecific synchrony across sites.
+    \item Evaluate temporal synchrony of total seed availability from a seed predator perspective.
+    \item Validate models, perform sensitivity analyses, and prepare figures for publication.
+\end{enumerate}
+
+% ------------------ Section: Output ------------------
+\section{Expected Output}
+
+\begin{itemize}
+    \item Cleaned dataset
+    \item Bayesian model code using Stan 
+    \item Summary figures and tables
+    \item Draft manuscript
+\end{itemize}
+
+% ------------------ Section: Weekly Planning ------------------
+\section{Potential Weekly Planning}
+% I have honestly not a clear idea of how much time each steps regarding the model take as I have never worked with those types of model. So this is tentitative and open to change :)
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Week} & \textbf{Main Activities} \\
+\midrule
+Week 1--2 & Data cleaning?, getting familiar with STAN, exploratory analysis, maybe with Victor's model? \\
+Week 3--4 & Model specification and prior testing + Lab retreat (potentially working already on the manuscript; Method and overall sections) \\
+Week 5--6 & Model fitting and diagnostics \\
+Week 7--8 & Interpretation and visualization \\
+Week 9--10 & Writing and synthesis \\
+Week 11--After & Wrapping up and more writing \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ------------------ Section: Gantt Chart ------------------
+\newpage
+\section{Timeline (Gantt Chart)}
+
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    x unit=2cm, %controls widht of each month slot
+    y unit title=0.6cm,
+    y unit chart=0.6cm,
+    bar height=0.6,
+    bar/.style={fill=blue!50},
+    milestone/.style={fill=red},
+]{1}{3}
+%Title row
+\gantttitle{Jan}{1}
+\gantttitle{Feb}{1}
+\gantttitle{Mar}{1} \\
+
+% Tasks
+\ganttbar{Data cleaning \& exploration}{1}{1} \\
+\ganttbar{Model formulation}{1}{2} \\
+\ganttbar{Bayesian model fitting}{2}{2} \\
+\ganttbar{Diagnostics \& validation}{2}{2} \\
+\ganttbar{Visualization \& interpretation}{2}{3} \\
+\ganttbar{Writing \& reporting}{3}{3} \\
+
+% Optional milestone
+\ganttbar{Final presentation / report}{3}{3}\\
+
+\end{ganttchart}
+
+% ------------------ Notes ------------------
+\section{Notes}
+
+Add risks, dependencies, meetings, or buffer time here.
+
+\end{document}
