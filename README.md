@@ -1,6 +1,11 @@
 # Masting, Seeds and Seedlings (Mt. Rainier)
 Mount Rainier Seed and seedling data
 
+22.01.2026. This is a copy of the Masting-1 Repo from the Janneke Hille Ris Lambers Group Lab at ETH for collaboration with the Temporal Ecology (Elizabeth Wolkovich) Group at UBC.
+I had to make a copy as I could not fork at make the repository public. 
+Please tell me if there are any changes or things that I should do on it. 
+I added Victor, Lizzie and Janneke on it and I hope that everything looks good :)
+
 Updated January 4, 2026
 
 This repo contains the seed data collected from 2009 - 2024. 
