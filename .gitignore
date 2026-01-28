@@ -5,7 +5,6 @@
 .Ruserdata
 .Rapp.history
 .DS_Store
-StartingWithStan.R
 *.aux
 *.log
 *.out
