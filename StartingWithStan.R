@@ -5,6 +5,10 @@
 ##I'm not sure what would be the next good approach
 ##Should I change my priors?
 #I tried changing my theta distribution, I tried changing alpha, I also change the likelihood function but nothing worked. So I will go back to the first one I did because I'm lost on what to do.
+#28.01.2026
+#Do I need to simulate differently? Like simulated with completely other data and priors matching my expectations without seing the data? Or what should I do ?
+#Clean coomments and explanation for .R and .stan 
+#Figure out next steps. 
 
 #Analysis on seed production for one specie over elevation (stand used as proxy)
 library(dplyr)
@@ -12,7 +16,7 @@ library(ggplot2)
 library(cmdstanr)
 library(posterior)
 library(bayesplot)
-library(posterior)
+library(patchwork) #To lay out two plots together
 
 getwd()
 list.files()
@@ -156,11 +160,49 @@ stan_data <- list(
   elev = psme_data$elev_sc
 )
 
+#Density plot of my data
+#This shows me where my data is concentrated. I can see that most of it is close to 0. 
+#X-axis : Each point is one observation (year/stand/trap)
+#Y-axis: How concentrated is the data around a specific x -value. So here I can see that my data is highly concentrated around 0. 
+ggplot(psme_data, aes(x = total_viable_sds)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  labs(
+    title = "Density of total viable seeds",
+    x = "Total viable seeds",
+    y = "Density"
+  ) +
+  coord_cartesian(xlim = c(0, 50))
+
+#Another good approach acn be to compare density plots and histogram as with count data histograms can be more informative. 
+p1 <- ggplot(psme_data, aes(x = total_viable_sds)) +
+  geom_histogram(bins = 30, fill = "grey70") +
+  ggtitle("Histogram")
+p2 <- ggplot(psme_data, aes(x = total_viable_sds)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  ggtitle("Density")
+p1 + p2
+#So seed count is relatively low in general. 
+#Interpretation: Seeds are usually not high but occasionally some high years or high sites which are shown with the end of the curve. So this could be masting or some sites with higher production?
+
+#Another way of visualizing my data to see the distribution of the seed productio nbased on each stand
+ggplot(psme_data, aes(x = total_viable_sds)) +
+  geom_density() +
+  facet_wrap(~ stand)
+
+summary(psme_data$elev_sc)
+range(psme_data$elev_sc)
+#This can help me define the range for my beta prior
+
+
+
+
 ###STEP 2: Choosing the likelihood distribution (the model I will use)
 #My options
 # a) I thoutgh that I could try first with a *poisson distribution* as it is count data but as the poisson distribution assumes that the mean = var (see line 126-127) I think it is not appropriate. 
 # b) I could try now a *negative binomial* (adding a dispersion parameter so that my variance > mean which is useful for overdispersion of the seed counts.) But I have an excess of 0'S (see line 138) and this my underestimate the probabiliy of 0's
 # c) I can also try a *zero-inflated Negative Binomial* if I have a lot of 0's which is the case. I think it is the best option as it can handle overdispersion and many 0's 
+
+#Model justification : why log? Seed counts are non-negative integers and doing exp() ensure that alpha + beta * elevation is always =or > than 0. but the multiplicative effect (from beta) becomes additive so it is easier to interpret and alows for a stable model. It stabilizes the variance for overdispesed count data
 
 
 ###In .stan file now
@@ -191,6 +233,14 @@ fit_ppc <- mod$sample(
 )
 
 print(fit_ppc, variables = c("alpha", "beta", "phi", "theta"))
+
+#How to interpet this : 
+#mad is the median absolute deviation of posterior draws. It measrures spread and sometimes reported as an alternative to SD. Is it important? 
+#q5 and q95 are the 5th and 95th percentiles of the posterior draws they form the 90% interval where most of the parameter values lie given the data. 
+#rhat is the gelman-rubin convergence diagnostic and compares within chain vs between chain variance (1= chains converge well) 
+#Ess-bulk is the effective sample size and measures how many independent draws your posterior is equivalent to for the main bulk of the distribution (not sure I understand). High ESS is reliable estimates, low ess is high autocorrelation. 
+#ESS-tail: effective sample for the tail of the posterior, important for credible intervals (especially if the distribution is skewdwd). Low ess tail is uncertainity in the extremes. 
+
 
 
 # Extract prior predictive draws
@@ -244,14 +294,11 @@ ppc_dens_overlay(
 frac_zero <- function(x) mean(x == 0) #creating a function
 zero_fracs <- apply(ypost, 1, frac_zero)
 summary(zero_fracs)
-#Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#0.9766  0.9962  0.9981  0.9975  0.9994  1.0000
+
 hist(zero_fracs, breaks = 20, xlim= c(0,1))
 abline(v = mean(psme_data$total_viable_sds == 0), col = "red", lwd = 2)
 
 #Model output
-print(fit, variables = c("alpha", "beta"))
-
 fit$summary()
 fit$cmdstan_diagnose()
 
@@ -271,3 +318,83 @@ fit$cmdstan_diagnose()
 #     y[n] ~ neg_binomial_2_log(alpha + beta * elev[n], phi);
 #   }
 # }
+
+
+#To figure out what distribution I can use for my priors 
+
+#Type of distribution for the theta parameter (probability of 0's)
+curve(dbeta(x,1,1), 0,1)   # uniform, mean 0.5, max variance
+curve(dbeta(x,2,2), 0,1)   # symmetric, mean 0.5, less spread
+curve(dbeta(x,5,5), 0,1)   # symmetric, mean 0.5, tighter
+curve(dbeta(x,10,5), 0,1)  # skewed, mean 0.667
+
+#Type of distribution for the phi parameter (dispersion)
+curve(dexp(x,1),0,5)        # exponential
+curve(dlnorm(x,-1,0.7),0,5) # lognormal
+curve(dgamma(x,2,1),0,5)    # gamma
+
+
+#A prior's check
+
+alpha_draws <- rnorm(1000, mean = 1.4, sd = 1)  # log mean
+mu_draws <- exp(alpha_draws)
+summary(mu_draws)  # check range
+
+theta_draws <- rbeta(1000, 2, 2)
+hist(theta_draws)  # mostly between 0.1 and 0.9
+
+alpha <- rnorm(1000, 1.4, 1)
+beta  <- rnorm(1000, 0, 0.5)
+phi   <- rgamma(1000, 2, 0.5)
+theta <- rbeta(1000, 2, 2)
+
+summary(phi)   # gamma(2,0.5) → mean 4
+summary(beta)  # mean 0, SD 0.5
+
+
+#Simulationg priors
+set.seed(123)
+
+n_draws <- 1000      # number of prior draws
+n_obs   <- 100       # number of observations to simulate
+elev    <- runif(n_obs, -2, 2)  # scaled elevation
+
+# Draw parameters from priors
+alpha <- rnorm(n_draws, 1.5, 1)
+beta  <- rnorm(n_draws, 0, 0.5)
+phi   <- rgamma(n_draws, 2, 0.5)   # NB overdispersion
+theta <- rbeta(n_draws, 2, 2)      # probability of structural zero
+
+#Simulating from the negative binomial ditstribution
+y_sim <- matrix(NA, nrow = n_draws, ncol = n_obs)
+
+for(i in 1:n_draws){
+  mu <- exp(alpha[i] + beta[i] * elev)  # NB mean for each obs
+  for(j in 1:n_obs){
+    if(runif(1) < theta[i]){
+      y_sim[i,j] <- 0                 # structural zero
+    } else {
+      # NB: rnbinom parametrized with size=phi, mean=mu
+      y_sim[i,j] <- rnbinom(1, size = phi[i], mu = mu[j])
+    }
+  }
+}
+
+#Checking for the 0's
+frac_zero <- apply(y_sim, 1, function(x) mean(x==0))
+summary(frac_zero)
+hist(frac_zero, breaks = 20, col = "grey",
+     main = "Fraction of zeros from prior predictive draws",
+     xlab = "Fraction of zeros")
+
+# Add observed fraction of zeros for reference
+observed_frac_zero <- 0.524  # from your data
+abline(v = observed_frac_zero, col = "red", lwd = 2)
+
+#Checking distribution of simulated seeds
+y_all <- as.vector(y_sim)
+
+hist(y_all, breaks = 50, col = "lightblue",
+     main = "Prior predictive distribution of seeds",
+     xlab = "Simulated seed counts")
+

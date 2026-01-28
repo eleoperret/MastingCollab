@@ -26,9 +26,9 @@ parameters {
 
 model {
   // Priors
-  alpha ~ normal(4, 0.5); 
-  beta ~ normal(0, 1.5); 
-  phi ~ normal(2, 3) T[0,];//dispersion parameter 
+  alpha ~ normal(1.5, 1); 
+  beta ~ normal(0, 0.5); 
+  phi ~ gamma(2,0.5);
   theta ~ beta(2, 2);
 
   // Likelihood
@@ -45,6 +45,14 @@ model {
   
 }
 
+//last changes 28.01.26 : tried the gamma but looks worse than the exponential and changed the alpha to 1.5 so maybe try again next time. 
+
+//What to try : Alpha 1.4,1/Beta 0,0.5 or (0,1)/theta beta(5,5)or (10,10) or (20,1) or (2,2)/ phi exponential (1) or lognnormal(-1,0.7) or gamma(2,1)
+
+//Justification on how I chose my priors.
+//model : log(expected number of seeds)= alpha + beta * elevation
+//alpha. As my mean seed is around 4 so if I do log(4) which is 1,4. Then if you look at the density plot my values are mostly around 0-17 seeds with some case of extreme seed production (which is handled by my phi-- overdispersion), so then I should select for a SD that would be within this range of most datapoint which one would be good so I would have alpha ranging between 0,4 and 2,4 which would meanbetween 1,5 and 11 seeds (????maybe I could use another one like 1.1 or 1.3 ????). The SD here has to reflect the plausible variation on the log scale not the extreme outliers that will be handled by phi. 
+//theta. Because I know that I have 50% of my data that is 0, this means that I have a and b that are symmetric so using (5,5) means that I have 0,5 for my theta prior which reflects my data. 
 
 
 //This is the model block. THe assumption and the learning from my data.
