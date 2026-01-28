@@ -2,6 +2,9 @@
 
 ##Issues with the code. 
 ##I can't get the model to not overcompute 0's. There are a lot of them and even if the model is merging and there is technically an output I'm not sure it is working. 
+##I'm not sure what would be the next good approach
+##Should I change my priors?
+#I tried changing my theta distribution, I tried changing alpha, I also change the likelihood function but nothing worked. So I will go back to the first one I did because I'm lost on what to do.
 
 #Analysis on seed production for one specie over elevation (stand used as proxy)
 library(dplyr)
@@ -256,52 +259,8 @@ fit$cmdstan_diagnose()
 
 
 
+#Old Stan likelihood function 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-library(bayesplot)
-library(ggplot2)
-
-#--------------------------
-# Simulated example
-#--------------------------
-
-# Observed data: y (10 observations)
-y <- c(2, 3, 0, 5, 1, 4, 2, 0, 3, 6)
-
-# Posterior predictive draws: yrep (5 draws, same 10 observations)
-set.seed(123)
-yrep <- matrix(
-  rpois(50, lambda = 3),   # 50 simulated values = 5 draws * 10 observations
-  nrow = 5,
-  ncol = 10
-)
-
-#--------------------------
-# Posterior predictive density overlay
-#--------------------------
-ppc_dens_overlay(y = y, yrep = yrep) +
-  ggtitle("Illustration: Observed y (black) vs Multiple yrep draws (colored)") +
-  xlab("Counts") +
-  ylab("Density")
-
-
-
-
-
-# 
 # for (n in 1:N) {
 #   if (y[n] == 0) {
 #     target += log_mix(theta,
