@@ -26,18 +26,21 @@ parameters {
 
 model {
   // Priors
-  alpha ~ normal(1.5, 1);  
-  beta  ~ normal(0, 0.5);
-  phi   ~ exponential(1);//dispersion parameter
-  theta ~ beta(2, 3);
+  alpha ~ normal(4, 0.5); 
+  beta ~ normal(0, 1.5); 
+  phi ~ normal(2, 3) T[0,];//dispersion parameter 
+  theta ~ beta(2, 2);
 
   // Likelihood
   for (n in 1:N) {
-  target += log_mix(
-      theta,
-      bernoulli_lpmf(1 | 1),                 // structural zero
-      neg_binomial_2_log_lpmf(y[n] | alpha + beta * elev[n], phi) // NB
-  );
+   if (y[n] == 0) {
+     target += log_mix(theta,
+                       bernoulli_lpmf(1 | 1),
+                       neg_binomial_2_log_lpmf(y[n] | alpha + beta * elev[n], phi)
+     );
+   } else {
+     y[n] ~ neg_binomial_2_log(alpha + beta * elev[n], phi);
+  }
 }
   
 }

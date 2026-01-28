@@ -1,5 +1,8 @@
 #Getting to learn STAN
 
+##Issues with the code. 
+##I can't get the model to not overcompute 0's. There are a lot of them and even if the model is merging and there is technically an output I'm not sure it is working. 
+
 #Analysis on seed production for one specie over elevation (stand used as proxy)
 library(dplyr)
 library(ggplot2)
