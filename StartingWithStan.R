@@ -7,8 +7,8 @@
 #I tried changing my theta distribution, I tried changing alpha, I also change the likelihood function but nothing worked. So I will go back to the first one I did because I'm lost on what to do.
 #28.01.2026
 #Do I need to simulate differently? Like simulated with completely other data and priors matching my expectations without seing the data? Or what should I do ?
-#Clean coomments and explanation for .R and .stan 
 #Figure out next steps. 
+#Working on a hurdle model now
 
 #Analysis on seed production for one specie over elevation (stand used as proxy)
 library(dplyr)
@@ -430,7 +430,7 @@ stan_data <- list(
 )
 
 
-
+#Still working on this...
 
 
 
