@@ -1,3 +1,15 @@
+## Branch: eleonore-analysis
+This branch contains the analysis planned for my research stay at UBC.
+It is a working branch for exploring models and scripts without affecting the main branch.
+#Content will be discussed with Lizzie and Victor as I arrive
+#Branch created on the 16.01.2026
+
+
+
+
+
+
+
 # Masting, Seeds and Seedlings (Mt. Rainier)
 Mount Rainier Seed and seedling data
 
