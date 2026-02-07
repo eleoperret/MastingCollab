@@ -405,34 +405,145 @@ abline(v = mean(psme_data$total_viable_sds == 0), col = "red", lwd = 2)
 
 # Hurdle-model ------------------------------------------------------------
 #As the zinb did not really work and I'm not sure if it comes from me or from the fact that this is not a good model, I will try the hurdle model now. 
+#What is a hurdle model?
+#the hurdle model is constructing two likelihood. One for the probability that it is 0 and the other one for when the probability is not 0 what is the probability?
+#STEP1:
+#First I would like then to see if there is a stand and year effect on seed production
+#How much of seed production is explained by year and stand. 
+# Potential step afterwards, 
+#Adding time without hard constraints,adding a lag effect, was last year a mast or not?
+#Is there evidence that last year reproduction affected this years reproduction?
+#is this strong, weak or zero?
 
-#Hurdle model (zero vs non-zero). Does the site produce any seeds at all? if it produces seeds how many. 
-#Difference with zinb, is that in the zinb the zeros can come from two different sources whereas the hurdle only from the hurdle bever from the model. 
+
+#Year: I will treat years as random effect, why ? because if I treat each year as a fixed effect, I'm giving each year its own parameter. and then the model treats each year as completely seperated from others. And then if one year has too few sample, the estimate for this year can be extreme. So I will have year as a random effect (partial pooling). What does this do? Random effect assume that each year comes from a common distribution, all year share information and extreme years are shrunk towards the overall mean. This prevents overfitting 
+
+#Defining the model components: 
+#Part 1 : Occurence (0 vs >0)
+#Occurence (yi)~Bernouilli yi
+#logit (yi)= alpha + alpha stand [i] + delta year [i]+ gamma*Seeds (i,t-1)
+#Alpha = overal baseline probability
+#Alpha stand [i]= random effect for the stand 
+#delta year= random effect for the year
+# gamma *Seeds i,t-1 )= effect of previous year seed production
+#Part 2: Count part (how many seeds |>0 ; when production is not 0). 
+#yi count ~negbinomial (mean i and standard deviation and dispersion parameter)
+#log (meani)= beta + beta stand [i]+ n year[i]
+#beta = baseline mean
+#beta stand [i]= stand random effect
+#beta_year[i]= year random effect
 
 
-y <- psme_data$total_viable_sds
-elev <- psme_data$elev_sc
+psme_data <- psme_data %>%
+  arrange(stand, year) %>%
+  group_by(stand) %>%
+  mutate(lag_seeds = lag(total_viable_sds, 1)) %>%
+  ungroup()
 
-# Indicator: 1 = produces seeds, 0 = zero
-is_pos <- as.integer(y > 0)
 
-# Positive counts only
-y_pos <- y[y > 0]
-elev_pos <- elev[y > 0]
+# prior predictive checks
+stan_data_ppc <- list(
+  N = nrow(psme_data),                    # number of observations
+  Seeds = rep(0, nrow(psme_data)),        # dummy response for Stan
+  N_Stand = length(unique(psme_data$stand)),
+  Stand = as.integer(factor(psme_data$stand)),  # integer IDs for Stan
+  N_Year  = length(unique(psme_data$year)),
+  Year = as.integer(factor(psme_data$year)),    # integer IDs for Stan
+  lag_Seeds = ifelse(is.na(psme_data$lag_seeds), 0, psme_data$lag_seeds)  # NA -> 0
+)
 
-stan_data <- list(
-  N = length(y),
-  N_pos = length(y_pos),
-  y = y,
-  y_pos = y_pos,
-  elev = elev,
-  elev_pos = elev_pos
+mod <- cmdstan_model("hurdle.stan")
+
+fit_ppc <- mod$sample(
+  data = stan_data_ppc,
+  chains = 4,
+  parallel_chains = 4,
+  iter_warmup = 500, #can be modified depending on how many times I want to do
+  iter_sampling = 500
 )
 
 
-#Still working on this...
+fit_ppc$summary()
+
+#Checking if my priors are good. 
+
+#1
+prior_pred <- fit_ppc$draws("Seeds_prior")          # draws x obs x chains
+prior_pred_mat <- as_draws_matrix(prior_pred)       # combine chains
+
+#2
+# Observed zeros (comparing my data with what the priors are producing)
+prop_zero_obs <- mean(psme_data$total_viable_sds == 0)
+prop_zero_prior <- mean(prior_pred_mat == 0)
+
+cat("Observed proportion of zeros:", round(prop_zero_obs, 2), "\n")
+cat("Prior predictive proportion of zeros:", round(prop_zero_prior, 2), "\n")
+
+#3
+# Only positive counts
+positive_obs <- psme_data$total_viable_sds[psme_data$total_viable_sds > 0]
+positive_seeds <- prior_pred_mat[prior_pred_mat > 0]
+
+summary(positive_obs)
+summary(positive_seeds)
+
+#4
+# define inv_logit
+inv_logit <- function(x) 1 / (1 + exp(-x))
+
+# example prior draws
+alpha_occ_draws <- rnorm(1000, 0, 5)   # prior for intercept
+gamma_lag_draws <- rnorm(1000, 0, 2)   # prior for lag effect
+
+# probability of reproducing with lag = 0 and lag = 10
+lag0 <- inv_logit(alpha_occ_draws + gamma_lag_draws * 0)
+lag10 <- inv_logit(alpha_occ_draws + gamma_lag_draws * 10)
+
+summary(lag0)
+summary(lag10)
+
+#5
+#Checking the observed vs prior results. 
+# Combine data
+df_all <- data.frame(
+  Seeds = c(psme_data$total_viable_sds, prior_pred_mat),
+  Type = c(rep("Observed", nrow(psme_data)),
+           rep("Prior", length(prior_pred_mat)))
+)
+
+# Plot using density
+ggplot(df_all, aes(x = Seeds + 1, fill = Type, color = Type)) +
+  geom_histogram(aes(y = ..density..), position = "identity", alpha = 0.5, bins = 50) +
+  scale_x_continuous(trans = "log1p") +  # log(1 + x) to show zeros
+  labs(title = "Observed vs Prior Predictive Seeds (density, log scale)",
+       x = "log1p(Seeds)", y = "Density") +
+  theme_minimal() +
+  scale_fill_manual(values = c("Observed" = "tomato", "Prior" = "skyblue")) +
+  scale_color_manual(values = c("Observed" = "tomato", "Prior" = "skyblue"))
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+##Posterior predictive check
+stan_data <- list(
+  N = nrow(species_data),
+  Seeds = species_data$Seeds,          # can be dummy for prior predictive
+  N_Stand = length(unique(species_data$Stand)),
+  Stand = species_data$Stand,
+  N_Year  = length(unique(species_data$Year)),
+  Year = species_data$Year,
+  lag_Seeds = species_data$lag_Seeds
+)
