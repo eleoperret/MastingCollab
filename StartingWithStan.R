@@ -24,6 +24,13 @@ list.files()
 
 seed_data<-read.csv("SeedData_all.csv")
 
+#What to work on and questions for myself: 
+#Is the hurdle model a good approach? if yes, how to make it work as now it doesn't work, change the priors? make it more simple? --> approach I did not try yet is to remove the stands where there is no seeds. TO DO. 
+#Understand better what is a HMM matrix and how to use it. 
+#Is my approach correct to check priors? 
+#What is a bin probability? and why plotting bin probability vs bin width?
+#Think about my parameters. Are they correlated, are they constrained? 
+
 
 # ABAM --------------------------------------------------------------------
 #selecting one species 
@@ -121,9 +128,6 @@ str(psme_data)
 #Key points for myself: 
 #Everything that has to do with definin the distribution, the prior, the parameter, the likelihood is in the .stan file
 #Anything with data prep, scaling, plotting, extracting results is in R. 
-
-
-
 
 ###STEP 1 : Understand the data
 #Attaching my elevation data to my dataset.
@@ -297,9 +301,6 @@ ggplot(zero_curve, aes(x = elev_sc, y = prop_zero)) +
 #Looks quite similar maybe?
 
 
-
-
-
 ###STEP 4 : Prior predictive check. 
 #If simulated count are way to high or all zeros than my priors need adjusting
 #Once my prior predictive check looks good I can fit my model with the real data 
@@ -401,8 +402,6 @@ hist(zero_fracs, breaks = 20, xlim= c(0,1))
 abline(v = mean(psme_data$total_viable_sds == 0), col = "red", lwd = 2)
 
 
-
-
 # Hurdle-model ------------------------------------------------------------
 #As the zinb did not really work and I'm not sure if it comes from me or from the fact that this is not a good model, I will try the hurdle model now. 
 #What is a hurdle model?
@@ -461,7 +460,7 @@ fit_ppc <- mod$sample(
   iter_warmup = 500, #can be modified depending on how many times I want to do
   iter_sampling = 500
 )
-
+#Model converging issues-- need to work on that. I think changing my priors and maybe thinking about what could potentially affect my model. Because overproduction of 0's but better than the previous one I tried :) 0.99 before 1 :p
 
 fit_ppc$summary()
 
@@ -521,29 +520,35 @@ ggplot(df_all, aes(x = Seeds + 1, fill = Type, color = Type)) +
   scale_fill_manual(values = c("Observed" = "tomato", "Prior" = "skyblue")) +
   scale_color_manual(values = c("Observed" = "tomato", "Prior" = "skyblue"))
 
+# ##Posterior predictive check
+# stan_data <- list(
+#   N = nrow(species_data),
+#   Seeds = species_data$Seeds,          # can be dummy for prior predictive
+#   N_Stand = length(unique(species_data$Stand)),
+#   Stand = species_data$Stand,
+#   N_Year  = length(unique(species_data$Year)),
+#   Year = species_data$Year,
+#   lag_Seeds = species_data$lag_Seeds
+# )
+# 
 
 
 
 
+# HMM Model ---------------------------------------------------------------
 
+#A hidden markov model is a model for situations where the system moves through a sequence of states over time, those states are not directly obsevable (hidden) and they generate observable data that I can measure. It is about observing the outcome not the true underlying process. 
+#there is a process happening in the background (hidden states), and this process follows rules: the next state depends only on the current state (markov part) and each hidden state produces observations with certain probabilities. 
 
+#With the data I have I have a few issues. 1) a lot of zeros and 2) occasional huge mast years 3) strong temporal autocorrelation because of the trees capacity to produce seeds so in that context my hidden state would be the tree's physiological/reproductive state?
 
+#There could be three hidden states: low, or no repoduction (recovery)/ moderate reproduction/ mast year. But those states are latent and I can't observe then directly. 
 
+#Difference with a hurdle model: a hurdle model explains how zeros vs non-zeros happen, why HMM explains why years cluster into low and  mast phase over time. The hurdle model splits the process into two parts (whether any seeds are produced; usually a Bernoulli(logistic model) and how many seeds are produced given production is >0; poisson or negative binomial). 
 
+#In the hurdle : 0 = no reproduction this year and positives = reproduction occured but it doesn't encode memory, a mast year has no effect except if you force it. (I can use a lagged seed production)
 
+#In the HMM, it assumes that the tree/stands switch among latent reproductive states and the states persists over time. 
 
-
-
-
-
-
-##Posterior predictive check
-stan_data <- list(
-  N = nrow(species_data),
-  Seeds = species_data$Seeds,          # can be dummy for prior predictive
-  N_Stand = length(unique(species_data$Stand)),
-  Stand = species_data$Stand,
-  N_Year  = length(unique(species_data$Year)),
-  Year = species_data$Year,
-  lag_Seeds = species_data$lag_Seeds
-)
+#How to compare both of my models. THe Hurdle is going to try to explain the 0's by dispersal limitation, trap geometry, species absence and local stochasticity-- no discrete reproductive phases whereas the HMM the 0's happen because the system is sometimes in a low reproductive state and sampling (the system switches between discrete reproductive phases). 
+#How to compare both models: look at the posteriror predictive check. Are both models: able to reproduce the lengths of runs of zeros, the amplitude of high years, the timing of peaks? I can also use the predictive performance (LOO/WAIC): large improvement-->structure matters/ small or no improvement : simpler model wins. 
