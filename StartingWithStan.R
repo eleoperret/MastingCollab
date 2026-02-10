@@ -1,22 +1,22 @@
 #Getting to learn STAN
+#Analysis on seed production for one specie over elevation (stand used as proxy)
+#Eléonore Perret - February 2026
 
 ##Issues with the code. 
-##I can't get the model to not overcompute 0's. There are a lot of them and even if the model is merging and there is technically an output I'm not sure it is working. 
-##I'm not sure what would be the next good approach
-##Should I change my priors?
-#I tried changing my theta distribution, I tried changing alpha, I also change the likelihood function but nothing worked. So I will go back to the first one I did because I'm lost on what to do.
-#28.01.2026
-#Do I need to simulate differently? Like simulated with completely other data and priors matching my expectations without seing the data? Or what should I do ?
-#Figure out next steps. 
-#Working on a hurdle model now
+#What to work on and questions for myself: 
+#Worked on the HMM model and it looked really good for PSME but not for TSHE. Also do I change my priors for each species? How would that look like in a multi-species model?
+#For HMM I did not use a transition matrix but a latent continuous variable as my hidden state. Is that correct? I have 
+#Is my approach correct to check priors? 
+#What is a bin probability? and why plotting bin probability vs bin width? Should I use this? 
+#Think about my parameters. Are they correlated, are they constrained? 
 
-#Analysis on seed production for one specie over elevation (stand used as proxy)
 library(dplyr)
 library(ggplot2)
 library(cmdstanr)
 library(posterior)
 library(bayesplot)
 library(patchwork) #To lay out two plots together
+library(tidyr)
 
 getwd()
 list.files()
@@ -24,30 +24,8 @@ list.files()
 
 seed_data<-read.csv("SeedData_all.csv")
 
-#What to work on and questions for myself: 
-#Is the hurdle model a good approach? if yes, how to make it work as now it doesn't work, change the priors? make it more simple? --> approach I did not try yet is to remove the stands where there is no seeds. TO DO. 
-#Understand better what is a HMM matrix and how to use it. 
-#Is my approach correct to check priors? 
-#What is a bin probability? and why plotting bin probability vs bin width?
-#Think about my parameters. Are they correlated, are they constrained? 
 
-
-# ABAM --------------------------------------------------------------------
-#selecting one species 
-Abam_data<-seed_data%>%
-  filter(spp=="ABAM")
-
-total_stand<-Abam_data%>%
-  group_by(stand)%>%
-  summarise(total_seeds=sum(total_viable_sds),na.rm=TRUE)
-
-ggplot(total_stand, aes(x = stand, y = total_seeds)) +
-  geom_col() +
-  theme_bw() +
-  labs(x = "Stand",
-       y = "Total viable seeds",
-       title = "Total viable seeds per stand") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+# SiteInfos ---------------------------------------------------------------
 
 
 #Site elevation based on the handbook
@@ -79,6 +57,25 @@ elev_df <- data.frame(
   stand = names(stand_elevations),
   elevation = as.numeric(stand_elevations)
 )
+
+# ABAM --------------------------------------------------------------------
+#selecting one species 
+Abam_data<-seed_data%>%
+  filter(spp=="ABAM")
+
+total_stand<-Abam_data%>%
+  group_by(stand)%>%
+  summarise(total_seeds=sum(total_viable_sds),na.rm=TRUE)
+
+ggplot(total_stand, aes(x = stand, y = total_seeds)) +
+  geom_col() +
+  theme_bw() +
+  labs(x = "Stand",
+       y = "Total viable seeds",
+       title = "Total viable seeds per stand") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+
+
 #Adding it 
 total_stand <- merge(total_stand, elev_df, by = "stand")
 
@@ -94,7 +91,9 @@ ggplot(total_stand,
 # PSME --------------------------------------------------------------------
 #selecting one species 
 psme_data<-seed_data%>%
-  filter(spp=="PSME")
+  filter(spp=="PSME")%>%
+  #Added this constraint
+  filter(!stand %in% c("AE10", "AR07", "PARA", "SUNR", "SPRY", "AV14", "AM16"))
 
 total_stand_psme<-psme_data%>%
   group_by(stand)%>%
@@ -121,6 +120,19 @@ ggplot(total_stand_psme,
 
 #I can see here that some stand have 0 seed production in 15 years (very unlikely that it will change) except for SPRY and AR07 (but to be honest I'm a bit suprised; in total it is 2 seeds found for the AR07 and 3 for the SPRY over the last years; what to do with that. I honestly cannot refute the misidentification because there are no adult tree anywhere close to this area so something to think about)
 
+#Changing my dataset to PSME where only stands with seeds -- removing AE10, AR07, PARA, SUNR, SPRY, AV14, AM16
+
+
+# TSHE --------------------------------------------------------------------
+#selecting one species 
+tshe_data<-seed_data%>%
+  filter(spp=="TSHE")%>%
+  #Added this constraint
+  filter(!stand %in% c("AE10", "AR07", "PARA", "SUNR", "SPRY"))
+
+total_stand_tshe<-tshe_data%>%
+  group_by(stand)%>%
+  summarise(total_seeds=sum(total_viable_sds),na.rm=TRUE)
 
 # Modelling production/elevation with Stan  --------------------------------
 str(psme_data)
@@ -445,10 +457,10 @@ stan_data_ppc <- list(
   N = nrow(psme_data),                    # number of observations
   Seeds = rep(0, nrow(psme_data)),        # dummy response for Stan
   N_Stand = length(unique(psme_data$stand)),
-  Stand = as.integer(factor(psme_data$stand)),  # integer IDs for Stan
+  Stand = as.integer(factor(psme_data$stand)),  
   N_Year  = length(unique(psme_data$year)),
-  Year = as.integer(factor(psme_data$year)),    # integer IDs for Stan
-  lag_Seeds = ifelse(is.na(psme_data$lag_seeds), 0, psme_data$lag_seeds)  # NA -> 0
+  Year = as.integer(factor(psme_data$year)),    
+  lag_Seeds = ifelse(is.na(psme_data$lag_seeds), 0, psme_data$lag_seeds)  
 )
 
 mod <- cmdstan_model("hurdle.stan")
@@ -552,3 +564,136 @@ ggplot(df_all, aes(x = Seeds + 1, fill = Type, color = Type)) +
 
 #How to compare both of my models. THe Hurdle is going to try to explain the 0's by dispersal limitation, trap geometry, species absence and local stochasticity-- no discrete reproductive phases whereas the HMM the 0's happen because the system is sometimes in a low reproductive state and sampling (the system switches between discrete reproductive phases). 
 #How to compare both models: look at the posteriror predictive check. Are both models: able to reproduce the lengths of runs of zeros, the amplitude of high years, the timing of peaks? I can also use the predictive performance (LOO/WAIC): large improvement-->structure matters/ small or no improvement : simpler model wins. 
+
+
+
+
+
+stan_data <- list(
+  N = nrow(psme_data),
+  S = length(unique(psme_data$stand)),
+  J = length(unique(psme_data$trapno)),
+  T = length(unique(psme_data$year)),
+  stand = as.integer(as.factor(psme_data$stand)),
+  trap  = as.integer(as.factor(psme_data$trapno)),
+  year  = as.integer(as.factor(psme_data$year)),
+  y     = as.integer(psme_data$total_viable_sds),
+  log_offset = log(psme_data$size)
+)
+
+stan_data_tshe <- list(
+  N = nrow(tshe_data),
+  S = length(unique(tshe_data$stand)),
+  J = length(unique(tshe_data$trapno)),
+  T = length(unique(tshe_data$year)),
+  stand = as.integer(as.factor(tshe_data$stand)),
+  trap  = as.integer(as.factor(tshe_data$trapno)),
+  year  = as.integer(as.factor(tshe_data$year)),
+  y     = as.integer(tshe_data$total_viable_sds),
+  log_offset = log(tshe_data$size)
+)
+
+
+mod <- cmdstan_model("hmm.stan")
+
+#I think I might need to change the prior acordingly for each species--how can I do that for a multipspecie model then. 
+
+fit_prior <- mod$sample(
+  data = stan_data,
+  chains = 4,
+  iter_warmup = 0,
+  iter_sampling = 1000,
+  fixed_param = TRUE  # VERY IMPORTANT: sample from priors only
+)
+
+y_prior_draws <- fit_prior$draws("y_prior")
+y_prior_mean <- apply(as_draws_matrix(y_prior_draws), 2, mean)  # mean per trap/year
+
+hist(y_prior_mean, breaks = 20,
+     main = "Prior predictive distribution of seed counts",
+     xlab = "Simulated seed counts",
+     xlim=c(0,100))
+abline(v=c(0,2), col="red", lty=2)  # reference range from the summary
+
+summary(psme_data$total_viable_sds)
+summary(tshe_data$total_viable_sds)
+
+
+fit <- mod$sample(
+  data = stan_data_tshe,
+  chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  adapt_delta = 0.95,
+  max_treedepth = 12
+)
+
+fit$summary(c("rho", "sigma_eta", "sigma_stand", "sigma_trap"))
+fit$summary()
+
+
+# Extract y_rep draws
+y_rep_draws <- fit$draws("y_rep")  
+
+y_rep_matrix <- as_draws_matrix(y_rep_draws)  # necessary for plotting
+dim(y_rep_matrix) 
+
+y_obs <- stan_data$y
+y_rep_flat <- as.numeric(y_rep_matrix)
+
+ggplot() +
+  geom_histogram(aes(x = y_rep_flat, y = ..density..),
+                 bins = 50, fill = "skyblue", alpha = 0.5) +
+  geom_histogram(aes(x = y_obs, y = ..density..),
+                 bins = 50, fill = "red", alpha = 0.5) +
+  labs(x = "Seed counts", y = "Density",
+       title = "Posterior predictive check") +
+  theme_minimal()
+
+ggplot() +
+  geom_histogram(aes(x = y_rep_flat, y = ..density..),
+                 bins = 50, fill = "skyblue", alpha = 0.5) +
+  geom_histogram(aes(x = y_obs, y = ..density..),
+                 bins = 50, fill = NA, color = "red", size = 1.2) +
+  labs(x = "Seed counts", y = "Density",
+       title = "Posterior predictive check") +
+  theme_minimal()
+
+eta_draws <- fit$draws("eta")  # draws × stands × years
+
+length(unique(psme_data$stand))
+length(unique(psme_data$year))
+
+
+# Flatten chains and iterations into one "draws" dimension, necessary for plotting
+eta_array <- as_draws_matrix(eta_draws)  
+
+# Number of stands and years
+S <- 11
+T <- 16
+
+
+# changing the columns names
+eta_cols <- grep("^eta\\[", colnames(eta_array))
+eta_mat <- eta_array[, eta_cols]  
+
+# Convert to tidy long format for plotting
+eta_long <- as.data.frame(eta_mat) %>%
+  mutate(draw = 1:n()) %>%  
+  pivot_longer(cols = -draw, names_to = "eta_var", values_to = "eta") %>%
+  separate(eta_var, into = c("tmp", "stand", "year"), sep = "\\[|,|\\]", convert = TRUE) %>%
+  select(-tmp)
+
+# Compute posterior mean per stand/year
+eta_mean <- eta_long %>%
+  group_by(stand, year) %>%
+  summarise(eta = mean(eta), .groups = "drop")
+
+ggplot(eta_mean, aes(x = year, y = eta, color = factor(stand), group = stand)) +
+  geom_line(size=1) +
+  theme_minimal() +
+  labs(y = "Latent reproductive effort (eta)", x = "Year", color = "Stand")
+
+
+
+
