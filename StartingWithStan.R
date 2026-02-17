@@ -10,6 +10,8 @@
 #What is a bin probability? and why plotting bin probability vs bin width? Should I use this? 
 #Think about my parameters. Are they correlated, are they constrained? 
 
+#Re do with same distribution and then check with a partial pooling for the difference between stands. Check the parameters differnece between model. Create git issue and with the summary adn the description of the model (likelihood) adn thoughts also the posterior check visuals (using mickeals diagnostics, or density together with histogramms). What I see and what to do next. WHcih parameters to change based on the fact that wach stand has its own distribution.
+
 library(dplyr)
 library(ggplot2)
 library(cmdstanr)
@@ -19,6 +21,7 @@ library(patchwork) #To lay out two plots together
 library(tidyr)
 
 getwd()
+setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 list.files()
 
 
@@ -117,6 +120,11 @@ ggplot(total_stand_psme,
   labs(x = "Stand (ordered by elevation)",
        y = "Total viable seeds") +
   theme(axis.text.x = element_text(angle = 90))
+
+summary(psme_data$total_viable_sds)
+mean(psme_data$total_viable_sds) #6.48657
+var(psme_data$total_viable_sds) #139.4104
+#This is overdispersed Var>> mean
 
 #I can see here that some stand have 0 seed production in 15 years (very unlikely that it will change) except for SPRY and AR07 (but to be honest I'm a bit suprised; in total it is 2 seeds found for the AR07 and 3 for the SPRY over the last years; what to do with that. I honestly cannot refute the misidentification because there are no adult tree anywhere close to this area so something to think about)
 
@@ -547,7 +555,7 @@ ggplot(df_all, aes(x = Seeds + 1, fill = Type, color = Type)) +
 
 
 
-# HMM Model ---------------------------------------------------------------
+# HMM Model AR(1) ---------------------------------------------------------------
 
 #A hidden markov model is a model for situations where the system moves through a sequence of states over time, those states are not directly obsevable (hidden) and they generate observable data that I can measure. It is about observing the outcome not the true underlying process. 
 #there is a process happening in the background (hidden states), and this process follows rules: the next state depends only on the current state (markov part) and each hidden state produces observations with certain probabilities. 
@@ -594,7 +602,7 @@ stan_data_tshe <- list(
 )
 
 
-mod <- cmdstan_model("hmm.stan")
+mod <- cmdstan_model("ar1.stan")
 
 #I think I might need to change the prior acordingly for each species--how can I do that for a multipspecie model then. 
 
@@ -613,7 +621,7 @@ hist(y_prior_mean, breaks = 20,
      main = "Prior predictive distribution of seed counts",
      xlab = "Simulated seed counts",
      xlim=c(0,100))
-abline(v=c(0,2), col="red", lty=2)  # reference range from the summary
+abline(v=c(0,6), col="red", lty=2)  # reference range from the summary
 
 summary(psme_data$total_viable_sds)
 summary(tshe_data$total_viable_sds)
@@ -629,6 +637,7 @@ fit <- mod$sample(
 )
 
 fit$summary(c("rho", "sigma_eta", "sigma_stand", "sigma_trap"))
+fit$summary(c("eta"))
 fit$summary()
 
 
@@ -642,9 +651,9 @@ y_obs <- stan_data$y
 y_rep_flat <- as.numeric(y_rep_matrix)
 
 ggplot() +
-  geom_histogram(aes(x = y_rep_flat, y = ..density..),
+  geom_histogram(aes(x = y_rep_flat, y = after_stat(density)),
                  bins = 50, fill = "skyblue", alpha = 0.5) +
-  geom_histogram(aes(x = y_obs, y = ..density..),
+  geom_histogram(aes(x = y_obs, y = after_stat(density)),
                  bins = 50, fill = "red", alpha = 0.5) +
   labs(x = "Seed counts", y = "Density",
        title = "Posterior predictive check") +
@@ -690,10 +699,589 @@ eta_mean <- eta_long %>%
   summarise(eta = mean(eta), .groups = "drop")
 
 ggplot(eta_mean, aes(x = year, y = eta, color = factor(stand), group = stand)) +
-  geom_line(size=1) +
+  geom_line(linewidth =1) +
   theme_minimal() +
   labs(y = "Latent reproductive effort (eta)", x = "Year", color = "Stand")
 
 
 
 
+
+# HMM model Matrix --------------------------------------------------------
+
+
+
+
+# Aggregate seeds per stand per year
+psme_sy <- psme_data %>%
+  group_by(stand, year) %>%
+  summarise(y = sum(total_viable_sds), .groups = "drop") %>%
+  mutate(
+    stand_id = as.integer(as.factor(stand)),
+    year_id  = as.integer(as.factor(year))
+  )
+
+S <- length(unique(psme_sy$stand_id))
+T <- length(unique(psme_sy$year_id))
+
+# Create matrix: rows=stands, columns=years
+y_mat <- matrix(0, nrow = S, ncol = T)
+for(i in 1:nrow(psme_sy)) {
+  y_mat[psme_sy$stand_id[i], psme_sy$year_id[i]] <- psme_sy$y[i]
+}
+
+stan_data <- list(
+  S = S,
+  T = T,
+  y = y_mat
+)
+
+
+mod <- cmdstan_model("hmm.stan")
+
+fit <- mod$sample(
+  data = stan_data,
+  seed = 123,
+  chains = 4,
+  parallel_chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000
+)
+
+fit$summary()
+
+
+
+stand_ids <- sort(unique(psme_data$stand))
+year_ids  <- sort(unique(psme_data$year))
+
+S <- length(stand_ids)
+T <- length(year_ids)
+
+# Create y[S,T] matrix
+y_obs <- matrix(NA, nrow = S, ncol = T)
+for(s in 1:S){
+  for(t in 1:T){
+    y_obs[s,t] <- sum(psme_data$total_viable_sds[
+      psme_data$stand == stand_ids[s] & psme_data$year == year_ids[t]
+    ])
+  }
+}
+
+
+n_samples <- 200
+
+mu_state_draws <- as_draws_matrix(fit$draws(variables = "mu_state"))
+phi_draws      <- as_draws_matrix(fit$draws(variables = "phi"))
+P_draws        <- as_draws_matrix(fit$draws(variables = "P"))
+pi_draws       <- as_draws_matrix(fit$draws(variables = "pi"))
+
+
+set.seed(123)
+y_rep <- array(NA, dim = c(n_samples, S, T))
+
+for(draw in 1:n_samples){
+  mu  <- mu_state_draws[draw, ]       # log mean per state
+  phi <- phi_draws[draw, 1]           # overdispersion
+  P   <- matrix(P_draws[draw, ], 2, 2, byrow = TRUE)  # transition matrix
+  pi  <- pi_draws[draw, ]             # initial state probabilities
+  
+  for(s in 1:S){
+    # Simulate latent states
+    z <- integer(T)
+    z[1] <- sample(1:2, 1, prob = pi)
+    if(T > 1){
+      for(t in 2:T){
+        z[t] <- sample(1:2, 1, prob = P[z[t-1], ])
+      }
+    }
+    
+    # Simulate observed counts
+    for(t in 1:T){
+      y_rep[draw, s, t] <- rnbinom(1, mu = exp(mu[z[t]]), size = phi)
+    }
+  }
+}
+
+y_obs_vec <- as.vector(y_obs)
+y_rep_vec <- as.vector(y_rep)
+
+df <- data.frame(
+  count = c(y_obs_vec, y_rep_vec),
+  type = rep(c("Observed", "Simulated"), c(length(y_obs_vec), length(y_rep_vec)))
+)
+
+
+ggplot(df, aes(x = count + 1, fill = type)) +  # +1 to avoid log(0)
+  geom_density(alpha = 0.5) +
+  scale_x_log10() +  # optional for heavy-tailed counts
+  theme_minimal() +
+  labs(
+    x = "Seed count (log scale)",
+    y = "Density",
+    title = "Posterior Predictive Check for HMM"
+  )
+
+fit$summary("mu_state")
+
+
+
+# hmm_zeroinflated --------------------------------------------------------
+
+# # Encode categorical variables as integers
+# df <- psme_data %>%
+#   mutate(
+#     year_id  = as.integer(factor(year)),
+#     stand_id = as.integer(factor(stand)),
+#     trap_id  = as.integer(factor(trapno))
+#   )
+# 
+# # Total counts
+# N       <- nrow(df)
+# T_years <- length(unique(df$year_id))
+# n_stand <- length(unique(df$stand_id))
+# n_trap  <- length(unique(df$trap_id))
+# 
+# # Build data list for Stan
+# stan_data <- list(
+#   N       = N,
+#   T       = T_years,
+#   y       = df$total_viable_sds,
+#   n_stand = n_stand,
+#   n_trap  = n_trap,
+#   year_id = df$year_id,
+#   stand_id = df$stand_id,
+#   trap_id  = df$trap_id
+# )
+# 
+# mod <- cmdstan_model("hmm_zero.stan")
+# 
+# fit <- mod$sample(
+#   data = stan_data,
+#   chains = 4,
+#   parallel_chains = 4,
+#   iter_warmup = 1000,
+#   iter_sampling = 2000,
+#   seed = 123
+# )
+# 
+# fit$summary()
+# 
+# library(cmdstanr)
+# library(dplyr)
+# library(ggplot2)
+# 
+
+
+# params <- as_draws_df(fit$draws())
+# posterior_draws <- params[1:200,]  # use first 200 draws for speed
+# 
+# T_years <- length(unique(df$year_id))
+# N <- nrow(df)
+# 
+# # Pre-allocate arrays
+# all_state_probs <- array(0, dim = c(T_years, 2, nrow(posterior_draws)))
+# posterior_y_pred <- matrix(0, nrow = N, ncol = nrow(posterior_draws))
+# 
+
+# compute_state_probs <- function(y, year_id, stand_id, trap_id,
+#                                 alpha, beta_stand, u_trap,
+#                                 init_state, trans, phi, T_years) {
+#   
+#   log_emission <- matrix(0, nrow = T_years, ncol = 2)
+#   for (t in 1:T_years) {
+#     for (s in 1:2) {
+#       inds <- which(year_id == t)
+#       eta <- alpha[s] + beta_stand[stand_id[inds]] + u_trap[trap_id[inds]]
+#       mu <- exp(eta)
+#       log_emission[t,s] <- sum(dnbinom(y[inds], size=phi, mu=mu, log=TRUE))
+#     }
+#   }
+#   
+#   # Forward pass
+#   log_alpha <- matrix(0, nrow = T_years, ncol = 2)
+#   log_alpha[1,] <- log(init_state) + log_emission[1,]
+#   for (t in 2:T_years) {
+#     for (s in 1:2) {
+#       temp <- log_alpha[t-1,] + log(trans[,s])
+#       log_alpha[t,s] <- log_emission[t,s] + log(sum(exp(temp - max(temp))) + 1e-12) + max(temp)
+#     }
+#   }
+#   
+#   # Backward pass
+#   log_beta <- matrix(0, nrow = T_years, ncol = 2)
+#   for (t in (T_years-1):1) {
+#     for (s in 1:2) {
+#       temp <- log(trans[s,]) + log_emission[t+1,] + log_beta[t+1,]
+#       log_beta[t,s] <- log(sum(exp(temp - max(temp))) + 1e-12) + max(temp)
+#     }
+#   }
+#   
+#   # Posterior probabilities
+#   state_prob <- matrix(0, nrow = T_years, ncol = 2)
+#   for (t in 1:T_years) {
+#     temp <- log_alpha[t,] + log_beta[t,]
+#     temp <- temp - max(temp)
+#     probs <- exp(temp) / sum(exp(temp))
+#     state_prob[t,] <- probs
+#   }
+#   
+#   return(state_prob)
+# }
+# 
+
+# for (i in 1:nrow(posterior_draws)) {
+#   
+#   # Extract parameters
+#   alpha <- as.numeric(posterior_draws[i, c("alpha[1]", "alpha[2]")])
+#   beta_stand <- as.numeric(posterior_draws[i, grep("^beta_stand", colnames(posterior_draws))])
+#   u_trap <- as.numeric(posterior_draws[i, grep("^u_trap", colnames(posterior_draws))])
+#   init_state <- as.numeric(posterior_draws[i, c("init_state[1]", "init_state[2]")])
+#   trans <- matrix(as.numeric(posterior_draws[i, c("trans[1,1]","trans[1,2]","trans[2,1]","trans[2,2]")]), nrow=2, byrow=TRUE)
+#   phi <- as.numeric(posterior_draws[i, "phi"])
+#   
+#   # Compute posterior state probabilities
+#   all_state_probs[,,i] <- compute_state_probs(
+#     y = df$total_viable_sds,
+#     year_id = df$year_id,
+#     stand_id = df$stand_id,
+#     trap_id = df$trap_id,
+#     alpha = alpha,
+#     beta_stand = beta_stand,
+#     u_trap = u_trap,
+#     init_state = init_state,
+#     trans = trans,
+#     phi = phi,
+#     T_years = T_years
+#   )
+#   
+#   # Posterior predictive simulation
+#   for (n in 1:N) {
+#     t <- df$year_id[n]
+#     state_probs <- all_state_probs[t,,i]
+#     z <- sample(1:2, size=1, prob = state_probs)
+#     eta <- alpha[z] + beta_stand[df$stand_id[n]] + u_trap[df$trap_id[n]]
+#     mu <- exp(eta)
+#     posterior_y_pred[n,i] <- rnbinom(1, size=phi, mu=mu)
+#   }
+# }
+# 
+
+# summary_probs <- data.frame(
+#   year = 1:T_years,
+#   mean = apply(all_state_probs[,2,], 1, mean),
+#   lower = apply(all_state_probs[,2,], 1, quantile, 0.025),
+#   upper = apply(all_state_probs[,2,], 1, quantile, 0.975)
+# )
+# 
+# ggplot(summary_probs, aes(x = year, y = mean)) +
+#   geom_line(color = "darkgreen", size=1) +
+#   geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.3, fill="lightgreen") +
+#   ylab("Posterior P(High Production)") +
+#   xlab("Year") +
+#   theme_minimal()
+# 
+
+# ppc_summary <- data.frame(
+#   observed = df$total_viable_sds,
+#   mean_pred = rowMeans(posterior_y_pred),
+#   lower = apply(posterior_y_pred, 1, quantile, 0.025),
+#   upper = apply(posterior_y_pred, 1, quantile, 0.975)
+# )
+# 
+# ggplot(ppc_summary, aes(x = observed, y = mean_pred)) +
+#   geom_point(alpha = 0.6) +
+#   geom_errorbar(aes(ymin=lower, ymax=upper), alpha=0.3) +
+#   geom_abline(intercept=0, slope=1, color="red", linetype="dashed") +
+#   xlab("Observed seed counts") +
+#   ylab("Posterior predictive mean ± 95% CI") +
+#   theme_minimal()
+# 
+# ggplot(ppc_summary, aes(x = observed, y = mean_pred)) +
+#   geom_point(color = "red", alpha = 0.6) +
+#   geom_abline(intercept=0, slope=1, linetype="dashed", color="black") +
+#   xlab("Observed seed counts") +
+#   ylab("Predicted seed counts") +
+#   theme_minimal()
+
+
+# Newmodel_HMM ------------------------------------------------------------
+
+psme_data_simple2<-psme_data%>%
+  group_by(year,stand) %>%
+  summarise(y = sum(total_viable_sds), .groups = "drop")
+
+head(psme_data_simple2)
+
+# Pivot to a stand x year matrix
+y_mat <- psme_data_simple2 %>%
+  pivot_wider(
+    names_from = year,
+    values_from = y,
+    values_fill = 0   # fill missing years with 0 seeds
+  ) %>%
+  arrange(stand) %>%     # optional, sort stands
+  select(-stand) %>%     # remove stand column for matrix
+  as.matrix()            # convert to numeric matrix
+
+
+
+
+stand_ranges <- psme_data_simple2 %>%
+  group_by(stand) %>%
+  summarise(
+    start_year = min(year),
+    end_year   = max(year),
+    .groups = "drop"
+  )
+
+stand_ranges <- stand_ranges %>%
+  mutate(
+    year_seq = purrr::map2(start_year, end_year, seq)
+  )
+
+
+missing_years <- psme_data_simple2 %>%
+  group_by(stand) %>%
+  summarise(
+    start_year = min(year),
+    end_year   = max(year),
+    observed_years = list(sort(unique(year))),
+    full_seq       = list(seq(start_year, end_year)),
+    missing_years  = list(setdiff(full_seq[[1]], observed_years[[1]])),
+    .groups = "drop"
+  )
+
+str(missing_years)
+
+# Sort data properly
+data_sorted <- psme_data_simple2 %>%
+  arrange(stand, year)
+
+# Create stacked observation vector
+y <- data_sorted$y   # <-- define y here
+
+# Count number of observations per stand
+T_i <- data_sorted %>%
+  count(stand) %>%
+  pull(n)            # <-- define T_i here
+
+# Define dimensions
+F <- length(T_i)     # number of stands
+N <- length(y)       # total number of observations
+
+
+start_idxs <- c()
+end_idxs <- c()
+id <- 1
+for(s in 1:F){
+  start_idxs <- c(start_idxs, id)
+  id <- id + T_i[s]-1
+  end_idxs <- c(end_idxs, id)
+  id <- id + 1
+}
+
+
+data_list <- list(
+  F   = F,
+  N   = N,
+  start_idxs = start_idxs, 
+  end_idxs = end_idxs, 
+  y   = y
+)
+
+
+mod <- cmdstan_model("hmm_stand.stan")
+
+fit <- mod$sample(
+  data = data_list,
+  chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  parallel_chains = 4
+)
+
+fit$summary()
+summary(fit$draws(c("theta","log_mu")))
+
+
+yrep <- fit$draws("y_rep")
+
+yrep_mat <- as_draws_matrix(yrep)
+
+summary(as.vector(yrep_mat))
+
+hist(as.vector(yrep_mat), breaks = 50)
+
+plot(density(as.vector(yrep_mat)))
+
+boxplot(yrep_mat[,1:20], outline = FALSE)
+
+df <- data.frame(y_pred = as.vector(yrep_mat))
+
+ggplot(df, aes(x = y_pred)) +
+  geom_density(fill = "lightblue", alpha = 0.5) +
+  theme_minimal()
+
+
+# 1. Extract posterior predictive draws
+yrep_mat <- as_draws_matrix(fit$draws("y_rep"))
+
+# 2. Create stand index using start/end indices
+stand_id <- rep(NA, data_list$N)
+
+for (f in 1:data_list$F) {
+  stand_id[data_list$start_idxs[f]:data_list$end_idxs[f]] <- f
+}
+
+lookup <- data.frame(
+  idx = 1:data_list$N,
+  stand = stand_id
+)
+
+# 3. Convert to long format
+yrep_long <- as.data.frame(yrep_mat)
+colnames(yrep_long) <- 1:data_list$N
+
+yrep_long <- yrep_long %>%
+  mutate(draw = 1:n()) %>%
+  pivot_longer(
+    cols = -draw,
+    names_to = "idx",
+    values_to = "y_pred"
+  ) %>%
+  mutate(idx = as.integer(idx)) %>%
+  left_join(lookup, by = "idx")
+
+# 4. Add observed data with same stand indexing
+obs_df <- data.frame(
+  idx = 1:data_list$N,
+  y = data_list$y,
+  stand = stand_id
+)
+
+# 5. Plot posterior predictive densities per stand
+ggplot() +
+  geom_density(
+    data = yrep_long,
+    aes(x = y_pred),
+    fill = "lightblue",
+    alpha = 0.5
+  ) +
+  geom_density(
+    data = obs_df,
+    aes(x = y),
+    color = "black",
+    size = 1
+  ) +
+  facet_wrap(~stand, scales = "free") +
+  theme_minimal() +
+  labs(
+    x = "Seed count",
+    y = "Density",
+    title = "Posterior Predictive Densities per Stand"
+  )
+
+
+
+
+
+
+
+
+# # Convert to a matrix: (iterations * chains) × T
+# yrep_mat <- as_draws_matrix(yrep)  # posterior package handles flattening
+# 
+# yrep_quants <- apply(yrep_mat, 2, quantile, probs = c(0.025, 0.5, 0.975))
+
+# years <- psme_data_simple2$year
+# y_obs <- psme_data_simple$y
+# 
+# df_plot <- data.frame(
+#   year = years,
+#   y_obs = y_obs,
+#   lower = yrep_quants[1, ],
+#   median = yrep_quants[2, ],
+#   upper = yrep_quants[3, ]
+# )
+# 
+# 
+# ggplot(df_plot, aes(x = year)) +
+#   geom_ribbon(aes(ymin = lower, ymax = upper), fill = "lightblue", alpha = 0.5) +
+#   geom_line(aes(y = median), color = "blue", size = 1) +
+#   geom_point(aes(y = y_obs), color = "red", size = 2) +
+#   labs(
+#     y = "Seed counts",
+#     x = "Year",
+#     title = "Posterior Predictive Check"
+#   ) +
+#   theme_minimal()
+# 
+# #changer avec deux distributions plot : avec les données. 
+# 
+# # Suppose your fitted model is 'fit'
+# posterior <- fit$draws(variables = c("mu", "phi"), format = "df")
+# 
+# # Check the first few rows
+# head(posterior)
+# 
+# 
+# 
+# set.seed(123)
+# 
+# # Take a subset of posterior draws to reduce plotting size
+# posterior_sub <- posterior[sample(nrow(posterior), 500), ]
+# 
+# # Simulate distributions
+# sim_data <- data.frame()
+# 
+# for (i in 1:nrow(posterior_sub)) {
+#   # State 1 (low)
+#   sim_low <- rnbinom(100, size = posterior_sub$`phi[1]`[i],
+#                      mu = posterior_sub$`mu[1]`[i])
+#   sim_data <- rbind(sim_data,
+#                     data.frame(seed = sim_low, state = "low"))
+#   
+#   # State 2 (high)
+#   sim_high <- rnbinom(100, size = posterior_sub$`phi[2]`[i],
+#                       mu = posterior_sub$`mu[2]`[i])
+#   sim_data <- rbind(sim_data,
+#                     data.frame(seed = sim_high, state = "high"))
+# }
+# 
+# 
+# ggplot(sim_data, aes(x = seed, fill = state)) +
+#   geom_density(alpha = 0.5) +
+#   scale_x_continuous(name = "Seed Production") +
+#   scale_fill_manual(values = c("low" = "skyblue", "high" = "orange")) +
+#   theme_minimal() +
+#   ggtitle("Posterior Predictive Distributions of Seed Production per State")
+# 
+# 
+# mu_means <- colMeans(posterior_sub[, c("mu[1]", "mu[2]")])
+# 
+# ggplot(sim_data, aes(x = seed, fill = state)) +
+#   geom_density(alpha = 0.5) +
+#   geom_vline(xintercept = mu_means[1], color = "blue", linetype = "dashed") +
+#   geom_vline(xintercept = mu_means[2], color = "red", linetype = "dashed") +
+#   scale_fill_manual(values = c("low" = "skyblue", "high" = "orange")) +
+#   theme_minimal() +
+#   xlim(c(0,300))
+# 
+# ggplot(psme_data_simple, aes(x = y)) +
+#   geom_density(fill = "skyblue", alpha = 0.5) +
+#   ggtitle("Density")
+# 
+# 
+# ggplot() +
+#   # Posterior predictive densities (by state)
+#   geom_density(data = sim_data, aes(x = seed, fill = state), alpha = 0.5) +
+#   geom_vline(xintercept = mu_means[1], color = "blue", linetype = "dashed") +
+#   geom_vline(xintercept = mu_means[2], color = "red", linetype = "dashed") +
+#   scale_fill_manual(values = c("low" = "skyblue", "high" = "orange")) +
+#   # Actual observed data density
+#   geom_density(data = psme_data_simple, aes(x = y),
+#                fill = "black", alpha = 0.3) +
+#   theme_minimal() +
+#   xlim(c(0, 300)) +
+#   ggtitle("Posterior Predictive Densities (by state) with Observed Data")
