@@ -15,3 +15,7 @@
 *.synctex.gz
 
 *.exe
+.aux
+.log
+.out
+.synctex.gz
