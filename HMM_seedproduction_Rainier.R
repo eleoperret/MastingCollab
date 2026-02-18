@@ -456,14 +456,12 @@ mu_summary <- as.data.frame(mu_draws) %>%
   group_by(stand, state) %>%
   summarise(mean_mu = mean(mu),median_mu = median(mu),lower = quantile(mu, 0.025),upper = quantile(mu, 0.975),.groups = "drop")
 
-ggplot(mu_summary, aes(x = factor(stand), y = mean_mu, fill = state)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width = 0.9)) +
-  scale_fill_manual(values = c("1" = "skyblue", "2" = "orange"), labels = c("low", "high")) +
-  labs(x = "Stand", y = "Posterior mean seed production", fill = "State") +
-  theme_minimal()
-
-
+# ggplot(mu_summary, aes(x = factor(stand), y = mean_mu, fill = state)) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width = 0.9)) +
+#   scale_fill_manual(values = c("1" = "skyblue", "2" = "orange"), labels = c("low", "high")) +
+#   labs(x = "Stand", y = "Posterior mean seed production", fill = "State") +
+#   theme_minimal()
 
 
 # Preparing the data for plotting the posterior distribution
@@ -485,7 +483,9 @@ df_pred %>%
   )
 
 
-#Overall 
+###First plot
+##
+#OVERALL
 set.seed(123)
 draw_id <- sample(1:nrow(yrep_mat), 1)
 yrep_one <- yrep_mat[draw_id, ]
@@ -494,7 +494,7 @@ df_hist <- data.frame(
   observed  = as.numeric(psme_data_simple2$y),
   predicted = as.numeric(yrep_one)
 )
-
+#Plot for the posterior distribution vs the observed for all model
 ggplot(df_hist) +
   geom_histogram(aes(x = observed, y = after_stat(density)),
                  bins = 30, fill = "black", alpha = 0.4) +
@@ -505,30 +505,27 @@ ggplot(df_hist) +
   labs(title = "Observed vs Posterior Predictive Histogram",
        x = "Seed Production",
        y = "Density")
-
-#per stand
+#PER STAND
 df_hist2 <- psme_data_simple2 %>%
   mutate(predicted = yrep_one)
-
+#Plot for the posterior distribution vs the observed for each stand
 ggplot(df_hist2, aes(x = y)) +
   geom_histogram(bins = 20, fill = "black", alpha = 0.4) +
   geom_histogram(aes(x = predicted), bins = 20, fill = "skyblue", alpha = 0.5) +
   facet_wrap(~ stand, scales = "free") +
   theme_minimal() +
   labs(title = "Observed vs Posterior Predictive per Stand", x = "Seed Production")
+##
 
-#per state
+##
+#MEAN PER STATE and STAND
 posterior <- fit$draws(variables = c("alpha","sigma_stand","stand_effect_raw","phi"), format = "df")
-
 set.seed(123)
 posterior_sub <- posterior[sample(nrow(posterior), 300), ]
-
+#Simulation
 sim_data <- data.frame()
-
 F <- length(unique(psme_data_simple2$stand))
-
 for (i in 1:nrow(posterior_sub)) {
-  
   for (f in 1:F) {
     # Compute stand-specific mu for low and high
     mu_low  <- exp(posterior_sub[[paste0("alpha[1]")]][i] +
@@ -550,34 +547,41 @@ for (i in 1:nrow(posterior_sub)) {
     )
   }
 }
-
-#per state and stand
+# Compute mean for each stand & state
+sim_means <- sim_data %>%
+  group_by(stand, state) %>%
+  summarise(mean_seed = mean(seed), .groups = "drop")
+#Plot of the posterior mean per state and stand. 
 ggplot(sim_data, aes(x = seed, fill = state)) +
   geom_histogram(position = "identity", alpha = 0.5, bins = 40) +
+  # Add vertical lines for posterior predictive mean
+  geom_vline(data = sim_means, aes(xintercept = mean_seed, color = state),
+             linetype = "dashed", size = 1) +
   scale_fill_manual(values = c("Low" = "skyblue","High" = "orange")) +
+  scale_color_manual(values = c("Low" = "blue", "High" = "red")) +
   facet_wrap(~ stand, scales = "free") +
   theme_minimal() +
   xlim(c(0, 300)) +
-  labs(title = "Posterior Predictive Histograms by State and Stand",
-       x = "Seed Production")
+  labs(
+    title = "Posterior Predictive Histograms by State and Stand",
+    x = "Seed Production",
+    subtitle = "Dashed lines = posterior predictive mean per state"
+  )
+##
 
-
-
-#Checking state switching
+##
+#STATE switching
 # Extract latent states from posterior draws
 z_draws <- fit$draws("state")  # or "z" if that’s the variable in your Stan model
 z_mat <- as_draws_matrix(z_draws)
-
 # Take posterior mode per observation
 z_mode <- apply(z_mat, 2, function(x) {
   ux <- unique(x)
   ux[which.max(tabulate(match(x, ux)))]
 })
-
 # Add to dataset
 df_pred <- df_pred %>%
   mutate(state_mode = z_mode)
-
 # Count number of transitions per stand
 state_transitions <- df_pred %>%
   group_by(stand) %>%
@@ -588,5 +592,196 @@ state_transitions <- df_pred %>%
     last_state  = state_mode[n()]
   ) %>%
   arrange(n_transitions)
-
 state_transitions
+##
+
+
+##
+##STAND SPECIFIC MEAN VS OBSERVED DATA
+post <- as_draws_matrix(
+  fit$draws(c("alpha","sigma_stand","stand_effect_raw"))
+)
+stand_summary <- data.frame()
+for (f in 1:F) {
+  mu_draws <- exp(
+    post[, paste0("alpha[1]")] +
+      post[, paste0("stand_effect_raw[",f,",1]")] *
+      post[, paste0("sigma_stand[1]")]
+  )
+  stand_summary <- rbind(
+    stand_summary,
+    data.frame(
+      stand = f,
+      mean  = mean(mu_draws),
+      lower = quantile(mu_draws, 0.025),
+      upper = quantile(mu_draws, 0.975)
+    )
+  )
+}
+# Compute mean observed seed production per stand
+observed_summary <- psme_data_simple2 %>%
+  group_by(stand) %>%
+  summarise(
+    mean_observed = mean(y),
+    .groups = "drop"
+  )
+# Extract stand names from observed_summary
+stand_names <- observed_summary$stand
+# Add them to stand_summary
+stand_summary$stand_name <- stand_names
+observed_summary$stand_name <- stand_names
+#Plot of the stand specific mean for posterior distribution vs the data
+ggplot(stand_summary, aes(x = stand_name, y = mean)) +
+  # Posterior mean ± CI
+  geom_point(size = 3, color = "skyblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, color = "skyblue") +
+  # Observed mean per stand
+  geom_point(data = observed_summary, aes(x = stand_name, y = mean_observed),
+             size = 3, shape = 17, color = "black") +
+  theme_minimal(base_size = 12) +
+  labs(
+    x = "Stand",
+    y = "Seed production",
+    title = "Stand-specific posterior mean μ vs Observed data",
+    subtitle = "Skyblue = posterior mean ± 95% CI, Black triangle = observed mean"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+##
+
+##PLOTTING PARAMETERS
+alpha_post  <- as_draws_matrix(fit$draws("alpha"))
+sigma_post  <- as_draws_matrix(fit$draws("sigma_stand"))
+phi_post    <- as_draws_matrix(fit$draws("phi"))
+rho_post    <- as_draws_matrix(fit$draws("rho"))
+gamma_post  <- as_draws_matrix(fit$draws("Gamma"))
+summarise_param <- function(mat, param_name) {
+  data.frame(
+    parameter = colnames(mat),
+    mean  = colMeans(mat),
+    lower = apply(mat, 2, quantile, 0.025),
+    upper = apply(mat, 2, quantile, 0.975),
+    group = param_name
+  )
+}
+summary_all <- bind_rows(
+  summarise_param(alpha_post,  "Alpha (log mean)"),
+  summarise_param(sigma_post,  "Sigma_stand"),
+  summarise_param(phi_post,    "Phi (dispersion)"),
+  summarise_param(rho_post,    "Rho (initial prob)"),
+  summarise_param(gamma_post,  "Gamma (transition)")
+)
+summary_all$parameter <- gsub("\\[|\\]", "", summary_all$parameter)
+ggplot(summary_all,
+       aes(x = parameter, y = mean)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  facet_wrap(~ group, scales = "free_x") +   # << free x-axis
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),  # labels upright
+    strip.text = element_text(face = "bold")
+  ) +
+  labs(
+    x = NULL,
+    y = "Posterior mean (95% CI)",
+    title = "Posterior summaries of global HMM parameters"
+  )
+###
+
+
+####PLot for posteriror mean between states
+# Extract posterior samples for relevant parameters
+posterior_sub <- as_draws_df(fit$draws(variables = c("alpha","sigma_stand","stand_effect_raw")))
+F <- length(unique(psme_data_simple2$stand))  # number of stands
+S <- 2  # number of states
+stand_names <- unique(psme_data_simple2$stand)  # keep original stand names
+# Prepare a dataframe to store posterior summaries
+stand_summary <- data.frame()
+for (f in 1:F){
+  for (s in 1:S){
+    mu_draws <- exp(
+      posterior_sub[[paste0("alpha[",s,"]")]] +
+        posterior_sub[[paste0("stand_effect_raw[",f,",",s,"]")]] *
+        posterior_sub[[paste0("sigma_stand[",s,"]")]]
+    )
+    stand_summary <- rbind(
+      stand_summary,
+      data.frame(
+        stand      = stand_names[f],
+        state      = ifelse(s==1,"Low","High"),
+        mean       = mean(mu_draws),
+        lower      = quantile(mu_draws, 0.025),
+        upper      = quantile(mu_draws, 0.975)
+      )
+    )
+  }
+}
+
+ggplot() +
+  # Posterior mean ± CI
+  geom_point(data = stand_summary, aes(x = stand, y = mean, color = state), size = 3) +
+  geom_errorbar(data = stand_summary,
+                aes(x = stand, ymin = lower, ymax = upper, color = state),
+                width = 0.2) +
+  # Observed mean
+  geom_point(data = observed_summary, aes(x = stand, y = mean_observed),
+             color = "black", shape = 17, size = 3) +
+  theme_minimal(base_size = 12) +
+  labs(
+    x = "Stand",
+    y = "Seed production",
+    color = "State",
+    title = "Posterior mean μ per stand (Low/High) vs Observed",
+    subtitle = "Skyblue/Orange = posterior mean ± 95% CI, Black triangle = observed mean"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplot(stand_summary, aes(x = stand, y = mean)) +
+  geom_point(aes(color = state), size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper, color = state), width = 0.2) +
+  geom_point(data = observed_summary, aes(x = stand, y = mean_observed), color = "black", shape = 17, size = 3) +
+  facet_wrap(~ state, scales = "free_y") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Stand", y = "Seed production", color = "State")
+##
+
+
+###PLot for posteriror mean between stands
+# Preparing the plot
+stand_wide <- stand_summary %>%
+  select(stand, state, mean) %>%
+  pivot_wider(names_from = stand, values_from = mean)
+# Separate by state
+low_mu  <- stand_wide %>% filter(state == "Low") %>% select(-state)
+high_mu <- stand_wide %>% filter(state == "High") %>% select(-state)
+# Function to make pairwise dataframe
+make_pairwise <- function(df){
+  combos <- combn(names(df), 2)
+  pairwise <- data.frame(
+    x = as.numeric(df[1, combos[1,]]), 
+    y = as.numeric(df[1, combos[2,]]),
+    stand_x = combos[1,],
+    stand_y = combos[2,]
+  )
+  pairwise
+}
+pairwise_low <- make_pairwise(low_mu)
+pairwise_high <- make_pairwise(high_mu)
+pairwise_low$state  <- "Low"
+pairwise_high$state <- "High"
+pairwise_all <- bind_rows(pairwise_low, pairwise_high)
+#Plotting: Mean between stands. If below the line Stand A> stand B and opposite
+ggplot(pairwise_all, aes(x = x, y = y, color = state)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c("Low" = "lightblue", "High" = "gray70")) +
+  theme_minimal(base_size = 12) +
+  labs(
+    x = "Stand mean",
+    y = "Stand mean",
+    title = "Pairwise comparison of stand-specific posterior mean",
+    subtitle = "Light blue = Low state, Gray = High state; dashed = 1:1 line"
+  )
+##
+
+
