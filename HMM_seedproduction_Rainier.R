@@ -785,3 +785,112 @@ ggplot(pairwise_all, aes(x = x, y = y, color = state)) +
 ##
 
 
+# PLotting based on Christophes' code -------------------------------------
+
+# STAND-LEVEL log_mu
+logmu_cols <- grep("^log_mu\\[", colnames(df_fit), value = TRUE)
+logmu_df <- df_fit[, logmu_cols]
+
+# Extract stand & state indices safely
+indices <- do.call(
+  rbind,
+  strsplit(gsub("log_mu\\[|\\]", "", logmu_cols), ",")
+)
+
+logmu_summary <- data.frame(
+  stand = as.integer(indices[,1]),
+  state = as.integer(indices[,2]),
+  mean = NA,
+  per5 = NA,
+  per95 = NA
+)
+
+for (i in seq_along(logmu_cols)) {
+  logmu_summary$mean[i]  <- mean(logmu_df[[i]])
+  logmu_summary$per5[i]  <- quantile(logmu_df[[i]], 0.05)
+  logmu_summary$per95[i] <- quantile(logmu_df[[i]], 0.95)
+}
+
+# Order correctly
+logmu_summary <- logmu_summary[order(logmu_summary$stand,
+                                     logmu_summary$state), ]
+
+ggplot(logmu_summary,
+       aes(x = factor(stand), y = mean)) +
+  geom_errorbar(aes(ymin = per5, ymax = per95),
+                width = 0, alpha = 0.4) +
+  geom_point(size = 1.5) +
+  facet_wrap(~ state) +
+  labs(x = "Stand", y = "log_mu") +
+  theme_minimal()
+
+
+
+
+
+#ALpha
+alpha_cols <- grep("^alpha\\[", colnames(df_fit), value = TRUE)
+alpha_df <- df_fit[, alpha_cols]
+S <- length(alpha_cols)
+
+alpha_summary <- data.frame(
+  state = 1:S,
+  mean = sapply(alpha_df, mean),
+  per5 = sapply(alpha_df, quantile, 0.05),
+  per25 = sapply(alpha_df, quantile, 0.25),
+  per75 = sapply(alpha_df, quantile, 0.75),
+  per95 = sapply(alpha_df, quantile, 0.95),
+  parameter = "alpha"
+)
+
+#SIGMA
+sigma_cols <- grep("^sigma_stand\\[", colnames(df_fit), value = TRUE)
+sigma_df <- df_fit[, sigma_cols]
+
+sigma_summary <- data.frame(
+  state = 1:S,
+  mean = sapply(sigma_df, mean),
+  per5 = sapply(sigma_df, quantile, 0.05),
+  per25 = sapply(sigma_df, quantile, 0.25),
+  per75 = sapply(sigma_df, quantile, 0.75),
+  per95 = sapply(sigma_df, quantile, 0.95),
+  parameter = "sigma_stand"
+)
+
+#PHI
+phi_cols <- grep("^phi\\[", colnames(df_fit), value = TRUE)
+phi_df <- df_fit[, phi_cols]
+
+phi_summary <- data.frame(
+  state = 1:S,
+  mean = sapply(phi_df, mean),
+  per5 = sapply(phi_df, quantile, 0.05),
+  per25 = sapply(phi_df, quantile, 0.25),
+  per75 = sapply(phi_df, quantile, 0.75),
+  per95 = sapply(phi_df, quantile, 0.95),
+  parameter = "phi"
+)
+
+combined_summary <- bind_rows(
+  alpha_summary,
+  sigma_summary,
+  phi_summary
+)
+
+
+
+ggplot(combined_summary,
+       aes(x = factor(state), y = mean)) +
+  geom_errorbar(aes(ymin = per5, ymax = per95),
+                width = 0, alpha = 0.4) +
+  geom_errorbar(aes(ymin = per25, ymax = per75),
+                width = 0, linewidth = 1) +
+  geom_point(size = 2.5) +
+  facet_wrap(~ parameter, scales = "free_y") +
+  labs(x = "State",
+       y = "Posterior estimate") +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
