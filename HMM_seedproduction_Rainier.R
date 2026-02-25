@@ -8,7 +8,7 @@
 
 library(dplyr)
 library(ggplot2)
-library(cmdstanr)
+library(rstan)
 library(posterior)
 library(bayesplot)
 library(tidyr)
@@ -427,41 +427,141 @@ data_list <- list(
   y   = y
 )
 
-mod <- cmdstan_model("hmm_stand_pooling.stan")
+mod <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling.stan")
 
-fit <- mod$sample(
+fit <- sampling(
+  mod,
   data = data_list,
-  chains = 4,
-  iter_warmup = 1000,
-  iter_sampling = 1000,
-  parallel_chains = 4
+  chains = 4, cores = 4,
+  iter = 2000, warmup = 1000
 )
 
 fit$summary()
 summary(fit$draws(c("phi","log_mu", "Gamma","rho")))
-pritfit$summary("sigma_stand")
 
 
-log_mu_draws <- fit$draws("log_mu")
-log_mu_mat <- as_draws_matrix(log_mu_draws)
+####
+##Plots
+#Based on Mike's code 
 
-# Convert to mu
-mu_draws <- exp(log_mu_mat)
+util<- new.env()
+source("mcmc_analysis_tools_rstan.R", local = util)
+source("mcmc_visualization_tools.R", local = util)
 
-# Posterior mean per stand and state
-apply(mu_draws, 2, mean)
+# diagnostics generaux HMC (chain behavior)
+diagnostics <- util$extract_hmc_diagnostics(fit)
+util$check_all_hmc_diagnostics(diagnostics)
 
-mu_summary <- as.data.frame(mu_draws) %>%
-  pivot_longer(cols = everything(),names_to = c("stand","state"),names_pattern = "log_mu\\[(\\d+),(\\d+)\\]",values_to = "mu") %>%
-  group_by(stand, state) %>%
-  summarise(mean_mu = mean(mu),median_mu = median(mu),lower = quantile(mu, 0.025),upper = quantile(mu, 0.975),.groups = "drop")
+# extraire les posterior values
+samples <- util$extract_expectand_vals(fit)
 
-# ggplot(mu_summary, aes(x = factor(stand), y = mean_mu, fill = state)) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(width = 0.9)) +
-#   scale_fill_manual(values = c("1" = "skyblue", "2" = "orange"), labels = c("low", "high")) +
-#   labs(x = "Stand", y = "Posterior mean seed production", fill = "State") +
-#   theme_minimal()
+# diagnostics parametre par parametre
+base_samples <- util$filter_expectands(samples,
+                                       c("rho", "Gamma_raw",
+                                         "log_lambda", "log_mu",
+                                         "stand_effect_raw", "phi",
+                                         "sigma"), check_arrays = TRUE)
+util$check_all_expectand_diagnostics(base_samples)
+
+# ppc for all 
+par(mfrow = c(1,1))
+names_yrep <- paste0("y_rep[", 1:data_list$N, "]")
+util$plot_hist_quantiles(samples, "y_rep")
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 1000, bin_delta = 100)
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20)
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = data_list$y)
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 100, bin_delta = 2,
+                         baseline_values = data_list$y)
+
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  subsamples <-  util$filter_expectands(samples,
+                                        paste0("y_rep[", idxs, "]"))
+  util$plot_hist_quantiles(subsamples, "y_rep",
+                           bin_min = 0, bin_max = 500, bin_delta = 10,
+                           baseline_values = data_list$y[idxs])
+}
+
+#Probability of being in a mast vs non-mast 
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  names <- paste0("y_rep[", idxs, "]")
+  util$plot_disc_pushforward_quantiles(samples, names,
+                                       baseline_values = data_list$y[idxs])
+}
+
+#Probability of being in a mast vs non-mast scaled
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  names <- paste0("y_rep[", idxs, "]")
+  util$plot_disc_pushforward_quantiles(samples, names,
+                                       baseline_values = data_list$y[idxs],
+                                       display_ylim = c(0,800))
+}
+
+unique(psme_data$stand)
+
+#Probability of switching
+par(mfrow = c(2,2), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(samples[["Gamma[1,1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[1,2]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[2,1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[2,2]"]], 50, flim = c(0,1))
+
+#Probability in starting in the low state
+par(mfrow=c(1,2))
+util$plot_expectand_pushforward(samples[["rho[1]"]], 50, flim=c(0,1))
+util$plot_expectand_pushforward(samples[["rho[2]"]], 50, flim=c(0,1))
+
+
+#Seed production for high state
+for(s in 1:data_list$F){
+  newname <- paste0("alpha[", s, "]")
+  samples[[newname]] <- exp(samples[[paste0("log_alpha[", s, "]")]])
+}
+#Mast means vary by stand
+par(mfrow = c(1,1), mar = c(5,5,1,1))
+util$plot_disc_pushforward_quantiles(samples, paste0("alpha[", 1:data_list$F, "]"))
+#Mast means vary by stand [1] or [2]
+util$plot_expectand_pushforward(samples[["log_alpha[1]"]], 50)
+util$plot_expectand_pushforward(samples[["log_alpha[2]"]], 50)
+#Mast means vary by all stands
+par(mfrow=c(4,3))
+for(f in 1:F){
+  util$plot_expectand_pushforward(samples[[paste0("log_alpha[", f, "]")]], 50)
+}
+#Seed production under mast year per stands.
+par(mfrow=c(4,3))
+for(f in 1:F){
+  util$plot_expectand_pushforward(
+    exp(samples[[paste0("log_alpha[", f, "]")]]), 50,display_name = bquote(alpha * "(high)"))
+}
+
+forplot <- psme_data %>%
+  group_by(stand) %>%
+  summarise(
+    mean_seed = mean(total_viable_sds, na.rm = TRUE),
+    max_seed  = max(total_viable_sds, na.rm = TRUE)
+  )
+
+
+
+#mean seed production of the low state
+par(mfrow = c(1,1), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(exp(samples[["log_lambda"]]), 20,
+                                display_name = bquote(lambda * " (low)"))
+
+
+
+####
 
 
 # Preparing the data for plotting the posterior distribution
@@ -689,208 +789,198 @@ ggplot(summary_all,
 ###
 
 
-####PLot for posteriror mean between states
-# Extract posterior samples for relevant parameters
-posterior_sub <- as_draws_df(fit$draws(variables = c("alpha","sigma_stand","stand_effect_raw")))
-F <- length(unique(psme_data_simple2$stand))  # number of stands
-S <- 2  # number of states
-stand_names <- unique(psme_data_simple2$stand)  # keep original stand names
-# Prepare a dataframe to store posterior summaries
-stand_summary <- data.frame()
-for (f in 1:F){
-  for (s in 1:S){
-    mu_draws <- exp(
-      posterior_sub[[paste0("alpha[",s,"]")]] +
-        posterior_sub[[paste0("stand_effect_raw[",f,",",s,"]")]] *
-        posterior_sub[[paste0("sigma_stand[",s,"]")]]
-    )
-    stand_summary <- rbind(
-      stand_summary,
-      data.frame(
-        stand      = stand_names[f],
-        state      = ifelse(s==1,"Low","High"),
-        mean       = mean(mu_draws),
-        lower      = quantile(mu_draws, 0.025),
-        upper      = quantile(mu_draws, 0.975)
-      )
-    )
-  }
+
+
+
+
+# HMM: One specie x Stands (Partial Pooled)  x Traps (as offset) x same start year and also with new transition matrix per stand ---------------------------------------
+
+head(psme_data)
+
+
+
+stand_year_df <- psme_data %>%
+  group_by(stand, year) %>%
+  filter(year!="2009") %>% #All starting in 2010 
+  summarise(
+    y = sum(total_viable_sds, na.rm = TRUE),
+    area = sum(size, na.rm = TRUE), #Summarizing the total trap aerea
+    .groups = "drop"
+  ) %>%
+  arrange(stand, year)
+
+
+years_per_stand <- stand_year_df %>%
+  group_by(stand) %>%
+  summarise(T_i = n(), .groups = "drop")
+
+F <- nrow(years_per_stand)
+T_i <- years_per_stand$T_i
+
+start_idxs <- c()
+end_idxs <- c()
+id <- 1
+
+for (s in 1:F) {
+  start_idxs <- c(start_idxs, id)
+  id <- id + T_i[s] - 1
+  end_idxs <- c(end_idxs, id)
+  id <- id + 1
 }
 
-ggplot() +
-  # Posterior mean ± CI
-  geom_point(data = stand_summary, aes(x = stand, y = mean, color = state), size = 3) +
-  geom_errorbar(data = stand_summary,
-                aes(x = stand, ymin = lower, ymax = upper, color = state),
-                width = 0.2) +
-  # Observed mean
-  geom_point(data = observed_summary, aes(x = stand, y = mean_observed),
-             color = "black", shape = 17, size = 3) +
-  theme_minimal(base_size = 12) +
-  labs(
-    x = "Stand",
-    y = "Seed production",
-    color = "State",
-    title = "Posterior mean μ per stand (Low/High) vs Observed",
-    subtitle = "Skyblue/Orange = posterior mean ± 95% CI, Black triangle = observed mean"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggplot(stand_summary, aes(x = stand, y = mean)) +
-  geom_point(aes(color = state), size = 3) +
-  geom_errorbar(aes(ymin = lower, ymax = upper, color = state), width = 0.2) +
-  geom_point(data = observed_summary, aes(x = stand, y = mean_observed), color = "black", shape = 17, size = 3) +
-  facet_wrap(~ state, scales = "free_y") +
-  theme_minimal(base_size = 12) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Stand", y = "Seed production", color = "State")
-##
+y <- stand_year_df$y
+area <- stand_year_df$area
+N <- length(y)
 
-
-###PLot for posteriror mean between stands
-# Preparing the plot
-stand_wide <- stand_summary %>%
-  select(stand, state, mean) %>%
-  pivot_wider(names_from = stand, values_from = mean)
-# Separate by state
-low_mu  <- stand_wide %>% filter(state == "Low") %>% select(-state)
-high_mu <- stand_wide %>% filter(state == "High") %>% select(-state)
-# Function to make pairwise dataframe
-make_pairwise <- function(df){
-  combos <- combn(names(df), 2)
-  pairwise <- data.frame(
-    x = as.numeric(df[1, combos[1,]]), 
-    y = as.numeric(df[1, combos[2,]]),
-    stand_x = combos[1,],
-    stand_y = combos[2,]
-  )
-  pairwise
-}
-pairwise_low <- make_pairwise(low_mu)
-pairwise_high <- make_pairwise(high_mu)
-pairwise_low$state  <- "Low"
-pairwise_high$state <- "High"
-pairwise_all <- bind_rows(pairwise_low, pairwise_high)
-#Plotting: Mean between stands. If below the line Stand A> stand B and opposite
-ggplot(pairwise_all, aes(x = x, y = y, color = state)) +
-  geom_point(size = 3, alpha = 0.7) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") +
-  scale_color_manual(values = c("Low" = "lightblue", "High" = "gray70")) +
-  theme_minimal(base_size = 12) +
-  labs(
-    x = "Stand mean",
-    y = "Stand mean",
-    title = "Pairwise comparison of stand-specific posterior mean",
-    subtitle = "Light blue = Low state, Gray = High state; dashed = 1:1 line"
-  )
-##
-
-
-# PLotting based on Christophes' code -------------------------------------
-
-# STAND-LEVEL log_mu
-logmu_cols <- grep("^log_mu\\[", colnames(df_fit), value = TRUE)
-logmu_df <- df_fit[, logmu_cols]
-
-# Extract stand & state indices safely
-indices <- do.call(
-  rbind,
-  strsplit(gsub("log_mu\\[|\\]", "", logmu_cols), ",")
+stan_data <- list(
+  F = F,              
+  N = N,              
+  T_i = T_i,          
+  start_idxs = start_idxs,
+  end_idxs = end_idxs,
+  y = y,              
+  area = area        
 )
 
-logmu_summary <- data.frame(
-  stand = as.integer(indices[,1]),
-  state = as.integer(indices[,2]),
-  mean = NA,
-  per5 = NA,
-  per95 = NA
+
+mod <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling_TransitionStand.stan")
+
+#Issues as some values of y rep in the initialization cannot be computed so I changed the log_mu_raw
+
+fit <- sampling(
+  mod,
+  data = stan_data,
+  chains = 4, cores = 4,
+  iter = 2000, warmup = 1000
 )
 
-for (i in seq_along(logmu_cols)) {
-  logmu_summary$mean[i]  <- mean(logmu_df[[i]])
-  logmu_summary$per5[i]  <- quantile(logmu_df[[i]], 0.05)
-  logmu_summary$per95[i] <- quantile(logmu_df[[i]], 0.95)
+
+####
+##Plots
+#Based on Mike's code 
+
+util<- new.env()
+source("mcmc_analysis_tools_rstan.R", local = util)
+source("mcmc_visualization_tools.R", local = util)
+
+# diagnostics generaux HMC (chain behavior)
+diagnostics <- util$extract_hmc_diagnostics(fit)
+util$check_all_hmc_diagnostics(diagnostics)
+
+# extraire les posterior values
+samples <- util$extract_expectand_vals(fit)
+
+# diagnostics parametre par parametre
+base_samples <- util$filter_expectands(samples,
+                                       c("rho", "theta1","theta2",
+                                         "log_lambda", "log_mu_raw",
+                                         "stand_effect_raw", "phi",
+                                         "sigma"), check_arrays = TRUE)
+util$check_all_expectand_diagnostics(base_samples)
+
+# ppc for all 
+par(mfrow = c(1,1))
+
+names_yrep <- paste0("y_rep[", 1:data_list$N, "]")
+util$plot_hist_quantiles(samples, "y_rep")
+
+
+
+# Plot PPC
+par(mfrow = c(1,1))
+
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 1000, bin_delta = 100)
+
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20)
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = data_list$y)
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 100, bin_delta = 2,
+                         baseline_values = data_list$y)
+
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  subsamples <-  util$filter_expectands(samples,
+                                        paste0("y_rep[", idxs, "]"))
+  util$plot_hist_quantiles(subsamples, "y_rep",
+                           bin_min = 0, bin_max = 500, bin_delta = 10,
+                           baseline_values = data_list$y[idxs])
 }
 
-# Order correctly
-logmu_summary <- logmu_summary[order(logmu_summary$stand,
-                                     logmu_summary$state), ]
+#Probability of being in a mast vs non-mast 
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  names <- paste0("y_rep[", idxs, "]")
+  util$plot_disc_pushforward_quantiles(samples, names,
+                                       baseline_values = data_list$y[idxs])
+}
 
-ggplot(logmu_summary,
-       aes(x = factor(stand), y = mean)) +
-  geom_errorbar(aes(ymin = per5, ymax = per95),
-                width = 0, alpha = 0.4) +
-  geom_point(size = 1.5) +
-  facet_wrap(~ state) +
-  labs(x = "Stand", y = "log_mu") +
-  theme_minimal()
+#Probability of being in a mast vs non-mast scaled
+par(mfrow = c(4,3), mar = c(5,5,1,1))
+for(s in 1:data_list$F){
+  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+  names <- paste0("y_rep[", idxs, "]")
+  util$plot_disc_pushforward_quantiles(samples, names,
+                                       baseline_values = data_list$y[idxs],
+                                       display_ylim = c(0,800))
+}
 
+unique(psme_data$stand)
 
+#Probability of switching
+par(mfrow = c(2,2), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(samples[["Gamma[1,1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[1,2]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[2,1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["Gamma[2,2]"]], 50, flim = c(0,1))
 
-
-
-#ALpha
-alpha_cols <- grep("^alpha\\[", colnames(df_fit), value = TRUE)
-alpha_df <- df_fit[, alpha_cols]
-S <- length(alpha_cols)
-
-alpha_summary <- data.frame(
-  state = 1:S,
-  mean = sapply(alpha_df, mean),
-  per5 = sapply(alpha_df, quantile, 0.05),
-  per25 = sapply(alpha_df, quantile, 0.25),
-  per75 = sapply(alpha_df, quantile, 0.75),
-  per95 = sapply(alpha_df, quantile, 0.95),
-  parameter = "alpha"
-)
-
-#SIGMA
-sigma_cols <- grep("^sigma_stand\\[", colnames(df_fit), value = TRUE)
-sigma_df <- df_fit[, sigma_cols]
-
-sigma_summary <- data.frame(
-  state = 1:S,
-  mean = sapply(sigma_df, mean),
-  per5 = sapply(sigma_df, quantile, 0.05),
-  per25 = sapply(sigma_df, quantile, 0.25),
-  per75 = sapply(sigma_df, quantile, 0.75),
-  per95 = sapply(sigma_df, quantile, 0.95),
-  parameter = "sigma_stand"
-)
-
-#PHI
-phi_cols <- grep("^phi\\[", colnames(df_fit), value = TRUE)
-phi_df <- df_fit[, phi_cols]
-
-phi_summary <- data.frame(
-  state = 1:S,
-  mean = sapply(phi_df, mean),
-  per5 = sapply(phi_df, quantile, 0.05),
-  per25 = sapply(phi_df, quantile, 0.25),
-  per75 = sapply(phi_df, quantile, 0.75),
-  per95 = sapply(phi_df, quantile, 0.95),
-  parameter = "phi"
-)
-
-combined_summary <- bind_rows(
-  alpha_summary,
-  sigma_summary,
-  phi_summary
-)
+#Probability in starting in the low state
+par(mfrow=c(1,2))
+util$plot_expectand_pushforward(samples[["rho[1]"]], 50, flim=c(0,1))
+util$plot_expectand_pushforward(samples[["rho[2]"]], 50, flim=c(0,1))
 
 
+#Seed production for high state
+for(s in 1:data_list$F){
+  newname <- paste0("alpha[", s, "]")
+  samples[[newname]] <- exp(samples[[paste0("log_alpha[", s, "]")]])
+}
+#Mast means vary by stand
+par(mfrow = c(1,1), mar = c(5,5,1,1))
+util$plot_disc_pushforward_quantiles(samples, paste0("alpha[", 1:data_list$F, "]"))
+#Mast means vary by stand [1] or [2]
+util$plot_expectand_pushforward(samples[["log_alpha[1]"]], 50)
+util$plot_expectand_pushforward(samples[["log_alpha[2]"]], 50)
+#Mast means vary by all stands
+par(mfrow=c(4,3))
+for(f in 1:F){
+  util$plot_expectand_pushforward(samples[[paste0("log_alpha[", f, "]")]], 50)
+}
+#Seed production under mast year per stands.
+par(mfrow=c(4,3))
+for(f in 1:F){
+  util$plot_expectand_pushforward(
+    exp(samples[[paste0("log_alpha[", f, "]")]]), 50,display_name = bquote(alpha * "(high)"))
+}
 
-ggplot(combined_summary,
-       aes(x = factor(state), y = mean)) +
-  geom_errorbar(aes(ymin = per5, ymax = per95),
-                width = 0, alpha = 0.4) +
-  geom_errorbar(aes(ymin = per25, ymax = per75),
-                width = 0, linewidth = 1) +
-  geom_point(size = 2.5) +
-  facet_wrap(~ parameter, scales = "free_y") +
-  labs(x = "State",
-       y = "Posterior estimate") +
-  theme_minimal(base_size = 12) +
-  theme(
-    strip.text = element_text(face = "bold"),
-    panel.grid.minor = element_blank()
+forplot <- psme_data %>%
+  group_by(stand) %>%
+  summarise(
+    mean_seed = mean(total_viable_sds, na.rm = TRUE),
+    max_seed  = max(total_viable_sds, na.rm = TRUE)
   )
+
+
+
+#mean seed production of the low state
+par(mfrow = c(1,1), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(exp(samples[["log_lambda"]]), 20,
+                                display_name = bquote(lambda * " (low)"))
+
+
+
