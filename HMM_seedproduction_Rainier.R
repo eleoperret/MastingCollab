@@ -797,6 +797,7 @@ ggplot(summary_all,
 
 head(psme_data)
 
+min(psme_data$size); max(psme_data$size);var(psme_data$size)
 
 
 stand_year_df <- psme_data %>%
@@ -843,17 +844,33 @@ stan_data <- list(
 )
 
 
-mod <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling_TransitionStand.stan")
+
+mod1 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling.stan")
+
+mod2 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling.stan")
 
 #Issues as some values of y rep in the initialization cannot be computed so I changed the log_mu_raw
 
-fit <- sampling(
-  mod,
+fit1 <- sampling(
+  mod1,
   data = stan_data,
   chains = 4, cores = 4,
   iter = 2000, warmup = 1000
 )
 
+fit2 <- sampling(
+  mod2,
+  data = stan_data,
+  chains = 4, cores = 4,
+  iter = 2000, warmup = 1000
+)
+
+fit3 <- sampling(
+  mod3,
+  data = stan_data,
+  chains = 4, cores = 4,
+  iter = 2000, warmup = 1000
+)
 
 ####
 ##Plots
@@ -864,16 +881,20 @@ source("mcmc_analysis_tools_rstan.R", local = util)
 source("mcmc_visualization_tools.R", local = util)
 
 # diagnostics generaux HMC (chain behavior)
-diagnostics <- util$extract_hmc_diagnostics(fit)
+diagnostics <- util$extract_hmc_diagnostics(fit1)
+diagnostics <- util$extract_hmc_diagnostics(fit2)
+diagnostics <- util$extract_hmc_diagnostics(fit3)
 util$check_all_hmc_diagnostics(diagnostics)
 
 # extraire les posterior values
-samples <- util$extract_expectand_vals(fit)
+samples <- util$extract_expectand_vals(fit1)
+samples <- util$extract_expectand_vals(fit2)
+samples <- util$extract_expectand_vals(fit3)
 
 # diagnostics parametre par parametre
 base_samples <- util$filter_expectands(samples,
                                        c("rho", "theta1","theta2",
-                                         "log_lambda", "log_mu_raw",
+                                         "log_lambda", "log_mu",
                                          "stand_effect_raw", "phi",
                                          "sigma"), check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples)
@@ -953,9 +974,9 @@ for(s in 1:data_list$F){
 #Mast means vary by stand
 par(mfrow = c(1,1), mar = c(5,5,1,1))
 util$plot_disc_pushforward_quantiles(samples, paste0("alpha[", 1:data_list$F, "]"))
-#Mast means vary by stand [1] or [2]
-util$plot_expectand_pushforward(samples[["log_alpha[1]"]], 50)
-util$plot_expectand_pushforward(samples[["log_alpha[2]"]], 50)
+# #Mast means vary by stand [1] or [2]
+# util$plot_expectand_pushforward(samples[["log_alpha[1]"]], 50)
+# util$plot_expectand_pushforward(samples[["log_alpha[2]"]], 50)
 #Mast means vary by all stands
 par(mfrow=c(4,3))
 for(f in 1:F){

@@ -17,7 +17,7 @@ parameters {
   real<lower=0, upper=1> theta2[F]; // P(non-mast->non-mast) per stand
   
   real log_lambda;// mean for low years
-  real log_mu_raw;// base for high years
+  real<lower=log_lambda> log_mu;// base for high years
   
   vector[F] stand_effect_raw;// stand deviations
   real<lower=0> sigma;// stand SD
@@ -25,8 +25,10 @@ parameters {
 }
 
 transformed parameters {
-  real log_mu;
-  log_mu = log_lambda + exp(log_mu_raw);
+  //real log_mu;
+  //real<lower=log_lambda> log_mu;
+  //log_mu = log_lambda + exp(log_mu_raw);
+  real baseline_area = min(area);
 
   vector[F] log_alpha;
   for (f in 1:F)
@@ -47,8 +49,8 @@ transformed parameters {
     int start_id = start_idxs[f];
     int end_id = end_idxs[f];
     for (t in start_id:end_id){
-      log_omega[1,t] = poisson_log_lpmf(y[t] | log_lambda + log(area[t]));
-      log_omega[2,t] = neg_binomial_2_log_lpmf(y[t] | log_alpha[f] + log(area[t]), phi);
+      log_omega[1,t] = poisson_log_lpmf(y[t] | log_lambda + log(area[t]/ baseline_area));
+      log_omega[2,t] = neg_binomial_2_log_lpmf(y[t] | log_alpha[f] + log(area[t]/ baseline_area), phi);
     }
   }
 }
@@ -62,7 +64,7 @@ model {
   }
 
   log_lambda ~ normal(0, log(5)/2.57);
-  log_mu_raw ~ normal(0, 1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
+  log_mu ~ normal(0, 1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
   phi ~ gamma(2, 0.1);
@@ -86,9 +88,9 @@ generated quantities {
     
     for (t in start_id:end_id){
       if (state[t] == 1){
-        y_rep[t] = poisson_log_rng(log_lambda + log(area[t]));
+        y_rep[t] = poisson_log_rng(log_lambda + log(area[t]/ baseline_area));
       } else {
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha[f] + log(area[t]), phi);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha[f] + log(area[t]/ baseline_area), phi);
       }
     }
   }
