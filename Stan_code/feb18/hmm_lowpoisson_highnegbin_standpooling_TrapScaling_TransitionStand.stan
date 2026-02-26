@@ -13,8 +13,8 @@ data {
 parameters {
   simplex[2] rho;// initial state probabilities
   //NEW
-  real<lower=0, upper=1> theta1[F]; // P(mast->mast) per stand
-  real<lower=0, upper=1> theta2[F]; // P(non-mast->non-mast) per stand
+  real<lower=0, upper=1> theta1[F]; // State 1
+  real<lower=0, upper=1> theta2[F]; // State 2
   
   real log_lambda;// mean for low years
   real<lower=log_lambda> log_mu;// base for high years
@@ -25,9 +25,6 @@ parameters {
 }
 
 transformed parameters {
-  //real log_mu;
-  //real<lower=log_lambda> log_mu;
-  //log_mu = log_lambda + exp(log_mu_raw);
   real baseline_area = min(area);
 
   vector[F] log_alpha;
@@ -38,10 +35,10 @@ transformed parameters {
   matrix[2,N] log_omega; // log-likelihood per year × state
 
   for (f in 1:F){
-    Gamma[f][1,1] = theta1[f];// mast -> mast
-    Gamma[f][1,2] = 1 - theta1[f];// mast -> non-mast
-    Gamma[f][2,1] = 1 - theta2[f];// non-mast -> mast
-    Gamma[f][2,2] = theta2[f];// non-mast -> non-mast
+    Gamma[f][1,1] = theta1[f];
+    Gamma[f][1,2] = 1 - theta1[f];
+    Gamma[f][2,1] = 1 - theta2[f];
+    Gamma[f][2,2] = theta2[f];
   }
 
   // compute log-likelihood for each year
@@ -59,12 +56,12 @@ model {
   // Priors
   rho ~ dirichlet(rep_vector(1.0,2));// initial state, equal probability of being mast or non-mast
   for (f in 1:F){
-    theta1[f] ~ beta(1,5);// low probability mast->mast
-    theta2[f] ~ beta(5,1); // high probability non-mast->non-mast
+    theta1[f] ~ beta(5,1);// mean ~ 0.83
+    theta2[f] ~ beta(1,5); // mean ~ 0.17
   }
 
   log_lambda ~ normal(0, log(5)/2.57);
-  log_mu ~ normal(0, 1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
+  log_mu ~ normal(log(200), 0.1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
   phi ~ gamma(2, 0.1);

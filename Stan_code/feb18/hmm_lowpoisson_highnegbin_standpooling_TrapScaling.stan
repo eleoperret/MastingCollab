@@ -19,7 +19,7 @@ parameters {
   matrix<lower=0>[2,2] Gamma_raw; // raw transition matrix (rows to be normalized)//changer ca
   real log_lambda; // average seed production in low years
   //real<lower=log_lambda> log_mu;// replaced because issues as parameter from parameter
-  real log_mu_raw;
+  real<lower=log_lambda> log_mu;
   
   vector[F] stand_effect_raw;// stand deviations
   real<lower=0> sigma;// stand-level SD
@@ -27,10 +27,9 @@ parameters {
 }
 
 transformed parameters {
-  real log_mu;
-  log_mu = log_lambda + exp(log_mu_raw); // ensures log_mu > log_lambda
+  real baseline_area = min(area);
 
-  // stand-level random effect for mast years
+    // stand-level random effect for mast years
   vector[F] log_alpha;
   for (f in 1:F)
     log_alpha[f] = log_mu + stand_effect_raw[f] * sigma;
@@ -48,8 +47,8 @@ transformed parameters {
     int end_id = end_idxs[f];
 
     for (t in start_id:end_id){
-      log_omega[1,t] = poisson_log_lpmf(y[t] | log_lambda + log(area[t]));
-      log_omega[2,t] = neg_binomial_2_log_lpmf(y[t] | log_alpha[f] + log(area[t]), phi);
+      log_omega[1,t] = poisson_log_lpmf(y[t] | log_lambda + log(area[t]/ baseline_area));
+      log_omega[2,t] = neg_binomial_2_log_lpmf(y[t] | log_alpha[f] + log(area[t]/ baseline_area), phi);
     }
   }
 }
@@ -84,9 +83,9 @@ generated quantities {
     
     for (t in start_id:end_id){
       if(state[t] == 1){
-        y_rep[t] = poisson_log_rng(log_lambda+ log(area[t]));
+        y_rep[t] = poisson_log_rng(log_lambda+ log(area[t]/ baseline_area));
       }else{
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha[f]+ log(area[t]), phi);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha[f]+ log(area[t]/ baseline_area), phi);
       }
           
     }

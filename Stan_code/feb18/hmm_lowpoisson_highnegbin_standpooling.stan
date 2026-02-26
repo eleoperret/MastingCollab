@@ -23,7 +23,6 @@ parameters {
 }
 
 transformed parameters {
-  //as we expected a difference in the mast years between the stands
   vector[F] log_alpha;
   for (f in 1:F)
     log_alpha[f] = log_mu + stand_effect_raw[f] * sigma; //parameter of parameter

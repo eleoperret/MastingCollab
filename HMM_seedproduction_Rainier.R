@@ -811,6 +811,21 @@ stand_year_df <- psme_data %>%
   arrange(stand, year)
 
 
+# Compute seed density (seeds per m²)
+stand_year_df <- stand_year_df %>%
+  mutate(seed_density = y / area)
+# Seed density over time
+ggplot(stand_year_df, aes(x = year, y = seed_density, color = stand, group = stand)) +
+  geom_line(size = 1) +
+  geom_point() +
+  labs(
+    title = "Seed Density (seeds/m²) per Stand over Time",
+    x = "Year",
+    y = "Seed Density"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right")
+
 years_per_stand <- stand_year_df %>%
   group_by(stand) %>%
   summarise(T_i = n(), .groups = "drop")
@@ -848,6 +863,8 @@ stan_data <- list(
 mod1 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling.stan")
 
 mod2 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling.stan")
+
+mod3 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling_TransitionStand.stan")
 
 #Issues as some values of y rep in the initialization cannot be computed so I changed the log_mu_raw
 
@@ -959,6 +976,19 @@ util$plot_expectand_pushforward(samples[["Gamma[1,1]"]], 50, flim = c(0,1))
 util$plot_expectand_pushforward(samples[["Gamma[1,2]"]], 50, flim = c(0,1))
 util$plot_expectand_pushforward(samples[["Gamma[2,1]"]], 50, flim = c(0,1))
 util$plot_expectand_pushforward(samples[["Gamma[2,2]"]], 50, flim = c(0,1))
+
+par(mfrow = c(1,2), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(samples[["theta1[1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["theta2[1]"]], 50, flim = c(0,1))
+F <- length(unique(stand_year_df$stand))
+par(mfrow = c(F,2), mar = c(3,3,1,1))  # adjust layout if you have many stands
+for(f in 1:F){
+  util$plot_expectand_pushforward(1 - samples[[paste0("theta1[",f,"]")]], 50, flim = c(0,1))
+  title(paste0("Stand ", f, ": 1 → 2"))
+  
+  util$plot_expectand_pushforward(1 - samples[[paste0("theta2[",f,"]")]], 50, flim = c(0,1))
+  title(paste0("Stand ", f, ": 2 → 1"))
+}
 
 #Probability in starting in the low state
 par(mfrow=c(1,2))
