@@ -21,7 +21,8 @@ parameters {
   
   vector[F] stand_effect_raw;// stand deviations
   real<lower=0> sigma;// stand SD
-  real<lower=0> phi;// dispersion for high years
+  real<lower=0> phi;
+
 }
 
 transformed parameters {
@@ -52,6 +53,8 @@ transformed parameters {
   }
 }
 
+
+
 model {
   // Priors
   rho ~ dirichlet(rep_vector(1.0,2));// initial state, equal probability of being mast or non-mast
@@ -62,6 +65,8 @@ model {
 
   log_lambda ~ normal(0, log(5)/2.57);
   log_mu ~ normal(log(200), 0.1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
+  //log_lambda ~ normal(log(10), 1);
+  //log_mu ~ normal(log(60), 1);
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
   phi ~ gamma(2, 0.1);
