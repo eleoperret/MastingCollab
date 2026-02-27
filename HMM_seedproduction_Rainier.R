@@ -798,7 +798,7 @@ ggplot(summary_all,
 head(psme_data)
 
 min(psme_data$size); max(psme_data$size);var(psme_data$size)
-
+min(psme_data$total_viable_sds); max(psme_data$total_viable_sds);var(psme_data$total_viable_sds)
 
 stand_year_df <- psme_data %>%
   group_by(stand, year) %>%
@@ -866,6 +866,8 @@ mod2 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapS
 
 mod3 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling_TransitionStand.stan")
 
+mod4 <- stan_model("Stan_code/feb18/hmm_2highnegbin_standpooling_TrapScaling_TransitionStand.stan")
+
 #Issues as some values of y rep in the initialization cannot be computed so I changed the log_mu_raw
 
 fit1 <- sampling(
@@ -889,6 +891,13 @@ fit3 <- sampling(
   iter = 2000, warmup = 1000
 )
 
+fit4 <- sampling(
+  mod4,
+  data = stan_data,
+  chains = 4, cores = 4,
+  iter = 2000, warmup = 1000
+)
+
 ####
 ##Plots
 #Based on Mike's code 
@@ -901,19 +910,20 @@ source("mcmc_visualization_tools.R", local = util)
 diagnostics <- util$extract_hmc_diagnostics(fit1)
 diagnostics <- util$extract_hmc_diagnostics(fit2)
 diagnostics <- util$extract_hmc_diagnostics(fit3)
+diagnostics <- util$extract_hmc_diagnostics(fit4)
 util$check_all_hmc_diagnostics(diagnostics)
 
 # extraire les posterior values
 samples <- util$extract_expectand_vals(fit1)
 samples <- util$extract_expectand_vals(fit2)
 samples <- util$extract_expectand_vals(fit3)
+samples <- util$extract_expectand_vals(fit4)
 
 # diagnostics parametre par parametre
 base_samples <- util$filter_expectands(samples,
                                        c("rho", "theta1","theta2",
                                          "log_lambda", "log_mu",
-                                         "stand_effect_raw", "phi",
-                                         "sigma"), check_arrays = TRUE)
+                                         "stand_effect_raw", "phi1", "phi2",                                         "sigma"), check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples)
 
 # ppc for all 
@@ -967,6 +977,11 @@ for(s in 1:data_list$F){
                                        baseline_values = data_list$y[idxs],
                                        display_ylim = c(0,800))
 }
+
+all(sort(unlist(mapply(seq,
+                       data_list$start_idxs,
+                       data_list$end_idxs))) == 1:data_list$N)
+
 
 unique(psme_data$stand)
 
