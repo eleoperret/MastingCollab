@@ -58,8 +58,8 @@ model {
   // Priors
   rho ~ dirichlet(rep_vector(1.0,2));// initial state, equal probability of being mast or non-mast
   for (f in 1:F){
-    theta1[f] ~ beta(5,1);// mean ~ 0.83
-    theta2[f] ~ beta(1,5); // mean ~ 0.17
+    theta1[f] ~ beta(3,1);// mean ~ 0.83 before 5,1 
+    theta2[f] ~ beta(2,2); // mean ~ 0.17 before 1,5
   }
 
   log_lambda ~ normal(0, log(5)/2.57);
@@ -68,8 +68,8 @@ model {
   //log_mu ~ normal(log(60), 1);
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
-  phi1 ~ gamma(2, 1);
-  phi2 ~ gamma(2, 0.1);
+  phi1 ~ gamma(2, 0.2);
+  phi2 ~ gamma(2, 0.2);
 
   // likelihood
   for (f in 1:F){
