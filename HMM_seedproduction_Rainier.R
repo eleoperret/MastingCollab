@@ -1050,3 +1050,21 @@ util$plot_expectand_pushforward(exp(samples[["log_lambda"]]), 20,
 
 
 
+
+#Seed production for high state
+hist(samples[["log_mu"]], breaks = 40)
+mu <- exp(samples[["log_mu"]])
+plot(density(mu))
+
+
+
+mean(samples[["theta2[1]"]])
+mean(exp(samples[["log_lambda"]]))
+mean(exp(samples[["log_mu"]]))
+mean(samples[["phi1"]])
+mean(samples[["phi2"]])
+util$plot_expectand_pushforward(samples[["theta2[1]"]], 50, flim=c(0,1))
+
+
+curve(dgamma(x, shape=2, rate=0.2), from=0, to=50,
+      ylab="Density", xlab="phi value", main="Gamma priors comparison")
