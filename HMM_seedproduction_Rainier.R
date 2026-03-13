@@ -1,10 +1,10 @@
-#HMM model
+#HMM model for PSME
 #Analysis on seed production for one specie over elevation (stand used as proxy)
 #Eléonore Perret - February 2026
 
 
 #TO DO: 
-#Re do with same distribution and then check with a partial pooling for the difference between stands. Check the parameters differnece between model. Create git issue and with the summary adn the description of the model (likelihood) adn thoughts also the posterior check visuals (using mickeals diagnostics, or density together with histogramms). What I see and what to do next. WHcih parameters to change based on the fact that wach stand has its own distribution. 
+#Description of the script.  
 
 library(dplyr)
 library(ggplot2)
@@ -19,6 +19,20 @@ list.files()
 
 seed_data<-read.csv("SeedData_all.csv")
 
+stand_elev <- data.frame(
+  stand = c("TO11","TO04","TA01","AV02","AE10","TB13",
+            "AO03","AG05","AV06","AX15","AB08","PP17",
+            "AV14","AM16","AR07","PARA","SPRY","SUNR"),
+  elevation = c(600,668,700,850,1450,850,
+                900,950,1060,1090,1100,1150,
+                1150,1200,1450,1600,1700,1800)
+)
+saveRDS(stand_elev, "stand_elevation_table.rds")
+
+stand_order <- stand_elev %>%
+  arrange(elevation) %>%
+  pull(stand)
+
 # PSME --------------------------------------------------------------------
 #selecting one species 
 #Changing my dataset to PSME where only stands with seeds -- removing AE10, AR07, PARA, SUNR, SPRY, AV14, AM16
@@ -26,6 +40,7 @@ psme_data<-seed_data%>%
   filter(spp=="PSME")%>%
   #Added this constraint
   filter(!stand %in% c("AE10", "AR07", "PARA", "SUNR", "SPRY", "AV14", "AM16"))
+
 
 total_stand_psme<-psme_data%>%
   group_by(stand)%>%
@@ -810,6 +825,8 @@ stand_year_df <- psme_data %>%
   ) %>%
   arrange(stand, year)
 
+unique(stand_year_df$stand)
+
 
 # Compute seed density (seeds per m²)
 stand_year_df <- stand_year_df %>%
@@ -826,6 +843,7 @@ ggplot(stand_year_df, aes(x = year, y = seed_density, color = stand, group = sta
   theme_minimal() +
   theme(legend.position = "right")
 
+#For stan code
 years_per_stand <- stand_year_df %>%
   group_by(stand) %>%
   summarise(T_i = n(), .groups = "drop")
@@ -865,6 +883,7 @@ mod1 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling.stan"
 mod2 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling.stan")
 
 mod3 <- stan_model("Stan_code/feb18/hmm_lowpoisson_highnegbin_standpooling_TrapScaling_TransitionStand.stan")
+
 
 mod4 <- stan_model("Stan_code/feb18/hmm_2highnegbin_standpooling_TrapScaling_TransitionStand.stan")
 
@@ -923,16 +942,16 @@ samples <- util$extract_expectand_vals(fit4)
 base_samples <- util$filter_expectands(samples,
                                        c("rho", "theta1","theta2",
                                          "log_lambda", "log_mu",
-                                         "stand_effect_raw", "phi1", "phi2",                                         "sigma"), check_arrays = TRUE)
+                                         "stand_effect_raw", "phi",                                         "sigma"), check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples)
+
+#Ordering the stand based on elevation for PSME
+original_order <- unique(stand_year_df$stand)
 
 # ppc for all 
 par(mfrow = c(1,1))
 
-names_yrep <- paste0("y_rep[", 1:data_list$N, "]")
-util$plot_hist_quantiles(samples, "y_rep")
-
-
+names_yrep <- paste0("y_rep[", 1:stan_data$N, "]")
 
 # Plot PPC
 par(mfrow = c(1,1))
@@ -944,88 +963,148 @@ util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 600, bin_delta = 20)
 util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = data_list$y)
+                         baseline_values = stan_data$y)
 util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = data_list$y)
+                         baseline_values = stan_data$y)
 
 par(mfrow = c(4,3), mar = c(5,5,1,1))
-for(s in 1:data_list$F){
-  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+for(s in 1:stan_data$F){
+  idxs <- stan_data$start_idxs[s]:stan_data$end_idxs[s]
   subsamples <-  util$filter_expectands(samples,
                                         paste0("y_rep[", idxs, "]"))
   util$plot_hist_quantiles(subsamples, "y_rep",
                            bin_min = 0, bin_max = 500, bin_delta = 10,
-                           baseline_values = data_list$y[idxs])
+                           baseline_values = stan_data$y[idxs])
 }
 
-#Probability of being in a mast vs non-mast 
-par(mfrow = c(4,3), mar = c(5,5,1,1))
-for(s in 1:data_list$F){
-  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+
+#For plotting
+#Adding the stand elevation and names
+unique(stand_year_df$stand)
+perm <- match(stand_order, original_order)
+
+
+#Probability of being in mast or not
+par(mfrow = c(4,3), mar = c(5,5,2,1))
+for(i in 1:stan_data$F){
+  s <- perm[i]
+  idxs <- stan_data$start_idxs[s]:stan_data$end_idxs[s]
   names <- paste0("y_rep[", idxs, "]")
-  util$plot_disc_pushforward_quantiles(samples, names,
-                                       baseline_values = data_list$y[idxs])
+  util$plot_disc_pushforward_quantiles(samples,names,
+    baseline_values = stan_data$y[idxs],
+    main = paste0(stand_order[i], " (",
+                  stand_elev$elevation[stand_elev$stand == stand_order[i]],
+                  " m)")
+  )
 }
 
-#Probability of being in a mast vs non-mast scaled
-par(mfrow = c(4,3), mar = c(5,5,1,1))
-for(s in 1:data_list$F){
-  idxs <- data_list$start_idxs[s]:data_list$end_idxs[s]
+#Scaled
+par(mfrow = c(4,3), mar = c(5,5,2,1))
+for(i in 1:stan_data$F){
+  s <- perm[i]
+  idxs <- stan_data$start_idxs[s]:stan_data$end_idxs[s]
   names <- paste0("y_rep[", idxs, "]")
-  util$plot_disc_pushforward_quantiles(samples, names,
-                                       baseline_values = data_list$y[idxs],
-                                       display_ylim = c(0,800))
+  util$plot_disc_pushforward_quantiles(samples,names,                                    baseline_values = stan_data$y[idxs],display_ylim = c(0,400),main = paste0(stand_order[i], " (",       stand_elev$elevation[stand_elev$stand == stand_order[i]]," m)")
+  )
 }
 
-all(sort(unlist(mapply(seq,
-                       data_list$start_idxs,
-                       data_list$end_idxs))) == 1:data_list$N)
+# #Probability of being in a mast vs non-mast
+# par(mfrow = c(4,3), mar = c(5,5,1,1))
+# for(s in 1:stan_data$F){
+#   idxs <- stan_data$start_idxs[s]:stan_data$end_idxs[s]
+#   names <- paste0("y_rep[", idxs, "]")
+#   util$plot_disc_pushforward_quantiles(samples, names,
+#                                        baseline_values = stan_data$y[idxs])
+# }
+# #Probability of being in a mast vs non-mast scaled
+# par(mfrow = c(4,3), mar = c(5,5,1,1))
+# for(s in 1:stan_data$F){
+#   idxs <- stan_data$start_idxs[s]:stan_data$end_idxs[s]
+#   names <- paste0("y_rep[", idxs, "]")
+#   util$plot_disc_pushforward_quantiles(samples, names,
+#                                        baseline_values = stan_data$y[idxs],
+#                                        display_ylim = c(0,800))
+# }
 
+# #Probability of switching (one transition matrix for all)
+# par(mfrow = c(2,2), mar = c(5,5,1,1))
+# util$plot_expectand_pushforward(samples[["Gamma[1,1]"]], 50, flim = c(0,1))
+# util$plot_expectand_pushforward(samples[["Gamma[1,2]"]], 50, flim = c(0,1))
+# util$plot_expectand_pushforward(samples[["Gamma[2,1]"]], 50, flim = c(0,1))
+# util$plot_expectand_pushforward(samples[["Gamma[2,2]"]], 50, flim = c(0,1))
 
-unique(psme_data$stand)
+#Probability of switching (transition matrix per stand)
+f <- 1  # choose stand
+par(mfrow = c(2,2), mar = c(5,5,2,1))
+for(i in 1:2){
+  for(j in 1:2){
+    util$plot_expectand_pushforward(
+      samples[[paste0("Gamma[",f,",",i,",",j,"]")]],
+      50,
+      flim = c(0,1),
+      main = paste0("Gamma[",i,"→",j,"]")
+    )
+  }
+}
 
-#Probability of switching
-par(mfrow = c(2,2), mar = c(5,5,1,1))
-util$plot_expectand_pushforward(samples[["Gamma[1,1]"]], 50, flim = c(0,1))
-util$plot_expectand_pushforward(samples[["Gamma[1,2]"]], 50, flim = c(0,1))
-util$plot_expectand_pushforward(samples[["Gamma[2,1]"]], 50, flim = c(0,1))
-util$plot_expectand_pushforward(samples[["Gamma[2,2]"]], 50, flim = c(0,1))
-
+#General Probability of switching (transition matrix per stand)
 par(mfrow = c(1,2), mar = c(5,5,1,1))
-util$plot_expectand_pushforward(samples[["theta1[1]"]], 50, flim = c(0,1))
-util$plot_expectand_pushforward(samples[["theta2[1]"]], 50, flim = c(0,1))
+util$plot_expectand_pushforward(samples[["theta1[1]"]], 50, flim = c(0,1),display_name = bquote(theta * "(Staying in Low)" ))
+util$plot_expectand_pushforward(samples[["theta2[1]"]], 50, flim = c(0,1),display_name = bquote(theta * "(Staying in Mast)" ))
+
+# #Probability of staying in a state 
+# F <- length(unique(stand_year_df$stand))
+# par(mfrow = c(F,2), mar = c(3,3,1,1))  # adjust layout if you have many stands
+# for(f in 1:F){
+#   util$plot_expectand_pushforward(1 - samples[[paste0("theta1[",f,"]")]], 50, flim = c(0,1))
+#   title(paste0("Stand ", f, ": 1 → 2"))
+#   util$plot_expectand_pushforward(1 - samples[[paste0("theta2[",f,"]")]], 50, flim = c(0,1))
+#   title(paste0("Stand ", f, ": 2 → 1"))
+# }
+
+# Probability of staying in a state for all stand clean
 F <- length(unique(stand_year_df$stand))
-par(mfrow = c(F,2), mar = c(3,3,1,1))  # adjust layout if you have many stands
+par(mfrow = c(F, 2), mar = c(3,3,2,1))
 for(f in 1:F){
-  util$plot_expectand_pushforward(1 - samples[[paste0("theta1[",f,"]")]], 50, flim = c(0,1))
-  title(paste0("Stand ", f, ": 1 → 2"))
-  
-  util$plot_expectand_pushforward(1 - samples[[paste0("theta2[",f,"]")]], 50, flim = c(0,1))
-  title(paste0("Stand ", f, ": 2 → 1"))
+  stand_name <- stand_order[f]
+  elev <- stand_elev$elevation[stand_elev$stand == stand_name]
+  # 1 -> 2
+  util$plot_expectand_pushforward(
+    1 - samples[[paste0("theta1[", f, "]")]],
+    50, flim = c(0,1)
+  )
+  title(main = paste0(stand_name, " (", elev, " m) : 1 → 2"))
+  # 2 -> 1
+  util$plot_expectand_pushforward(
+    1 - samples[[paste0("theta2[", f, "]")]],
+    50, flim = c(0,1)
+  )
+  title(main = paste0(stand_name, " (", elev, " m) : 2 → 1"))
 }
 
 #Probability in starting in the low state
-par(mfrow=c(1,2))
-util$plot_expectand_pushforward(samples[["rho[1]"]], 50, flim=c(0,1))
-util$plot_expectand_pushforward(samples[["rho[2]"]], 50, flim=c(0,1))
+par(mfrow = c(1,2), mar = c(5,5,1,1))
+util$plot_expectand_pushforward(samples[["rho[1]"]], 50, flim=c(0,1),display_name = bquote(rho * "(Low)" ))
+util$plot_expectand_pushforward(samples[["rho[2]"]], 50, flim=c(0,1),display_name = bquote(rho * "(High)" ))
 
 
 #Seed production for high state
-for(s in 1:data_list$F){
+for(s in 1:stan_data$F){
   newname <- paste0("alpha[", s, "]")
   samples[[newname]] <- exp(samples[[paste0("log_alpha[", s, "]")]])
 }
 #Mast means vary by stand
 par(mfrow = c(1,1), mar = c(5,5,1,1))
-util$plot_disc_pushforward_quantiles(samples, paste0("alpha[", 1:data_list$F, "]"))
+util$plot_disc_pushforward_quantiles(samples, paste0("alpha[", 1:stan_data$F, "]"))
 # #Mast means vary by stand [1] or [2]
 # util$plot_expectand_pushforward(samples[["log_alpha[1]"]], 50)
 # util$plot_expectand_pushforward(samples[["log_alpha[2]"]], 50)
-#Mast means vary by all stands
+
+#Mast means vary by all stands (log scale)
 par(mfrow=c(4,3))
 for(f in 1:F){
-  util$plot_expectand_pushforward(samples[[paste0("log_alpha[", f, "]")]], 50)
+  util$plot_expectand_pushforward(samples[[paste0("log_alpha[", f, "]")]], 50,display_name = bquote(log_alpha * "(High)" ))
 }
 #Seed production under mast year per stands.
 par(mfrow=c(4,3))
@@ -1034,13 +1113,13 @@ for(f in 1:F){
     exp(samples[[paste0("log_alpha[", f, "]")]]), 50,display_name = bquote(alpha * "(high)"))
 }
 
+#Verification 
 forplot <- psme_data %>%
   group_by(stand) %>%
   summarise(
     mean_seed = mean(total_viable_sds, na.rm = TRUE),
     max_seed  = max(total_viable_sds, na.rm = TRUE)
   )
-
 
 
 #mean seed production of the low state
@@ -1050,12 +1129,7 @@ util$plot_expectand_pushforward(exp(samples[["log_lambda"]]), 20,
 
 
 
-
-#Seed production for high state
-hist(samples[["log_mu"]], breaks = 40)
-mu <- exp(samples[["log_mu"]])
-plot(density(mu))
-
+####Stoped here : 
 
 
 mean(samples[["theta2[1]"]])
@@ -1064,7 +1138,45 @@ mean(exp(samples[["log_mu"]]))
 mean(samples[["phi1"]])
 mean(samples[["phi2"]])
 util$plot_expectand_pushforward(samples[["theta2[1]"]], 50, flim=c(0,1))
+util$plot_expectand_pushforward(samples[["phi"]], 50, flim=c(0,1),display_name = bquote(phi * " (NB for masting)"))
+util$plot_expectand_pushforward(exp(samples[["log_mu"]]), 50, display_name = bquote(mu * " (high all stands)"))
+util$plot_expectand_pushforward(samples[["log_lambda"]], 50)
+exp(1)
+
+F <- 11  # number of stands
+log_alpha_mat <- sapply(1:F, function(f) samples[[paste0("log_alpha[", f, "]")]])
+
+# Compute mean on original scale (exp)
+mean_alpha <- mean(exp(log_alpha_mat))
+mean_alpha
+sd_alpha <- sd(exp(log_alpha_mat))
+mean(samples[["phi"]])
+
+stand_raw_mat <- sapply(1:F, function(f) samples[[paste0("stand_raw_unscaled[", f, "]")]])
+
+mean_stand_raw <- mean(exp(stand_raw_mat))
+
+var(exp(samples[["log_lambda"]]))
+lambda_samples <- exp(samples[["log_lambda"]])
+mean_lambda <- mean(lambda_samples)
+var_lambda <- var(lambda_samples)
+disp_index <- var(lambda_samples) / mean(lambda_samples)
+disp_index
 
 
-curve(dgamma(x, shape=2, rate=0.2), from=0, to=50,
-      ylab="Density", xlab="phi value", main="Gamma priors comparison")
+str(Cleaned_mapping_2017_Rainier)
+
+
+treestand<-Cleaned_mapping_2017_Rainier%>%
+  group_by(stand_id)%>%
+  summarise(species_list = list(unique(species)))
+treestandpsme <- Cleaned_mapping_2017_Rainier %>%
+  filter(species == "PSME") %>%
+  pull(stand_id) %>%
+  unique()
+
+
+#Not sure if needed
+all(sort(unlist(mapply(seq,
+                       stan_data$start_idxs,
+                       stan_data$end_idxs))) == 1:stan_data$N)

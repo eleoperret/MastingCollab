@@ -1,5 +1,9 @@
 // 2-state HMM for seed production with stand-specific transitions
 // Trap area scaling and stand-level random effects
+// Two NB as distribution for the low and high seed production
+// Changes in the low seed production as before too stricz
+// Changes in the high seed produciton as before too strict. 
+// Changes in the phi (overdispersion parameter) for the low
 
 data {
   int<lower=1> N;// number of observations
@@ -21,8 +25,8 @@ parameters {
   
   vector[F] stand_effect_raw;// stand deviations
   real<lower=0> sigma;// stand SD
-  real<lower=0> phi1;// dispersion for high years
-  // dispersion for low years
+  
+  real<lower=0> phi1;// dispersion for low years
   real<lower=0> phi2;// dispersion for high yars
 }
 
@@ -62,14 +66,12 @@ model {
     theta2[f] ~ beta(2,2); // mean ~ 0.17 before 1,5
   }
 
-  log_lambda ~ normal(0, log(5)/2.57);
-  log_mu ~ normal(log(200), 0.1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
-  //log_lambda ~ normal(log(10), 1);
-  //log_mu ~ normal(log(60), 1);
+  log_lambda ~ normal(0, log(30)/2.57);
+  log_mu ~ normal(log(200), 0.25) ; 
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
-  phi1 ~ gamma(2, 0.2);
-  phi2 ~ gamma(2, 0.2);
+  phi1 ~ normal(6.5, 1.79);
+  phi2 ~ normal(6.5, 1.79);
 
   // likelihood
   for (f in 1:F){

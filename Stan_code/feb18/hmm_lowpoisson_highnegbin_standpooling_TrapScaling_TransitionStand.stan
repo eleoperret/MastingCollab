@@ -64,9 +64,7 @@ model {
   }
 
   log_lambda ~ normal(0, log(5)/2.57);
-  log_mu ~ normal(log(200), 0.1) ; // old normal(log(200), 0.1) changed because this was causing issues when plotting the PPC. Too many NA's produced. 
-  //log_lambda ~ normal(log(10), 1);
-  //log_mu ~ normal(log(60), 1);
+  log_mu ~ normal(log(200), 0.1);   // other possibility normal(5,0.5) 
   sigma ~ normal(0, 0.5/2.57);
   stand_effect_raw ~ normal(0,1);
   phi ~ gamma(2, 0.1);
