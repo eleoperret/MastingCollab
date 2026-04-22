@@ -1,6 +1,7 @@
 //HMM 2 state
 //partial pooling on the distribution for the high and low state for species and stand
-//NC high stands + theta 1 and thetha 2 stands
+//Overdispersion varies by species and shared across states with partial pooling across species. 
+//21.04.2026
 
 data {
   int<lower=1> N;
@@ -26,7 +27,8 @@ transformed data {
 }
 
 parameters {
-  simplex[2] rho;
+  array [S] simplex[2] rho;
+  
 
   // Transitions (partially pooled by species and stand)
   real grand_logit_theta1; //grand mean for theta
@@ -58,9 +60,11 @@ parameters {
   real<lower=0> sigma_low_stand;
   real<lower=0> sigma_log_delta_high_stand;
 
-  // Dispersion (not partially pooled but per species)
-  real<lower=0> phi1;
-  real<lower=0> phi2;
+   // Dispersion 
+  real mu_log_phi;
+  real<lower=0> sigma_log_phi;
+  vector[S] log_phi_species;
+  
 }
 
 transformed parameters {
@@ -106,6 +110,7 @@ transformed parameters {
     Gamma[f][2, 1] = 1 - theta2[f];
     Gamma[f][2, 2] = theta2[f];
   }
+  
 
   // Emission log-likelihoods 
   matrix[2, N] log_omega;
@@ -114,8 +119,8 @@ transformed parameters {
     int end_id   = end_idxs[f];
     for (t in start_id:end_id) {
       int s= sp[t];
-      log_omega[1, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_low[f]  + log_area_ratio[t], phi1);
-      log_omega[2, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_high[f] + log_area_ratio[t], phi2);
+      log_omega[1, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s]));
+      log_omega[2, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s]));
     }
   }
 }
@@ -124,18 +129,18 @@ model {
   rho ~ dirichlet(rep_vector(8.0, 2));
 
   // Grand means
-  grand_logit_theta1 ~ normal(1.4, 1); //changed those priors here too
-  grand_logit_theta2 ~ normal(-1.4, 1);
+  grand_logit_theta1 ~ normal(1, 0.7); //changed those priors here too
+  grand_logit_theta2 ~ normal(0, 0.7);
 
   alpha_theta1_species_nc ~ normal(0,1);
   alpha_theta2_species_nc ~ normal(0,1);
-  sigma_theta1_species ~ normal(0, 0.5);
-  sigma_theta2_species ~ normal(0, 0.5);
+  sigma_theta1_species ~ normal(0, 0.7);
+  sigma_theta2_species ~ normal(0, 0.7);
 
   alpha_theta1_stand_nc ~ normal(0, 1);
   alpha_theta2_stand_nc ~ normal(0, 1);
-  sigma_theta1_stand ~ normal(0, 0.5);
-  sigma_theta2_stand ~ normal(0, 0.5);
+  sigma_theta1_stand ~ normal(0, 0.7);
+  sigma_theta2_stand ~ normal(0, 0.7);
 
   // Grand means — set priors to roughly the centre of your old per-species priors
   grand_mean_low  ~ normal(2.6, 1.0);
@@ -150,19 +155,24 @@ model {
   
   // 
   log_delta_high_grand_mean ~ normal(3, 1);
-  sigma_log_delta_high_species ~ normal(0, 1);
   log_delta_high_species ~ normal(0, sigma_log_delta_high_species);
-  sigma_log_delta_high_stand ~ normal(0, 1);
   log_delta_high_stand_nc ~ normal(0, 1);
-
+  sigma_log_delta_high_species ~ normal(0, 1);
+  sigma_log_delta_high_stand ~ normal(0, 1);
+    
+  
   // Dispersion
-  phi1    ~ gamma(4.0, 0.6);
-  phi2   ~ gamma(4.0, 0.6);
+  mu_log_phi ~ normal(log(4), 0.6);
+  sigma_log_phi ~ normal(0, 0.5);
+  log_phi_species ~ normal(mu_log_phi, sigma_log_phi);
+
+  for (s in 1:S)
+  rho [s] ~ dirichlet (rep_vector (2.0,2));
 
   for (f in 1:F) {
     int start_id = start_idxs[f];
     int end_id   = end_idxs[f];
-    target += hmm_marginal(log_omega[, start_id:end_id], Gamma[f], rho);
+    target += hmm_marginal(log_omega[, start_id:end_id], Gamma[f], rho[sp[start_idxs[f]]]);
   }
 }
 
@@ -176,15 +186,15 @@ generated quantities {
     int end_id   = end_idxs[f];
     
     state[start_id:end_id] = hmm_latent_rng(
-      log_omega[, start_id:end_id], Gamma[f], rho
+      log_omega[, start_id:end_id], Gamma[f], rho[sp[start_idxs[f]]]
     );
 
     for (t in start_id:end_id) {
       int s= sp[t];
       if (state[t] == 1)
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], phi1);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s]));
       else
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], phi2);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s]));
     }
   }
 }

@@ -110,7 +110,7 @@ transformed parameters {
   // Emission log-likelihoods 
   matrix[2, N] log_omega;
   for (f in 1:F) {
-    int start_id = start_idxs [f];
+    int start_id = start_idxs[f];
     int end_id   = end_idxs[f];
     for (t in start_id:end_id) {
       int s= sp[t];
@@ -138,18 +138,18 @@ model {
   sigma_theta2_stand ~ normal(0, 0.5);
 
   // Grand means — set priors to roughly the centre of your old per-species priors
-  grand_mean_low  ~ normal(2.6, 1.0);
+  grand_mean_low  ~ normal(3, 2);//changed that
 
   // Species random effects
   alpha_low_species  ~ normal(0,sigma_low_species);
-  sigma_low_species  ~ normal(0, 0.5);
+  sigma_low_species  ~ normal(0, 2);
 
   // Stand random effects
   alpha_low_stand  ~ normal(0,  sigma_low_stand);
   sigma_low_stand  ~ normal(0, 0.5);
   
   // 
-  log_delta_high_grand_mean ~ normal(3, 1);
+  log_delta_high_grand_mean ~ normal(2.5, 1.0); //normal(3, 1);
   sigma_log_delta_high_species ~ normal(0, 1);
   log_delta_high_species ~ normal(0, sigma_log_delta_high_species);
   sigma_log_delta_high_stand ~ normal(0, 1);
@@ -169,22 +169,59 @@ model {
 generated quantities {
   array[N] int<lower=0>          y_rep;
   array[N] int<lower=1, upper=2> state;
-  
+  vector[N_stands]               stand_sync;
 
+  // --- state sequence + y_rep ---
   for (f in 1:F) {
-    int start_id = start_idxs[f];
-    int end_id   = end_idxs[f];
-    
-    state[start_id:end_id] = hmm_latent_rng(
-      log_omega[, start_id:end_id], Gamma[f], rho
+    int f_start = start_idxs[f];  // renamed
+    int f_end   = end_idxs[f];    // renamed
+
+    state[f_start:f_end] = hmm_latent_rng(
+      log_omega[, f_start:f_end], Gamma[f], rho
     );
 
-    for (t in start_id:end_id) {
-      int s= sp[t];
+    for (t in f_start:f_end) {
       if (state[t] == 1)
         y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], phi1);
       else
         y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], phi2);
     }
   }
+
+  // --- synchrony ---
+  {
+    array[N_stands] real sum_prop;
+    array[N_stands] int  stand_n_years;
+
+    for (st in 1:N_stands) {
+      sum_prop[st]      = 0.0;
+      stand_n_years[st] = 0;
+    }
+
+    for (st in 1:N_stands) {
+      int f_stand = 0;
+      for (f in 1:F)
+        if (stand_id[f] == st)
+          f_stand = f;
+
+      stand_n_years[st] = end_idxs[f_stand] - start_idxs[f_stand] + 1;
+
+      for (yr in 1:stand_n_years[st]) {
+        int count_low  = 0;
+        int count_high = 0;
+        for (f in 1:F) {
+          if (stand_id[f] == st) {
+            int t = start_idxs[f] + yr - 1;
+            if (state[t] == 1) count_low  += 1;
+            else                count_high += 1;
+          }
+        }
+        sum_prop[st] += max(count_low, count_high) * 1.0 / (count_low + count_high);
+      }
+    }
+
+    for (st in 1:N_stands)
+      stand_sync[st] = sum_prop[st] / stand_n_years[st];
+  }
 }
+

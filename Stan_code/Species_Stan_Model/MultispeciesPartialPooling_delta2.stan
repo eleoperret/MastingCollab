@@ -58,12 +58,14 @@ parameters {
   real<lower=0> sigma_low_stand;
   real<lower=0> sigma_log_delta_high_stand;
 
-  // Dispersion (not partially pooled but per species)
-  real<lower=0> phi1;
-  real<lower=0> phi2;
+  // Dispersion
+  vector[S] log_phi1;
+  vector[S] log_phi2;
 }
 
 transformed parameters {
+  vector<lower=0>[S] phi1 = exp(log_phi1);
+  vector<lower=0>[S] phi2 = exp(log_phi2);
   
   vector[N_stands] log_delta_high_stand = log_delta_high_stand_nc * sigma_log_delta_high_stand;
   
@@ -110,12 +112,12 @@ transformed parameters {
   // Emission log-likelihoods 
   matrix[2, N] log_omega;
   for (f in 1:F) {
-    int start_id = start_idxs [f];
+    int start_id = start_idxs[f];
     int end_id   = end_idxs[f];
     for (t in start_id:end_id) {
       int s= sp[t];
-      log_omega[1, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_low[f]  + log_area_ratio[t], phi1);
-      log_omega[2, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_high[f] + log_area_ratio[t], phi2);
+      log_omega[1, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_low[f]  + log_area_ratio[t], phi1[s]);
+      log_omega[2, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_high[f] + log_area_ratio[t], phi2[s]);
     }
   }
 }
@@ -124,7 +126,7 @@ model {
   rho ~ dirichlet(rep_vector(8.0, 2));
 
   // Grand means
-  grand_logit_theta1 ~ normal(1.4, 1); //changed those priors here too
+  grand_logit_theta1 ~ normal(1.4, 1); 
   grand_logit_theta2 ~ normal(-1.4, 1);
 
   alpha_theta1_species_nc ~ normal(0,1);
@@ -149,6 +151,7 @@ model {
   sigma_low_stand  ~ normal(0, 0.5);
   
   // 
+
   log_delta_high_grand_mean ~ normal(3, 1);
   sigma_log_delta_high_species ~ normal(0, 1);
   log_delta_high_species ~ normal(0, sigma_log_delta_high_species);
@@ -156,8 +159,9 @@ model {
   log_delta_high_stand_nc ~ normal(0, 1);
 
   // Dispersion
-  phi1    ~ gamma(4.0, 0.6);
-  phi2   ~ gamma(4.0, 0.6);
+  
+  log_phi1 ~ normal(log(6.5), 0.5);
+  log_phi2 ~ normal(log(6.5), 0.5);
 
   for (f in 1:F) {
     int start_id = start_idxs[f];
@@ -169,12 +173,11 @@ model {
 generated quantities {
   array[N] int<lower=0>          y_rep;
   array[N] int<lower=1, upper=2> state;
-  
 
   for (f in 1:F) {
     int start_id = start_idxs[f];
     int end_id   = end_idxs[f];
-    
+
     state[start_id:end_id] = hmm_latent_rng(
       log_omega[, start_id:end_id], Gamma[f], rho
     );
@@ -182,9 +185,9 @@ generated quantities {
     for (t in start_id:end_id) {
       int s= sp[t];
       if (state[t] == 1)
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], phi1);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], phi1[s]);
       else
-        y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], phi2);
+        y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], phi2[s]);
     }
   }
 }
