@@ -33,6 +33,8 @@ stand_elev <- data.frame(
 )
 saveRDS(stand_elev, "stand_elevation_table.rds")
 
+str(stand)
+
 #Figure out what to do with that
 stand_order <- stand_elev %>%
   arrange(elevation) %>%
@@ -131,23 +133,139 @@ stan_data <- list(
   area = area        
 )
 
-
+mod<-stan_model("Stan_code/Species_Stan_Model/PSME_centered.stan")
 
 mod1 <- stan_model("Stan_code/feb18/hmm_2highnegbin_standpooling_TrapScaling_TransitionStand.stan")
 mod2 <- stan_model("Stan_code/feb18/hmm_2highnegbin_standpooling_TrapScaling_TransitionStand2.stan")#different priors but same model (based on older models)
 
 fit1 <- sampling(
-  mod1,
+  mod,
   data = stan_data,
   chains = 4, cores = 4,
   iter = 2000, warmup = 1000
 )
-fit2 <- sampling(
-  mod2,
-  data = stan_data,
-  chains = 4, cores = 4,
-  iter = 2000, warmup = 1000
-)
+
+
+
+# Plotting for gitissue ---------------------------------------------------
+#log(sigma)  ~ log_alpha
+samples <- rstan::extract(fit1)
+
+log_sigma <- log(samples$sigma)
+log_alpha <- samples$stand_effect + matrix(samples$log_mu,
+                                           nrow = length(samples$log_mu),
+                                           ncol = ncol(samples$stand_effect))
+#colorer les divergente 
+# Plot for one stand
+plot(log_alpha[,1], log_sigma,
+     xlab = "log_alpha (stand 1)",
+     ylab = "log(sigma)",
+     pch = 16, cex = 0.5)
+
+plot(NULL,
+     xlim = range(log_alpha),
+     ylim = range(log_sigma),
+     xlab = "log_alpha",
+     ylab = "log(sigma)")
+
+for (f in 1:ncol(log_alpha)) {
+  points(log_alpha[,f], log_sigma,
+         pch = 16, cex = 0.3, col = rgb(0,0,0,0.1))
+}
+
+sampler_params <- get_sampler_params(fit1, inc_warmup = FALSE)
+
+# combine chains
+divergent <- do.call(rbind, sampler_params)[,"divergent__"]
+
+length(divergent)
+length(log_sigma)
+nrow(log_alpha)
+
+
+cols <- ifelse(divergent == 1, "red", "grey")
+cols <- ifelse(divergent == 1,
+               "red",
+               rgb(0,0,0,0.1))
+
+unique(psme_data$stand)
+
+par(mfrow=c(4,3))
+plot(log_alpha[,1], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AG05)",
+     ylab = "log(sigma)")
+plot(log_alpha[,2], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AV06)",
+     ylab = "log(sigma)")
+plot(log_alpha[,3], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AX15)",
+     ylab = "log(sigma)")
+plot(log_alpha[,4], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand TB13)",
+     ylab = "log(sigma)")
+plot(log_alpha[,5], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand TO04)",
+     ylab = "log(sigma)")
+plot(log_alpha[,6], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AB08)",
+     ylab = "log(sigma)")
+plot(log_alpha[,7], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AO03)",
+     ylab = "log(sigma)")
+plot(log_alpha[,8], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand AV02)",
+     ylab = "log(sigma)")
+plot(log_alpha[,9], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand PP17)",
+     ylab = "log(sigma)")
+plot(log_alpha[,10], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand TA01)",
+     ylab = "log(sigma)")
+plot(log_alpha[,11], log_sigma,
+     col = cols,
+     pch = 16, cex = 0.6,
+     xlab = "log_alpha (stand TO11)",
+     ylab = "log(sigma)")
+
+mcmc_pairs(as.array(fit1),
+           pars = c("sigma", "stand_effect[1]", "log_mu"),
+           np = nuts_params(fit1))
+mcmc_pairs(as.array(fit1),
+           pars = c("sigma", "stand_effect[2]", "log_mu"),
+           np = nuts_params(fit1))
+mcmc_pairs(as.array(fit1),
+           pars = c("sigma", "stand_effect[3]", "log_mu"),
+           np = nuts_params(fit1))
+mcmc_pairs(as.array(fit1),
+           pars = c("sigma", "stand_effect[4]", "log_mu"),
+           np = nuts_params(fit1))
+mcmc_pairs(as.array(fit1),
+           pars = c("sigma", "stand_effect[5]", "log_mu"),
+           np = nuts_params(fit1))
+
+# PLots -------------------------------------------------------------------
+
+
 
 ####
 ##Plots
@@ -159,18 +277,16 @@ source("mcmc_visualization_tools.R", local = util)
 
 # diagnostics generaux HMC (chain behavior)
 diagnostics <- util$extract_hmc_diagnostics(fit1)
-diagnostics <- util$extract_hmc_diagnostics(fit2)
 util$check_all_hmc_diagnostics(diagnostics)
 
 # extraire les posterior values
 samples <- util$extract_expectand_vals(fit1)
-samples <- util$extract_expectand_vals(fit2)
 
 # diagnostics parametre par parametre
 base_samples <- util$filter_expectands(samples,
                                        c("rho", "theta1","theta2",
                                          "log_lambda", "log_mu",
-                                         "stand_effect_raw", "phi1", "phi2",                                         "sigma"), check_arrays = TRUE)
+                                         "stand_effect", "phi1", "phi2",                                         "sigma"), check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples)
 
 #Ordering the stand based on elevation for PSME

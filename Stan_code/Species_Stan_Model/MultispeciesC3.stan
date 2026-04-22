@@ -1,0 +1,192 @@
+// 2-state HMM for seed production - multispecies model
+// Expands single-species PSME model to multiple species
+// Key changes from single-species:
+  //   - log_lambda, log_mu, phi1, phi2 now vectors of length S
+//   - theta1, theta2 now per species not per stand
+//   - ordered[2] replaces lower=log_lambda constraint
+//   - log_area_ratio precomputed in transformed data
+//   - sp[] index added to data to identify species per observation
+
+data {
+  int<lower=1> N; // total observations
+  int<lower=1> F; // number of stands x species combination
+  int<lower=1> S; // number of species
+  
+  array[N] int<lower=0> y; // seed counts
+  array[N] int<lower=1, upper=S> sp;// species index per observation
+  array[N] int<lower=0, upper=1> is_obs;  // NEW: 1=observed, 0=missing
+  
+  array[F] int<lower=1> start_idxs; // start index per species x tand
+  array[F] int<upper=N> end_idxs;   // end index per species x stand
+  
+  vector<lower=0>[N] area;// trap area per observation
+}
+
+transformed data {
+  real baseline_area = min(area);
+  vector[N] log_area_ratio;
+  for (t in 1:N)
+    log_area_ratio[t] = log(area[t] / baseline_area);
+}
+
+parameters {
+  //simplex[2] rho;// initial state probabilities
+  
+  // Transitions now per species not per stand
+  vector[S] logit_mu_theta1;
+  vector[S] logit_mu_theta2;
+  real<lower=0> sigma_theta;
+  vector [F] theta1_raw;
+  vector [F] theta2_raw;
+  
+  // Emission means now per species
+  array[S] ordered[2] log_means;
+  
+  // Stand-level random effects — unchanged from single-species
+  vector[F] stand_effect_low_raw;
+  vector[F] stand_effect_high_raw;
+
+  vector<lower=0>[S] sigma_low;
+  vector<lower=0>[S] sigma_high;
+  
+  
+  // Dispersion now per species,
+  vector [S] mu_log_phi1;
+  vector [S] mu_log_phi2;
+  real <lower=0> sigma_phi;
+  vector [F] phi1_raw;
+  vector [F] phi2_raw;
+}
+
+transformed parameters {
+  vector<lower=0>[F] phi1 ;
+  vector<lower=0>[F] phi2 ;
+  for (f in 1: F) {
+    int s= sp[start_idxs[f]];
+    phi1[f]= exp (mu_log_phi1[s]+ sigma_phi *phi1_raw[f]);
+    phi2[f] = exp (mu_log_phi2[s]+sigma_phi* phi2_raw[f]);
+  }
+  
+  // Stand-level partial pooling for both state
+  vector[F] log_alpha_high;
+  vector[F] log_alpha_low;
+
+  for (f in 1:F) {
+    int s = sp[start_idxs[f]];
+  
+    log_alpha_low[f]  = log_means[s][1] + stand_effect_low_raw[f]  * sigma_low [s];
+    log_alpha_high[f] = log_means[s][2] + stand_effect_high_raw[f] * sigma_high [s];
+  }
+  
+  // Transition matrices per species AND per stand
+  vector<lower=0, upper=1>[F] theta1;
+  vector<lower=0, upper=1>[F] theta2;
+  array[F] matrix[2, 2] Gamma;
+  for (f in 1:F) {
+    int s = sp[start_idxs[f]];
+    theta1[f] = inv_logit(logit_mu_theta1[s] + sigma_theta * theta1_raw[f]);
+    theta2[f] = inv_logit(logit_mu_theta2[s] + sigma_theta * theta2_raw[f]);
+    Gamma[f][1, 1] = theta1[f];
+    Gamma[f][1, 2] = 1 - theta1[f];
+    Gamma[f][2, 1] = 1 - theta2[f];
+    Gamma[f][2, 2] = theta2[f];
+}
+  
+  // Emission log-likelihoods
+  matrix[2, N] log_omega;
+for (f in 1:F) {
+  int start_id = start_idxs[f];
+  int end_id   = end_idxs[f];
+  for (t in start_id:end_id) {
+    if (is_obs[t]) { //NEW
+      log_omega[1, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_low[f]  + log_area_ratio[t], phi1[f]);
+      log_omega[2, t] = neg_binomial_2_log_lpmf(y[t] | log_alpha_high[f] + log_area_ratio[t], phi2[f]);
+    } else { //NEW
+      log_omega[1, t] = 0.0;  // log(1): missing year, no emission update
+      log_omega[2, t] = 0.0;
+    }
+  }
+}
+}
+
+
+model {
+  
+  logit_mu_theta1 ~ normal(1.4, 1.0);
+  logit_mu_theta2 ~ normal(-1.4, 1.0);
+  sigma_theta ~ normal(0, 0.5);
+  theta1_raw ~ normal(0, 1);
+  theta2_raw ~ normal(0, 1);
+
+  // ABAM (s=1)
+  log_means[1][1] ~ normal(1.6, 0.8);
+  log_means[1][2] ~ normal(4.1, 0.8);
+
+  // CANO (s=2)
+  log_means[2][1] ~ normal(2.3, 0.8);
+  log_means[2][2] ~ normal(5.7, 0.8);
+
+  // PSME (s=3) 
+  log_means[3][1] ~ normal(2.3, 1.0);
+  log_means[3][2] ~ normal(5.0, 1.0);
+
+  // THPL (s=4)
+  log_means[4][1] ~ normal(3.0, 0.8);
+  log_means[4][2] ~ normal(6.7, 0.8);
+
+  // TSHE (s=5) 
+  log_means[5][1] ~ normal(3.9, 1.0);
+  log_means[5][2] ~ normal(6.9, 1.0);
+
+  stand_effect_low_raw  ~ normal(0, 1);
+  stand_effect_high_raw ~ normal(0, 1);
+
+  sigma_low  ~ normal(0, 0.5);
+  sigma_high ~ normal(0, 0.5);
+
+  mu_log_phi1 ~ normal(log(6.5), 0.5);
+  mu_log_phi2 ~ normal(log(6.5), 0.5);
+  sigma_phi   ~ normal(0, 0.5);
+  phi1_raw ~ normal(0, 1);
+  phi2_raw ~ normal(0, 1);
+
+  for (f in 1:F) {
+    int start_id = start_idxs[f];
+    int end_id   = end_idxs[f];
+    
+    // Stationary distribution from this series' own transition matrix
+    real p_high     = (1 - theta1[f]) / (2 - theta1[f] - theta2[f]);
+    vector[2] rho_f = [1 - p_high, p_high]';
+    
+    target += hmm_marginal(log_omega[, start_id:end_id], Gamma[f], rho_f);//per species and stand
+  }
+}
+
+
+generated quantities {
+  array[N] int<lower=0>          y_rep;
+  array[N] int<lower=1, upper=2> state;
+
+  for (f in 1:F) {
+    int start_id = start_idxs[f];
+    int end_id   = end_idxs[f];
+
+    real p_high     = (1 - theta1[f]) / (2 - theta1[f] - theta2[f]);
+    vector[2] rho_f = [1 - p_high, p_high]';
+
+    state[start_id:end_id] = hmm_latent_rng(
+      log_omega[, start_id:end_id], Gamma[f], rho_f
+    );
+
+    for (t in start_id:end_id) {
+      if (is_obs[t]) {
+        if (state[t] == 1)
+          y_rep[t] = neg_binomial_2_log_rng(log_alpha_low[f]  + log_area_ratio[t], phi1[f]);
+        else
+          y_rep[t] = neg_binomial_2_log_rng(log_alpha_high[f] + log_area_ratio[t], phi2[f]);
+      } else {
+        y_rep[t] = 0;  // sentinel for missing — exclude from PPC
+      }
+    }
+  }
+}

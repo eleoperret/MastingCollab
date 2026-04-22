@@ -400,3 +400,24 @@ ppc_dens_overlay_grouped(
   group  = stand_year_4sp$spp,
   trans  = "log1p"
 )
+
+
+
+
+# Which stand is stand 35?
+years_per_series[35, ]
+
+# Look at its data
+stand_35_data <- stand_year_4sp %>%
+  arrange(spp, stand, year) %>%
+  slice(stan_data_4sp$start_idxs[35]:stan_data_4sp$end_idxs[35])
+
+print(stand_35_data)
+
+# What does its seed counts look like?
+stand_35_data %>%
+  ggplot(aes(x = year, y = y)) +
+  geom_line() +
+  geom_point() +
+  labs(title = paste("Stand 35:", unique(stand_35_data$stand),
+                     unique(stand_35_data$spp)))

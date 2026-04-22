@@ -104,11 +104,11 @@ model {
   log_means[2][2] ~ normal(3.5, 1.0);
   
   // THPL (s=3): moderate baseline, high masting peaks
-  log_means[3][1] ~ normal(2.0, 1.0);
+  log_means[3][1] ~ normal(2.0, 0.5);
   log_means[3][2] ~ normal(5.0, 1.0);
   
   // TSHE (s=4): high baseline, very high masting peaks
-  log_means[4][1] ~ normal(4.5, 0.5);   // tighter — states close together
+  log_means[4][1] ~ normal(4.5, 0.3);   // tighter — states close together
   log_means[4][2] ~ normal(5.5, 0.5);   // tighter — states close together
   
   // Stand random effects
