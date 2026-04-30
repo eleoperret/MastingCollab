@@ -80,7 +80,6 @@ seed_filtered <- seed_data %>%
 str(seed_filtered)
 
 
-
 # Data prep ---------------------------------------------------------------
 
 stand_year_all <- seed_filtered %>%
@@ -97,6 +96,9 @@ str(stand_year_all)
 
 stand_year_all <- bind_rows(stand_year_all, extra_stands) %>%
   arrange(spp, stand, year)
+
+stand_year_all <- stand_year_all %>%
+  filter(!(stand == "SUNR" & year == 2024))
 
 
 # ABAM --------------------------------------------------------------------
@@ -382,7 +384,7 @@ print(THPL_data$total_viable_sds); length(THPL_data$total_viable_sds)
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -391,7 +393,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -401,7 +403,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -411,7 +413,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -421,7 +423,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -431,7 +433,7 @@ fit_TSHE <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling_deltaPhiNCdouble.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -464,45 +466,48 @@ for (sp in species_list) {
   
   samples <- rstan::extract(fits_list[[sp]])
   
+  # new: low state mean is exp(mu_log_low)
+  # new: fold change is exp(log1p_exp(mu_log_delta)) = 1 + exp(mu_log_delta)
+  # new: high state mean is low * fold_change
+  low_mean   <- exp(samples$mu_log_low)
+  fold_change <- 1 + exp(samples$mu_log_delta)
+  high_mean  <- low_mean * fold_change
+  
   cat("=== Emission means ===\n")
-  cat("Low state mean (seeds):  ", round(median(exp(samples$grand_mean_low)), 2), "\n")
-  cat("High state fold-change:  ", round(median(exp(samples$log_delta_high_grand_mean)), 2), "x\n")
-  cat("High state mean (seeds): ", round(median(exp(samples$grand_mean_low) +
-                                                  exp(samples$log_delta_high_grand_mean)), 2), "\n")
+  cat("Low state mean (seeds):  ", round(median(low_mean), 2), "\n")
+  cat("High state fold-change:  ", round(median(fold_change), 2), "x\n")
+  cat("High state mean (seeds): ", round(median(high_mean), 2), "\n")
   
   cat("\n=== Transition probabilities ===\n")
   cat("P(stay low  | low state):  ", round(median(plogis(samples$grand_logit_theta1)), 3), "\n")
   cat("P(stay high | high state): ", round(median(plogis(samples$grand_logit_theta2)), 3), "\n")
   
   cat("\n=== Standard deviations ===\n")
-  cat("sigma_low_stand:            ", round(median(samples$sigma_low_stand), 3), "\n")
-  cat("sigma_log_delta_high_stand: ", round(median(samples$sigma_log_delta_high_stand), 3), "\n")
-  cat("sigma_theta1_stand:         ", round(median(samples$sigma_theta1_stand), 3), "\n")
-  cat("sigma_theta2_stand:         ", round(median(samples$sigma_theta2_stand), 3), "\n")
+  cat("sigma_low_stand:   ", round(median(samples$sigma_low_stand), 3), "\n")
+  cat("sigma_log_delta:   ", round(median(samples$sigma_log_delta), 3), "\n")
+  cat("sigma_theta1_stand:", round(median(samples$sigma_theta1_stand), 3), "\n")
+  cat("sigma_theta2_stand:", round(median(samples$sigma_theta2_stand), 3), "\n")
   
   cat("\n=== Overdispersion (phi) ===\n")
   cat("phi low state:  ", round(median(exp(samples$log_phi_state[,1])), 3), "\n")
   cat("phi high state: ", round(median(exp(samples$log_phi_state[,2])), 3), "\n")
   
-  # Store results in a dataframe for later use
   results[[sp]] <- data.frame(
-    species                    = sp,
-    low_state_mean             = median(exp(samples$grand_mean_low)),
-    high_state_fold_change     = median(exp(samples$log_delta_high_grand_mean)),
-    high_state_mean            = median(exp(samples$grand_mean_low) +
-                                          exp(samples$log_delta_high_grand_mean)),
-    p_stay_low                 = median(plogis(samples$grand_logit_theta1)),
-    p_stay_high                = median(plogis(samples$grand_logit_theta2)),
-    sigma_low_stand            = median(samples$sigma_low_stand),
-    sigma_log_delta_high_stand = median(samples$sigma_log_delta_high_stand),
-    sigma_theta1_stand         = median(samples$sigma_theta1_stand),
-    sigma_theta2_stand         = median(samples$sigma_theta2_stand),
-    phi_low                    = median(exp(samples$log_phi_state[,1])),
-    phi_high                   = median(exp(samples$log_phi_state[,2]))
+    species            = sp,
+    low_state_mean     = median(low_mean),
+    high_state_fold_change = median(fold_change),
+    high_state_mean    = median(high_mean),
+    p_stay_low         = median(plogis(samples$grand_logit_theta1)),
+    p_stay_high        = median(plogis(samples$grand_logit_theta2)),
+    sigma_low_stand    = median(samples$sigma_low_stand),
+    sigma_log_delta    = median(samples$sigma_log_delta),
+    sigma_theta1_stand = median(samples$sigma_theta1_stand),
+    sigma_theta2_stand = median(samples$sigma_theta2_stand),
+    phi_low            = median(exp(samples$log_phi_state[,1])),
+    phi_high           = median(exp(samples$log_phi_state[,2]))
   )
 }
 
-# Combine into a single summary table
 summary_table <- do.call(rbind, results)
 print(summary_table, digits = 3)
 
@@ -524,7 +529,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_ABAM, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 #Model : Multispecies Paritial Pooling Delta Phi 6
@@ -616,6 +621,41 @@ for (f in 1:G_abam) {
 
 
 
+
+
+
+par(mfrow = c(4, 4))
+
+for (f in 1:G_abam) {
+  idx     <- start_idxs_abam[f]:end_idxs_abam[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_abam$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_abam$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_abam$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
+
+par(mfrow = c(1, 1))
+
+
+
+
+
+
+
+
+
+
 # State identification 
 
 samples <- util$extract_expectand_vals(fit_ABAM)
@@ -701,7 +741,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_ABLA, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 util <- new.env()
@@ -778,13 +818,20 @@ for (f in 1:G_abla) {
 
 
 
-print(fit_ABLA, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
+# print(fit_ABLA, pars = c("grand_mean_low",
+#                          "log_delta_high_grand_mean", 
+#                          "sigma_theta2_stand",
+#                          "sigma_low_stand",
+#                          "sigma_log_delta_high_stand",
+#                          "log_phi_state"))
+
+print(fit_ABLA, pars = c("mu_log_low",
+                         "mu_log_delta",
+                         "sigma_theta1_stand",
                          "sigma_theta2_stand",
                          "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
+                         "sigma_log_delta",
                          "log_phi_state"))
-
 
 # State identification 
 
@@ -816,6 +863,29 @@ for (f in 1:length(start_idxs_abla)) {
   
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_abla), " -- Press [Enter] for next..."))
 }
+
+
+par(mfrow = c(4, 4))
+for (f in 1:G_abla) {
+  idx     <- start_idxs_abla[f]:end_idxs_abla[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_abla$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_abla$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_abla$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
+
+par(mfrow = c(1, 1))
 
 
 
@@ -870,7 +940,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_CANO, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 #checking where the divergence are still from (after changing the prior in : SinglespeciesPartialPooling_deltaPhiNC2)
@@ -1001,6 +1071,27 @@ for (f in 1:length(start_idxs_cano)) {
 }
 
 
+par(mfrow = c(4, 4))
+for (f in 1:G_cano) {
+  idx     <- start_idxs_cano[f]:end_idxs_cano[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_cano$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_cano$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_cano$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
+
+par(mfrow = c(1, 1))
 
 # Prior vs posterior 
 
@@ -1052,7 +1143,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_PSME, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 util <- new.env()
@@ -1172,7 +1263,28 @@ for (f in 1:length(start_idxs_psme)) {
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_psme), " -- Press [Enter] for next..."))
 }
 
+#all in one
+par(mfrow = c(4, 4))
+for (f in 1:G_psme) {
+  idx     <- start_idxs_psme[f]:end_idxs_psme[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_psme$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_psme$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_psme$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
 
+par(mfrow = c(1, 1))
 
 # Prior vs posterior 
 
@@ -1223,7 +1335,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_TSHE, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 util <- new.env()
@@ -1340,7 +1452,28 @@ for (f in 1:length(start_idxs_tshe)) {
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_tshe), " -- Press [Enter] for next..."))
 }
 
+#all in one
+par(mfrow = c(4, 4))
+for (f in 1:G_tshe) {
+  idx     <- start_idxs_tshe[f]:end_idxs_tshe[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_tshe$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_tshe$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_tshe$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
 
+par(mfrow = c(1, 1))
 
 # Prior vs posterior 
 
@@ -1391,7 +1524,7 @@ cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
 pairs(fit_THPL, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta_high_stand"),
+      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
 util <- new.env()
@@ -1507,6 +1640,29 @@ for (f in 1:length(start_idxs_thpl)) {
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_thpl), " -- Press [Enter] for next..."))
 }
 
+
+#all in one
+par(mfrow = c(4, 4))
+for (f in 1:G_thpl) {
+  idx     <- start_idxs_thpl[f]:end_idxs_thpl[f]
+  T_f     <- length(idx)
+  years_f <- stand_year_thpl$year[idx]
+  
+  util$plot_disc_pushforward_quantiles(
+    samples,
+    paste0("y_rep[", idx, "]")
+  )
+  points(x = 1:T_f, y = stan_data_thpl$y[idx], pch = 16, cex = 0.8)
+  
+  # Add year labels on x axis
+  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
+  
+  title(main = paste0(years_per_series_thpl$stand[f],
+                      " (", min(years_f), "-", max(years_f), ")"),
+        cex.main = 0.8)
+}
+
+par(mfrow = c(1, 1))
 
 
 # Prior vs posterior
