@@ -384,7 +384,7 @@ print(THPL_data$total_viable_sds); length(THPL_data$total_viable_sds)
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -393,7 +393,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -403,7 +403,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -413,7 +413,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -423,7 +423,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -433,7 +433,7 @@ fit_TSHE <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_Victor.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbis.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
