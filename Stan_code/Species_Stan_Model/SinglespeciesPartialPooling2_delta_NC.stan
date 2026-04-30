@@ -3,9 +3,8 @@
 //Distribution: two NB for each state partially pooled by stand
 //Overdispersion per state
 //Forced state 2 above state 1 with delta
-
-
-// DO NOT USE THIS ONE AS I SAVED THIS WRONG!!!!!!!!!!!! FOR HOW IT WAS BEFORE SEE the other stan codes
+//new based on victor's comment in #66
+// PLus de-centering for the theta and the high distribution
 
 data {
   int<lower=1> N;
@@ -35,21 +34,22 @@ parameters {
   real grand_logit_theta1;
   real grand_logit_theta2;
 
-  vector[N_stands] alpha_theta1_stand_nc;   // non-centered
-  vector[N_stands] alpha_theta2_stand_nc;   // non_centered
+  vector[N_stands] alpha_theta1_stand_nc;   
+  vector[N_stands] alpha_theta2_stand_nc;  
   real<lower=0> sigma_theta1_stand;
   real<lower=0> sigma_theta2_stand;
 
-  // Emission means; changed based on Victor last Github comment on git issue #66
-  real log_mu;
+  // Emission means; 
+  real mu_log_low;
   real mu_log_delta;
   
 
   // Stand random effects — centered
-  vector[N_stands] alpha_low_stand;
-  vector[N_stands] alpha_delta_stand;//NEW changed vbased on git issue #66
+  vector [N_stands] alpha_low_stand;
+  //vector[N_stands] log_low_tilde;
+  vector[N_stands] log_delta_tilde;
   real<lower=0> sigma_low_stand;
-  real<lower=0> sigma_log_delta;//also renamed
+  real<lower=0> sigma_log_delta;
 
   // Dispersion per state
   vector[2] log_phi_state;
@@ -62,16 +62,17 @@ transformed parameters {
   vector<lower=0, upper=1>[F] theta2;
   array[F] matrix[2, 2] Gamma;
   
-  vector[N_stands] alpha_theta1_stand = sigma_theta1_stand * alpha_theta1_stand;
-  vector[N_stands] alpha_theta2_stand = sigma_theta2_stand * alpha_theta2_stand;
-  vector [N_stands] log_low_stand = log_mu + sigma_low_stand * alpha_low_stand;
-  vector [N_stands] log_delta_stand = mu_log_delta + sigma_log_delta * alpha_delta_stand;
-    
+  vector[N_stands] alpha_theta1_stand = sigma_theta1_stand * alpha_theta1_stand_nc;
+  vector[N_stands] alpha_theta2_stand = sigma_theta2_stand * alpha_theta2_stand_nc;
+  //vector[N_stands] log_low_stand = mu_log_low + sigma_low_stand * log_low_tilde;
+  vector[N_stands] log_low_stand = mu_log_low + alpha_low_stand;
+  vector[N_stands] log_1p_delta  = log1p_exp(mu_log_delta + sigma_log_delta * log_delta_tilde);
+  
   for (f in 1:F) {
     int st = stand_id[f];
 
     log_alpha_low [f] = log_low_stand[st];
-    log_alpha_high [f] = log_low_stand[st] + log1p_exp(log_delta_stand[st]);
+    log_alpha_high[f] = log_low_stand[st] + log_1p_delta[st];
 
     
     theta1[f] = inv_logit(grand_logit_theta1 + alpha_theta1_stand[st]);
@@ -101,18 +102,19 @@ model {
   grand_logit_theta1 ~ normal(1, 0.7);//mean of 73% chance of staying in low state
   grand_logit_theta2 ~ normal(0, 0.7); //mean of 50% chance of staying in mast state
 
-  alpha_theta1_stand_nc ~ normal(0, 1);   // non-centered
+  alpha_theta1_stand_nc ~ normal(0, 1);  
   alpha_theta2_stand_nc ~ normal(0, 1);   
   sigma_theta1_stand ~ normal(0, 0.7);
   sigma_theta2_stand ~ normal(0, 0.7);
 
   // Emission means
-  log_mu                    ~ normal(2.6, 1.0);
-  alpha_low_stand           ~ normal(0, sigma_low_stand);       
+  mu_log_low                 ~ normal(2.6, 1.0);
+  //mu_low_tilde              ~ normal(0, sigma_low_stand);
+  alpha_low_stand              ~ normal(0, sigma_low_stand);
   sigma_low_stand           ~ normal(0, 0.5);
 
   mu_log_delta              ~ normal(1.5, 1.5);
-  alpha_delta_stand         ~ normal(0, sigma_log_delta); 
+  log_delta_tilde           ~ normal(0, 1); 
   sigma_log_delta           ~ normal(0, 1);
 
   // Dispersion

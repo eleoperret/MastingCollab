@@ -4,9 +4,6 @@
 //Overdispersion per state
 //Forced state 2 above state 1 with delta
 
-
-// DO NOT USE THIS ONE AS I SAVED THIS WRONG!!!!!!!!!!!! FOR HOW IT WAS BEFORE SEE the other stan codes
-
 data {
   int<lower=1> N;
   int<lower=1> F;
@@ -35,8 +32,8 @@ parameters {
   real grand_logit_theta1;
   real grand_logit_theta2;
 
-  vector[N_stands] alpha_theta1_stand_nc;   // non-centered
-  vector[N_stands] alpha_theta2_stand_nc;   // non_centered
+  vector[N_stands] alpha_theta1_stand;   
+  vector[N_stands] alpha_theta2_stand;  
   real<lower=0> sigma_theta1_stand;
   real<lower=0> sigma_theta2_stand;
 
@@ -62,10 +59,9 @@ transformed parameters {
   vector<lower=0, upper=1>[F] theta2;
   array[F] matrix[2, 2] Gamma;
   
-  vector[N_stands] alpha_theta1_stand = sigma_theta1_stand * alpha_theta1_stand;
-  vector[N_stands] alpha_theta2_stand = sigma_theta2_stand * alpha_theta2_stand;
-  vector [N_stands] log_low_stand = log_mu + sigma_low_stand * alpha_low_stand;
-  vector [N_stands] log_delta_stand = mu_log_delta + sigma_log_delta * alpha_delta_stand;
+
+  vector [N_stands] log_low_stand = log_mu + alpha_low_stand;
+  vector [N_stands] log_delta_stand = mu_log_delta + alpha_delta_stand;
     
   for (f in 1:F) {
     int st = stand_id[f];
@@ -101,8 +97,8 @@ model {
   grand_logit_theta1 ~ normal(1, 0.7);//mean of 73% chance of staying in low state
   grand_logit_theta2 ~ normal(0, 0.7); //mean of 50% chance of staying in mast state
 
-  alpha_theta1_stand_nc ~ normal(0, 1);   // non-centered
-  alpha_theta2_stand_nc ~ normal(0, 1);   
+  alpha_theta1_stand ~ normal(0, 1);   // non-centered
+  alpha_theta2_stand ~ normal(0, 1);   
   sigma_theta1_stand ~ normal(0, 0.7);
   sigma_theta2_stand ~ normal(0, 0.7);
 
