@@ -425,8 +425,8 @@ print(THPL_data$total_viable_sds); length(THPL_data$total_viable_sds)
 
 
 
-# Raw seed counts plots ---------------------------------------------------------
 
+# Plots of raw seed production --------------------------------------------
 ggplot(stand_year_abam, aes(x = year, y = y)) +
   geom_col(fill = "steelblue", alpha = 0.8) +
   geom_point(size = 1.5, color = "black") +
@@ -444,11 +444,6 @@ ggplot(stand_year_abam, aes(x = year, y = y)) +
     axis.text.x      = element_text(angle = 45, hjust = 1, size = 7),
     panel.grid.minor = element_blank()
   )
-
-
-
-# Plots of raw seed production --------------------------------------------
-
 
 ggplot(stand_year_abla, aes(x = year, y = y)) +
   geom_col(fill = "steelblue", alpha = 0.8) +
@@ -640,7 +635,7 @@ fits_list <- list(
   CANO = fit_CANO,
   PSME = fit_PSME,
   TSHE = fit_TSHE,
-  TSME = fit_TSME
+  TSME = fit_TSME,
   THPL = fit_THPL
 )
 
@@ -730,33 +725,22 @@ util <- new.env()
 source('mcmc_analysis_tools_rstan.R', local=util)
 source('mcmc_visualization_tools.R', local=util)
 
-
-##1) checking the fit of my model
+#ABAM
 diagnostics <- util$extract_hmc_diagnostics(fit_ABAM)
 util$check_all_hmc_diagnostics(diagnostics)
-
 samples <- util$extract_expectand_vals(fit_ABAM)
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_abam, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_abam, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
+base_samples <- util$filter_expectands(samples,c(paste0('alpha_theta1_stand[',1:N_stands_abam, ']'),paste0('alpha_theta2_stand[',   1:N_stands_abam, ']'),'sigma_theta1_stand','sigma_theta2_stand','grand_logit_theta1','grand_logit_theta2','grand_mean_low','log_delta_high_grand_mean'))
 util$check_all_expectand_diagnostics(base_samples)
+base_samples2 <- util$filter_expectands(samples,c('log_delta_high_grand_mean','sigma_log_delta_high_stand',paste0('log_phi_state[1]'),paste0('log_phi_state[2]'),'grand_mean_low','sigma_low_stand'))
+util$check_all_expectand_diagnostics(base_samples2)
 
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
+#ABLA
+diagnostics <- util$extract_hmc_diagnostics(fit_ABLA)
+util$check_all_hmc_diagnostics(diagnostics)
+samples <- util$extract_expectand_vals(fit_ABLA)
+base_samples <- util$filter_expectands(samples,c(paste0('alpha_theta1_stand[',1:N_stands_abla, ']'),paste0('alpha_theta2_stand[',   1:N_stands_abla, ']'),'sigma_theta1_stand','sigma_theta2_stand','grand_logit_theta1','grand_logit_theta2','grand_mean_low','log_delta_high_grand_mean'))
+util$check_all_expectand_diagnostics(base_samples)
+base_samples2 <- util$filter_expectands(samples,c('log_delta_high_grand_mean','sigma_log_delta_high_stand',paste0('log_phi_state[1]'),paste0('log_phi_state[2]'),'grand_mean_low','sigma_low_stand'))
 util$check_all_expectand_diagnostics(base_samples2)
 
 
@@ -772,36 +756,29 @@ print(fit_ABAM, pars = c("grand_mean_low",
 
 # PPC -------------------------------------------------------------
 
-#Extracting some infos
-
-
-
 #ABAM
 draws       <- rstan::extract(fit_ABAM)
 state_draws <- draws$state
 samples <- util$extract_expectand_vals(fit_ABAM)
-
 # ppc for all 
 names_yrep <- paste0("y_rep[", 1:stan_data_abam$N, "]")
-
 # Plot PPC
 par(mfrow = c(1,1))
 util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 600, bin_delta = 20,
                          baseline_values = stan_data_abam$y, title("ABAM"))
-
 #Per series 
 par(mfrow = c(4, 4))
 for (f in 1:G_abam) {
   idx    <- start_idxs_abam[f]:end_idxs_abam[f]
-  years_f <- stand_year_abam$year[idx]  # actual calendar years
+  years_f <- stand_year_abam$year[idx]  
   
   pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
   
   util$plot_conn_pushforward_quantiles(
     samples,
     pred_names_f,
-    years_f,           # use actual years on x-axis
+    years_f,          
     xlab = paste("Series", f),
     ylab = "y ABAM"
   )
@@ -809,33 +786,174 @@ for (f in 1:G_abam) {
 }
 
 
+#ABLA
+samples <- util$extract_expectand_vals(fit_ABLA)
+names_yrep <- paste0("y_rep[", 1:stan_data_abla$N, "]")
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = stan_data_abla$y, title("ABLA"))
+#Per series 
+par(mfrow = c(2, 3))
+for (f in 1:G_abla) {
+  idx    <- start_idxs_abla[f]:end_idxs_abla[f]
+  years_f <- stand_year_abla$year[idx]  
+  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", 
+    title("ABLA")
+  )
+  points(years_f, stan_data_abla$y[idx], pch = 16, cex = 0.8)
+}
 
+
+#CANO
+samples <- util$extract_expectand_vals(fit_CANO)
+# ppc for all 
+names_yrep <- paste0("y_rep[", 1:stan_data_cano$N, "]")
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = stan_data_cano$y, title ("CANO"))
+#Per series 
+par(mfrow = c(3, 4))
+for (f in 1:G_cano) {
+  idx    <- start_idxs_cano[f]:end_idxs_cano[f]
+  years_f <- stand_year_cano$year[idx]  
+  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", title ("CANO")
+  )
+  points(years_f, stan_data_cano$y[idx], pch = 16, cex = 0.8)
+}
+
+
+#PSME
+samples <- util$extract_expectand_vals(fit_PSME)
+# ppc for all 
+names_yrep <- paste0("y_rep[", 1:stan_data_psme$N, "]")
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = stan_data_psme$y, title ("PSME"))
+#Per series 
+par(mfrow = c(3, 4))
+for (f in 1:G_psme) {
+  idx    <- start_idxs_psme[f]:end_idxs_psme[f]
+  years_f <- stand_year_psme$year[idx]  
+  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", title ("PSME")
+  )
+  points(years_f, stan_data_psme$y[idx], pch = 16, cex = 0.8)
+}
+
+
+#TSHE
+samples <- util$extract_expectand_vals(fit_TSHE)
+# ppc for all 
+names_yrep <- paste0("y_rep[", 1:stan_data_tshe$N, "]")
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 2000, bin_delta = 20,
+                         baseline_values = stan_data_tshe$y, title ("TSHE"))
+#Per series 
+par(mfrow = c(4, 4))
+for (f in 1:G_tshe) {
+  idx    <- start_idxs_tshe[f]:end_idxs_tshe[f]
+  years_f <- stand_year_tshe$year[idx]  
+  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", title ("TSHE")
+  )
+  points(years_f, stan_data_tshe$y[idx], pch = 16, cex = 0.8)
+}
+
+#TSME
+samples <- util$extract_expectand_vals(fit_TSME)
+# ppc for all 
+names_yrep <- paste0("y_rep[", 1:stan_data_tsme$N, "]")
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep",
+                         bin_min = 0, bin_max = 4000, bin_delta = 20,
+                         baseline_values = stan_data_tsme$y, title ("TSME"))
+#Per series 
+par(mfrow = c(4, 4))
+for (f in 1:G_tsme) {
+  idx    <- start_idxs_tsme[f]:end_idxs_tsme[f]
+  years_f <- stand_year_tsme$year[idx]  
+  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", title ("TSME")
+  )
+  points(years_f, stan_data_tsme$y[idx], pch = 16, cex = 0.8)
+}
 
 #THPL
-#Extracting some infos
-draws       <- rstan::extract(fit_THPL2)
-state_draws <- draws$state
-
+samples <- util$extract_expectand_vals(fit_THPL)
 # ppc for all 
 names_yrep <- paste0("y_rep[", 1:stan_data_thpl$N, "]")
-
 # Plot PPC
 par(mfrow = c(1,1))
 util$plot_hist_quantiles(samples, "y_rep", title ("THPL"),
                          bin_min = 0, bin_max = 600, bin_delta = 20,
                          baseline_values = stan_data_thpl$y)
-
-
-
-
+#Per series 
+par(mfrow = c(3, 4))
+for (f in 1:G_thpl) {
+  idx    <- start_idxs_thpl[f]:end_idxs_thpl[f]
+  years_f <- stand_year_thpl$year[idx]  
+  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  util$plot_conn_pushforward_quantiles(
+    samples,
+    pred_names_f,
+    years_f,           
+    xlab = paste("Series", f),
+    ylab = "y", title ("THPL")
+  )
+  points(years_f, stan_data_thpl$y[idx], pch = 16, cex = 0.8)
+}
 
 
 # State ID ----------------------------------------------------------------
 
 #ABAM
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_ABAM2)
+samples <- util$extract_expectand_vals(fit_ABAM)
 par(mfrow = c(2,1))
 
 #checking for a stand year combination
@@ -847,9 +965,7 @@ util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, 
 util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
 points(x = 1:length(start_id:end_id), y = stan_data_abam$y[start_id:end_id], pch = 20)
 
-
-
-
+par(mfrow = c(4, 4))
 for (f in 1:length(start_idxs_abam)) {
   
   start_id <- start_idxs_abam[f]
@@ -865,143 +981,8 @@ for (f in 1:length(start_idxs_abam)) {
 }
 
 
-
-
-# Prior vs posterior ------------------------------------------------------
-
-
-
-
-
-
-
-
-
-# Diagnostic plots ABLA --------------------------------------------------------
-
-#If there is a divergence : 
-
-#where is this divergence?
-divergent <- get_sampler_params(fit_ABLA, inc_warmup = FALSE) |>
-  map(as_tibble) |>
-  bind_rows(.id = "chain") |>
-  mutate(draw = row_number()) |>
-  filter(divergent__ == 1)
-
-cat("Divergence in chain:", divergent$chain, "\n")
-cat("At draw:", divergent$draw, "\n")
-
-#Checking the pair plots : 
-pairs(fit_ABLA, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
-      condition = "accept_stat__")
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
-
-##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_ABLA)
-util$check_all_hmc_diagnostics(diagnostics)
-
-samples <- util$extract_expectand_vals(fit_ABLA2)
-
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_abla, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_abla, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
-util$check_all_expectand_diagnostics(base_samples)
-
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
-util$check_all_expectand_diagnostics(base_samples2)
-
-#Extracting some infos
-draws       <- rstan::extract(fit_ABLA2)
-state_draws <- draws$state
-
-
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_abla$N, "]")
-
-# Plot PPC
-par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = stan_data_abla$y, title("ABLA"))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_abla$y)
-
-
-#Per series 
-par(mfrow = c(2, 3))
-for (f in 1:G_abla) {
-  idx    <- start_idxs_abla[f]:end_idxs_abla[f]
-  years_f <- stand_year_abla$year[idx]  # actual calendar years
-  
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y", 
-    title("ABLA")
-  )
-  points(years_f, stan_data_abla$y[idx], pch = 16, cex = 0.8)
-}
-
-
-
-# print(fit_ABLA, pars = c("grand_mean_low",
-#                          "log_delta_high_grand_mean", 
-#                          "sigma_theta2_stand",
-#                          "sigma_low_stand",
-#                          "sigma_log_delta_high_stand",
-#                          "log_phi_state"))
-
-print(fit_ABLA, pars = c("mu_log_low",
-                         "mu_log_delta",
-                         "sigma_theta1_stand",
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta",
-                         "log_phi_state"))
-
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_ABLA2)
-par(mfrow = c(2,1))
-
-#checking for a stand year combination
-f <- 1
-start_id <- start_idxs_abla [f];
-end_id <- end_idxs_abla [f];
-util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                     display_ylim = c(1,2))
-util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
-points(x = 1:length(start_id:end_id), y = stan_data_abla$y[start_id:end_id], pch = 20)
-
-
-
+#ABLA
+samples <- util$extract_expectand_vals(fit_ABLA)
 par(mfrow = c(3, 4))
 for (f in 1:length(start_idxs_abla)) {
   
@@ -1017,175 +998,8 @@ for (f in 1:length(start_idxs_abla)) {
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_abla), " -- Press [Enter] for next..."))
 }
 
-
-
-
-# Prior vs posterior 
-
-
-#partial pooling effect: 
-samples <- rstan::extract(fit_ABLA2)
-
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_abla), function(f) {
-  idx <- start_idxs_abla[f]:end_idxs_abla[f]
-  mean(stan_data_abla$y[idx] / stan_data_abla$area[idx])
-})
-
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
-
-# Plot
-par(mfrow = c(1, 2))
-
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(stand_year_abla$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(stand_year_abla$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-
-
-
-
-# Diagnostic plots CANO --------------------------------------------------------
-
-#If there is a divergence : 
-
-#where is this divergence?
-divergent <- get_sampler_params(fit_CANO, inc_warmup = FALSE) |>
-  map(as_tibble) |>
-  bind_rows(.id = "chain") |>
-  mutate(draw = row_number()) |>
-  filter(divergent__ == 1)
-
-cat("Divergence in chain:", divergent$chain, "\n")
-cat("At draw:", divergent$draw, "\n")
-
-#Checking the pair plots : 
-pairs(fit_CANO, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
-      condition = "accept_stat__")
-
-#checking where the divergence are still from (after changing the prior in : SinglespeciesPartialPooling_deltaPhiNC2)
-pairs(fit_CANO, pars = c("grand_mean_low", 
-                         "log_delta_high_grand_mean",
-                         "sigma_log_delta_high_stand",
-                         "sigma_low_stand"))
-
-print(fit_CANO, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
-                         "log_phi_state"))
-##
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
-
-##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_CANO2)
-util$check_all_hmc_diagnostics(diagnostics)
-
-samples <- util$extract_expectand_vals(fit_CANO2)
-
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_cano, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_cano, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
-util$check_all_expectand_diagnostics(base_samples)
-
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
-util$check_all_expectand_diagnostics(base_samples2)
-
-
-print(fit_CANO, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
-                         "log_phi_state"))
-
-#Extracting some infos
-draws       <- rstan::extract(fit_CANO2)
-state_draws <- draws$state
-
-
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_cano$N, "]")
-
-# Plot PPC
-par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = stan_data_cano$y, title ("CANO"))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_cano$y)
-
-
-#Per series 
-par(mfrow = c(3, 4))
-for (f in 1:G_cano) {
-  idx    <- start_idxs_cano[f]:end_idxs_cano[f]
-  years_f <- stand_year_cano$year[idx]  # actual calendar years
-  
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y", title ("CANO")
-  )
-  points(years_f, stan_data_cano$y[idx], pch = 16, cex = 0.8)
-}
-
-
-
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_CANO2)
-par(mfrow = c(2,1))
-
-#checking for a stand year combination
-f <- 1
-start_id <- start_idxs_cano [f];
-end_id <- end_idxs_cano [f];
-util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                     display_ylim = c(1,2))
-util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
-points(x = 1:length(start_id:end_id), y = stan_data_cano$y[start_id:end_id], pch = 20)
-
-
-
+#CANO
+samples <- util$extract_expectand_vals(fit_CANO)
 par(mfrow = c(4,4))
 for (f in 1:length(start_idxs_cano)) {
   
@@ -1202,164 +1016,9 @@ for (f in 1:length(start_idxs_cano)) {
 }
 
 
-
-
-# Prior vs posterior 
-
-
-
-#partial pooling effect: 
-samples <- rstan::extract(fit_CANO2)
-
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_cano), function(f) {
-  idx <- start_idxs_cano[f]:end_idxs_cano[f]
-  mean(stan_data_cano$y[idx] / stan_data_cano$area[idx])
-})
-
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
-
-# Plot
-par(mfrow = c(1, 2))
-
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(stand_year_cano$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(stand_year_cano$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-
-
-# Diagnostic plots PSME --------------------------------------------------------
-
-#If there is a divergence : 
-
-#where is this divergence?
-divergent <- get_sampler_params(fit_PSME, inc_warmup = FALSE) |>
-  map(as_tibble) |>
-  bind_rows(.id = "chain") |>
-  mutate(draw = row_number()) |>
-  filter(divergent__ == 1)
-
-cat("Divergence in chain:", divergent$chain, "\n")
-cat("At draw:", divergent$draw, "\n")
-
-#Checking the pair plots : 
-pairs(fit_PSME, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
-      condition = "accept_stat__")
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
-
-##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_PSME)
-util$check_all_hmc_diagnostics(diagnostics)
-
-samples <- util$extract_expectand_vals(fit_PSME2)
-
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_psme, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_psme, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
-util$check_all_expectand_diagnostics(base_samples)
-
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
-util$check_all_expectand_diagnostics(base_samples2)
-
-
-print(fit_PSME, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
-                         "log_phi_state"))
-
-
-#Extracting some infos
-draws       <- rstan::extract(fit_PSME2)
-state_draws <- draws$state
-
-
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_psme$N, "]")
-
-# Plot PPC
-par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = stan_data_psme$y, title ("PSME"))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_psme$y)
-
-
-#Per series 
-par(mfrow = c(3, 4))
-for (f in 1:G_psme) {
-  idx    <- start_idxs_psme[f]:end_idxs_psme[f]
-  years_f <- stand_year_psme$year[idx]  # actual calendar years
-  
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y", title ("PSME")
-  )
-  points(years_f, stan_data_psme$y[idx], pch = 16, cex = 0.8)
-}
-
-
-
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_PSME2)
-par(mfrow = c(2,1))
-
-#checking for a stand year combination
-f <- 1
-start_id <- start_idxs_psme [f];
-end_id <- end_idxs_psme [f];
-util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                     display_ylim = c(1,2))
-util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
-points(x = 1:length(start_id:end_id), y = stan_data_psme$y[start_id:end_id], pch = 20)
-
-
-
-tcheck<-PSME_data %>% mutate(f = row_number()) %>% filter(stand %in% c("AM16", "AR07"))
-
+#PSME
+samples <- util$extract_expectand_vals(fit_PSME)
 par(mfrow = c(4, 4))
-
 for (f in 1:length(start_idxs_psme)) {
   
   start_id <- start_idxs_psme[f]
@@ -1374,180 +1033,9 @@ for (f in 1:length(start_idxs_psme)) {
   readline(prompt = paste0("Stand ", f, "/", length(start_idxs_psme), " -- Press [Enter] for next..."))
 }
 
-#all in one
-par(mfrow = c(4, 4))
-for (f in 1:G_psme) {
-  idx     <- start_idxs_psme[f]:end_idxs_psme[f]
-  T_f     <- length(idx)
-  years_f <- stand_year_psme$year[idx]
-  
-  util$plot_disc_pushforward_quantiles(
-    samples,
-    paste0("y_rep[", idx, "]")
-  )
-  points(x = 1:T_f, y = stan_data_psme$y[idx], pch = 16, cex = 0.8)
-  
-  # Add year labels on x axis
-  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
-  
-  title(main = paste0(years_per_series_psme$stand[f],
-                      " (", min(years_f), "-", max(years_f), ")"),
-        cex.main = 0.8)
-}
 
-par(mfrow = c(1, 1))
-
-# Prior vs posterior 
-
-
-
-#partial pooling effect: 
-samples <- rstan::extract(fit_PSME2)
-
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_psme), function(f) {
-  idx <- start_idxs_psme[f]:end_idxs_psme[f]
-  mean(stan_data_psme$y[idx] / stan_data_psme$area[idx])
-})
-
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
-
-# Plot
-par(mfrow = c(1, 2))
-
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(PSME_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(PSME_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-
-# Diagnostic plots TSHE --------------------------------------------------------
-
-#If there is a divergence : 
-
-#where is this divergence?
-divergent <- get_sampler_params(fit_TSHE, inc_warmup = FALSE) |>
-  map(as_tibble) |>
-  bind_rows(.id = "chain") |>
-  mutate(draw = row_number()) |>
-  filter(divergent__ == 1)
-
-cat("Divergence in chain:", divergent$chain, "\n")
-cat("At draw:", divergent$draw, "\n")
-
-#Checking the pair plots : 
-pairs(fit_TSHE, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
-      condition = "accept_stat__")
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
-
-##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_TSHE)
-util$check_all_hmc_diagnostics(diagnostics)
-
-samples <- util$extract_expectand_vals(fit_TSHE2)
-
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_tshe, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_tshe, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
-util$check_all_expectand_diagnostics(base_samples)
-
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
-util$check_all_expectand_diagnostics(base_samples2)
-
-
-
-print(fit_TSHE, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
-                         "log_phi_state"))
-
-#Extracting some infos
-draws       <- rstan::extract(fit_TSHE2)
-state_draws <- draws$state
-
-
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_tshe$N, "]")
-
-# Plot PPC
-par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 4000, bin_delta = 20,
-                         baseline_values = stan_data_tshe$y, title ("TSHE"))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_tshe$y)
-
-
-#Per series 
-par(mfrow = c(4, 4))
-for (f in 1:G_tshe) {
-  idx    <- start_idxs_tshe[f]:end_idxs_tshe[f]
-  years_f <- stand_year_tshe$year[idx]  # actual calendar years
-  
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y", title ("TSHE")
-  )
-  points(years_f, stan_data_tshe$y[idx], pch = 16, cex = 0.8)
-}
-
-
-
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_TSHE2)
-par(mfrow = c(2,1))
-
-#checking for a stand year combination
-f <- 1
-start_id <- start_idxs_tshe [f];
-end_id <- end_idxs_tshe [f];
-util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                     display_ylim = c(1,2))
-util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
-points(x = 1:length(start_id:end_id), y = stan_data_tshe$y[start_id:end_id], pch = 20)
-
-
-
+#TSHE
+samples <- util$extract_expectand_vals(fit_TSHE)
 par(mfrow = c(4,4))
 for (f in 1:length(start_idxs_tshe)) {
   
@@ -1565,121 +1053,26 @@ for (f in 1:length(start_idxs_tshe)) {
 
 
 
-# Prior vs posterior 
-
-
-
-
-#partial pooling effect: 
-samples <- rstan::extract(fit_TSHE2)
-
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_tshe), function(f) {
-  idx <- start_idxs_tshe[f]:end_idxs_tshe[f]
-  mean(stan_data_tshe$y[idx] / stan_data_tshe$area[idx])
-})
-
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
-
-# Plot
-par(mfrow = c(1, 2))
-
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(TSHE_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(TSHE_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-# Diagnostic plots THPL --------------------------------------------------------
-
-
-##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_THPL)
-util$check_all_hmc_diagnostics(diagnostics)
-
-samples <- util$extract_expectand_vals(fit_THPL2)
-
-base_samples <- util$filter_expectands(samples,
-                                       c(paste0('alpha_theta1_stand[',   1:N_stands_thpl, ']'),
-                                         paste0('alpha_theta2_stand[',   1:N_stands_thpl, ']'),
-                                         'sigma_theta1_stand',   'sigma_theta2_stand',
-                                         'grand_logit_theta1',   'grand_logit_theta2',
-                                         'grand_mean_low',       'log_delta_high_grand_mean'
-                                       ))
-util$check_all_expectand_diagnostics(base_samples)
-
-base_samples2 <- util$filter_expectands(samples,
-                                        c(# Delta parameters
-                                          'log_delta_high_grand_mean',
-                                          'sigma_log_delta_high_stand',
-                                          # Phi 
-                                          paste0('log_phi_state[1]'),
-                                          paste0('log_phi_state[2]'),
-                                          
-                                          # Low state means
-                                          'grand_mean_low','sigma_low_stand'
-                                        ))
-
-util$check_all_expectand_diagnostics(base_samples2)
-
-
-print(fit_THPL, pars = c("grand_mean_low",
-                         "log_delta_high_grand_mean", 
-                         "sigma_theta2_stand",
-                         "sigma_low_stand",
-                         "sigma_log_delta_high_stand",
-                         "log_phi_state"))
-
-
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_thpl$y)
-
-
-#Per series 
-par(mfrow = c(3, 4))
-for (f in 1:G_thpl) {
-  idx    <- start_idxs_thpl[f]:end_idxs_thpl[f]
-  years_f <- stand_year_thpl$year[idx]  # actual calendar years
+#TSME
+samples <- util$extract_expectand_vals(fit_TSME)
+par(mfrow = c(4, 4))
+for (f in 1:length(start_idxs_tsme)) {
   
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+  start_id <- start_idxs_tsme[f]
+  end_id   <- end_idxs_tsme[f]
   
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y", title ("THPL")
-  )
-  points(years_f, stan_data_thpl$y[idx], pch = 16, cex = 0.8)
+  util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
+                                       display_ylim = c(1, 2))
+  
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
+  points(x = 1:length(start_id:end_id), y = stan_data_tsme$y[start_id:end_id], pch = 20, title ("TSME"))
+  
+  readline(prompt = paste0("Stand ", f, "/", length(start_idxs_tsme), " -- Press [Enter] for next..."))
 }
 
 
-
-# State identification 
-
-samples <- util$extract_expectand_vals(fit_THPL2)
-par(mfrow = c(2,1))
-
-#checking for a stand year combination
-f <- 1
-start_id <- start_idxs_thpl [f];
-end_id <- end_idxs_thpl [f];
-util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                     display_ylim = c(1,2))
-util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
-points(x = 1:length(start_id:end_id), y = stan_data_thpl$y[start_id:end_id], pch = 20)
-
-
-
+#THPL
+samples <- util$extract_expectand_vals(fit_THPL)
 par(mfrow = c(4, 4))
 for (f in 1:length(start_idxs_thpl)) {
   
@@ -1698,34 +1091,503 @@ for (f in 1:length(start_idxs_thpl)) {
 
 
 
-# Prior vs posterior
+
+# Prior vs posterior ------------------------------------------------------
 
 
 
-#partial pooling effect: 
-samples <- rstan::extract(fit_THPL2)
 
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_thpl), function(f) {
-  idx <- start_idxs_thpl[f]:end_idxs_thpl[f]
-  mean(stan_data_thpl$y[idx] / stan_data_thpl$area[idx])
-})
 
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
 
-# Plot
-par(mfrow = c(1, 2))
 
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(THPL_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
 
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(THPL_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
+
+
+
+
+#ABAM
+samples <- rstan::extract(fit_ABAM)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM ABAM",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+
+#ABLA
+samples <- rstan::extract(fit_ABLA)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM ABLA",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+
+#CANO
+samples <- rstan::extract(fit_CANO)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM CANO",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+
+#PSME
+samples <- rstan::extract(fit_PSME)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM PSME",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+
+#TSHE
+samples <- rstan::extract(fit_TSHE)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM TSHE",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+
+#TSME
+samples <- rstan::extract(fit_TSME)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM TSME",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
+
+
+#THPL
+samples <- rstan::extract(fit_THPL)  
+n <- length(samples$mu_log_low)
+# --- Simulate priors ---
+priors <- data.frame(
+  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_delta         = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  phi_low              = exp(rnorm(n, log(4), 0.6)),
+  phi_high             = exp(rnorm(n, log(4), 0.6))
+)
+# --- Extract posteriors ---
+posteriors <- data.frame(
+  mu_log_low           = samples$mu_log_low,
+  mu_log_delta         = samples$mu_log_delta,
+  grand_logit_theta1   = samples$grand_logit_theta1,
+  grand_logit_theta2   = samples$grand_logit_theta2,
+  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_log_delta      = samples$sigma_log_delta,
+  sigma_theta1_stand   = samples$sigma_theta1_stand,
+  sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_low              = exp(samples$log_phi_state[, 1]),
+  phi_high             = exp(samples$log_phi_state[, 2])
+)
+# --- Labels ---
+param_labels <- c(
+  mu_log_low          = "µ log low (grand mean, low state)",
+  mu_log_delta        = "µ log delta (fold-change)",
+  grand_logit_theta1  = "logit θ₁ (P stay low)",
+  grand_logit_theta2  = "logit θ₂ (P stay high)",
+  sigma_low_stand     = "σ low stand",
+  sigma_log_delta     = "σ log delta stand",
+  sigma_theta1_stand  = "σ θ₁ stand",
+  sigma_theta2_stand  = "σ θ₂ stand",
+  phi_low             = "φ low state",
+  phi_high            = "φ high state"
+)
+# --- Reshape ---
+df <- bind_rows(
+  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
+  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
+) %>%
+  mutate(
+    label = param_labels[param],
+    type  = factor(type, levels = c("Prior", "Posterior"))
+  )
+# --- Plot ---
+ggplot(df, aes(x = value, fill = type, color = type)) +
+  geom_density(alpha = 0.4, linewidth = 0.7) +
+  facet_wrap(~ label, scales = "free", ncol = 3) +
+  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  labs(
+    title = "Prior vs posterior — single species HMM THPL",
+    x = NULL, y = "Density", fill = NULL, color = NULL
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position  = "top",
+    strip.text       = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  )
