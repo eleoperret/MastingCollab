@@ -1,25 +1,10 @@
 ##Code for multispecies HMM model 
-# Stan code: 
 #HMM with two states each defined by a NB distribution
 #Start date: 12.03.2026
 
-####Doesn't include PARA and SUNR as I do not have a map of the species. 
-
-##Partially pooling also species
-##Theta partially pooled by species and stand
-##Seed production on the low and high state partially pooled also 
-
-
-###STOPPED at partial pooling non-centered on both the species and stand for overdispersion
-##To do : Put the results plot on github and then try the partial pooling on only the species
-## Then see if better or not.
-##then try the PPC plot again and maybe do a posterior vs prior check and then do a widening of the priors
-##Thing about discussion with Ken 
-
-
 ##Next things to do : 
 
-#1 : Add the 2009 year, handle the SUNR missing year (add PARA and SUNR)
+#1 : Add the 2009 year, handle the SUNR missing year 
 #2 : Trap-level
 #3 : Extract values for the synchrony.
 #4 : Clean my code (structure of the code and clean the top part)
@@ -150,7 +135,7 @@ print (stan_data_all)
 # Fitting Model -----------------------------------------------------------
 
 fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEW.stan",
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMike.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
