@@ -447,6 +447,9 @@ ggplot(stand_year_abam, aes(x = year, y = y)) +
 
 
 
+# Plots of raw seed production --------------------------------------------
+
+
 ggplot(stand_year_abla, aes(x = year, y = y)) +
   geom_col(fill = "steelblue", alpha = 0.8) +
   geom_point(size = 1.5, color = "black") +
@@ -629,15 +632,16 @@ fit_THPL <- stan(
 # Diagnostic plots per species --------------------------------------------
 
 
-species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "THPL")
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE","TSME","THPL")
 
 fits_list <- list(
-  ABAM = fit_ABAM2,
-  ABLA = fit_ABLA2,
-  CANO = fit_CANO2,
-  PSME = fit_PSME2,
-  TSHE = fit_TSHE2,
-  THPL = fit_THPL2
+  ABAM = fit_ABAM,
+  ABLA = fit_ABLA,
+  CANO = fit_CANO,
+  PSME = fit_PSME,
+  TSHE = fit_TSHE,
+  TSME = fit_TSME
+  THPL = fit_THPL
 )
 
 results <- list()
@@ -696,7 +700,10 @@ summary_table <- do.call(rbind, results)
 print(summary_table, digits = 3)
 
 
-# Diagnostic plots ABAM --------------------------------------------------------
+# Diagnostic plots --------------------------------------------------------
+
+
+# Divergence --------------------------------------------------------------
 
 
 #If there is a divergence : 
@@ -716,8 +723,9 @@ pairs(fit_ABAM,
       pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
-#Model : Multispecies Paritial Pooling Delta Phi 6
 
+
+# General diagnostics -----------------------------------------------------
 util <- new.env()
 source('mcmc_analysis_tools_rstan.R', local=util)
 source('mcmc_visualization_tools.R', local=util)
@@ -726,10 +734,8 @@ source('mcmc_visualization_tools.R', local=util)
 ##1) checking the fit of my model
 diagnostics <- util$extract_hmc_diagnostics(fit_ABAM)
 util$check_all_hmc_diagnostics(diagnostics)
-#there is 1% of divergence
 
 samples <- util$extract_expectand_vals(fit_ABAM)
-
 base_samples <- util$filter_expectands(samples,
                                        c(paste0('alpha_theta1_stand[',   1:N_stands_abam, ']'),
                                          paste0('alpha_theta2_stand[',   1:N_stands_abam, ']'),
@@ -754,8 +760,7 @@ base_samples2 <- util$filter_expectands(samples,
 util$check_all_expectand_diagnostics(base_samples2)
 
 
-
-
+#Checking the geometry
 print(fit_ABAM, pars = c("grand_mean_low",
                          "log_delta_high_grand_mean", 
                          "sigma_theta2_stand",
@@ -765,13 +770,17 @@ print(fit_ABAM, pars = c("grand_mean_low",
 
 
 
+# PPC -------------------------------------------------------------
+
 #Extracting some infos
-draws       <- rstan::extract(fit_ABAM2)
+
+
+
+#ABAM
+draws       <- rstan::extract(fit_ABAM)
 state_draws <- draws$state
-samples <- util$extract_expectand_vals(fit_ABAM2)
+samples <- util$extract_expectand_vals(fit_ABAM)
 
-
-#Overall
 # ppc for all 
 names_yrep <- paste0("y_rep[", 1:stan_data_abam$N, "]")
 
@@ -780,10 +789,6 @@ par(mfrow = c(1,1))
 util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 600, bin_delta = 20,
                          baseline_values = stan_data_abam$y, title("ABAM"))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 100, bin_delta = 2,
-                         baseline_values = stan_data_abam$y)
-
 
 #Per series 
 par(mfrow = c(4, 4))
@@ -806,40 +811,28 @@ for (f in 1:G_abam) {
 
 
 
+#THPL
+#Extracting some infos
+draws       <- rstan::extract(fit_THPL2)
+state_draws <- draws$state
 
+# ppc for all 
+names_yrep <- paste0("y_rep[", 1:stan_data_thpl$N, "]")
 
-par(mfrow = c(4, 4))
-
-for (f in 1:G_abam) {
-  idx     <- start_idxs_abam[f]:end_idxs_abam[f]
-  T_f     <- length(idx)
-  years_f <- stand_year_abam$year[idx]
-  
-  util$plot_disc_pushforward_quantiles(
-    samples,
-    paste0("y_rep[", idx, "]")
-  )
-  points(x = 1:T_f, y = stan_data_abam$y[idx], pch = 16, cex = 0.8)
-  
-  # Add year labels on x axis
-  axis(1, at = 1:T_f, labels = years_f, las = 2, cex.axis = 0.6)
-  
-  title(main = paste0(years_per_series_abam$stand[f],
-                      " (", min(years_f), "-", max(years_f), ")"),
-        cex.main = 0.8)
-}
-
-par(mfrow = c(1, 1))
+# Plot PPC
+par(mfrow = c(1,1))
+util$plot_hist_quantiles(samples, "y_rep", title ("THPL"),
+                         bin_min = 0, bin_max = 600, bin_delta = 20,
+                         baseline_values = stan_data_thpl$y)
 
 
 
 
 
 
+# State ID ----------------------------------------------------------------
 
-
-
-
+#ABAM
 # State identification 
 
 samples <- util$extract_expectand_vals(fit_ABAM2)
@@ -873,36 +866,11 @@ for (f in 1:length(start_idxs_abam)) {
 
 
 
-# Prior vs posterior 
+
+# Prior vs posterior ------------------------------------------------------
 
 
-#partial pooling effect: 
-samples <- rstan::extract(fit_ABAM2)
 
-# Observed mean per stand
-obs_mean <- sapply(1:length(start_idxs_abam), function(f) {
-  idx <- start_idxs_abam[f]:end_idxs_abam[f]
-  mean(stan_data_abam$y[idx] / stan_data_abam$area[idx])
-})
-
-# Posterior median of low and high state means per stand
-post_low  <- apply(exp(samples$log_alpha_low),  2, median)
-post_high <- apply(exp(samples$log_alpha_high), 2, median)
-
-# Plot
-par(mfrow = c(1, 2))
-
-plot(obs_mean, post_low,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "Low state", pch = 19, col = "steelblue")
-text(obs_mean, post_low, labels = unique(ABAM_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
-
-plot(obs_mean, post_high,
-     xlab = "Observed mean density", ylab = "Posterior median",
-     main = "High state", pch = 19, col = "darkorange")
-text(obs_mean, post_high, labels = unique(ABAM_data$stand), pos = 3, cex = 0.7)
-abline(0, 1, lty = 2)
 
 
 
@@ -1632,27 +1600,6 @@ abline(0, 1, lty = 2)
 
 # Diagnostic plots THPL --------------------------------------------------------
 
-#If there is a divergence : 
-
-#where is this divergence?
-divergent <- get_sampler_params(fit_THPL, inc_warmup = FALSE) |>
-  map(as_tibble) |>
-  bind_rows(.id = "chain") |>
-  mutate(draw = row_number()) |>
-  filter(divergent__ == 1)
-
-cat("Divergence in chain:", divergent$chain, "\n")
-cat("At draw:", divergent$draw, "\n")
-
-#Checking the pair plots : 
-pairs(fit_THPL, 
-      pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
-      condition = "accept_stat__")
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
 
 ##1) checking the fit of my model
 diagnostics <- util$extract_hmc_diagnostics(fit_THPL)
@@ -1691,21 +1638,7 @@ print(fit_THPL, pars = c("grand_mean_low",
                          "sigma_log_delta_high_stand",
                          "log_phi_state"))
 
-#Extracting some infos
-draws       <- rstan::extract(fit_THPL2)
-state_draws <- draws$state
 
-
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_thpl$N, "]")
-
-# Plot PPC
-par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep", title ("THPL"),
-                         bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = stan_data_thpl$y)
 util$plot_hist_quantiles(samples, "y_rep",
                          bin_min = 0, bin_max = 100, bin_delta = 2,
                          baseline_values = stan_data_thpl$y)

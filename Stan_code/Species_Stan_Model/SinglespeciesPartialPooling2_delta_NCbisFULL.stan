@@ -6,6 +6,7 @@
 //new based on victor's comment in #66
 //Sigma_low_stand also to 0.5 instead of 1
 // (comes from adter the code : Single specie----Victor.stan) PLus de-centering for the theta and the high distribution
+//added now the de-centering on the low emission too.
 
 data {
   int<lower=1> N;
@@ -46,8 +47,7 @@ parameters {
   
 
   // Stand random effects — centered
-  vector [N_stands] alpha_low_stand;
-  //vector[N_stands] log_low_tilde;
+  vector [N_stands] alpha_low_stand_nc;
   vector[N_stands] log_delta_tilde;
   real<lower=0> sigma_low_stand;
   real<lower=0> sigma_log_delta;
@@ -65,8 +65,7 @@ transformed parameters {
   
   vector[N_stands] alpha_theta1_stand = sigma_theta1_stand * alpha_theta1_stand_nc;
   vector[N_stands] alpha_theta2_stand = sigma_theta2_stand * alpha_theta2_stand_nc;
-  //vector[N_stands] log_low_stand = mu_log_low + sigma_low_stand * log_low_tilde;
-  vector[N_stands] log_low_stand = mu_log_low + alpha_low_stand;
+  vector[N_stands] log_low_stand = mu_log_low + sigma_low_stand * alpha_low_stand_nc;//non-centered now
   vector[N_stands] log_1p_delta  = log1p_exp(mu_log_delta + sigma_log_delta * log_delta_tilde);
   
   for (f in 1:F) {
@@ -110,7 +109,7 @@ model {
 
   // Emission means
   mu_log_low               ~ normal(2.6, 1.0);
-  alpha_low_stand           ~ normal(0, sigma_low_stand);
+  alpha_low_stand_nc           ~ normal(0, 1);
   sigma_low_stand           ~ normal(0, 0.5);
 
   mu_log_delta              ~ normal(1.5, 1.5);
