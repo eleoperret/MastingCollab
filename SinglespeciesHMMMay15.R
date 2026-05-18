@@ -18,6 +18,8 @@
 #At the stand NOT trap level
 #Combination of stand x specie (aggregated) seed production per year
 
+#Changed the priors based on : SinglespeciesPartialPooling2_delta_NCbisFULL
+
 #Libraries
 library(dplyr)
 library(ggplot2)
@@ -28,6 +30,11 @@ library(tidyverse)
 library(posterior)
 
 options(mc.cores = parallel::detectCores())
+
+#To run to use Mike's package
+util <- new.env()
+source('mcmc_analysis_tools_rstan.R', local=util)
+source('mcmc_visualization_tools.R', local=util)
 
 
 #Setting working directory
@@ -557,7 +564,7 @@ ggplot(stand_year_tshe, aes(x = year, y = y)) +
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -566,7 +573,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -576,7 +583,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -586,7 +593,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -596,7 +603,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -605,7 +612,7 @@ fit_TSHE <- stan(
 )
 
 fit_TSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_tsme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -615,7 +622,7 @@ fit_TSME <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesPartialPooling2_delta_NCbisFULL.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -721,9 +728,7 @@ pairs(fit_ABAM,
 
 
 # General diagnostics -----------------------------------------------------
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
+
 
 #ABAM
 diagnostics <- util$extract_hmc_diagnostics(fit_ABAM)
@@ -1094,308 +1099,17 @@ for (f in 1:length(start_idxs_thpl)) {
 
 # Prior vs posterior ------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
 #ABAM
-samples <- rstan::extract(fit_ABAM)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM ABAM",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )
-
-
-
-#ABLA
-samples <- rstan::extract(fit_ABLA)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM ABLA",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )
-
-
-
-#CANO
-samples <- rstan::extract(fit_CANO)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM CANO",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )
-
-
-
-#PSME
-samples <- rstan::extract(fit_PSME)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM PSME",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )
-
-
-
-#TSHE
 samples <- rstan::extract(fit_TSHE)  
 n <- length(samples$mu_log_low)
 # --- Simulate priors ---
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_low           = rnorm(n, 2.8, 1.0),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
+  grand_logit_theta1   = rnorm(n, 1.2, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.5, 0.7),
+  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1)),
   sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
   sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
   phi_low              = exp(rnorm(n, log(4), 0.6)),
@@ -1455,139 +1169,3 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
 
 
 
-#TSME
-samples <- rstan::extract(fit_TSME)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM TSME",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )
-
-
-#THPL
-samples <- rstan::extract(fit_THPL)  
-n <- length(samples$mu_log_low)
-# --- Simulate priors ---
-priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
-  mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1.0)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
-)
-# --- Extract posteriors ---
-posteriors <- data.frame(
-  mu_log_low           = samples$mu_log_low,
-  mu_log_delta         = samples$mu_log_delta,
-  grand_logit_theta1   = samples$grand_logit_theta1,
-  grand_logit_theta2   = samples$grand_logit_theta2,
-  sigma_low_stand      = samples$sigma_low_stand,
-  sigma_log_delta      = samples$sigma_log_delta,
-  sigma_theta1_stand   = samples$sigma_theta1_stand,
-  sigma_theta2_stand   = samples$sigma_theta2_stand,
-  phi_low              = exp(samples$log_phi_state[, 1]),
-  phi_high             = exp(samples$log_phi_state[, 2])
-)
-# --- Labels ---
-param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
-)
-# --- Reshape ---
-df <- bind_rows(
-  priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
-  posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
-) %>%
-  mutate(
-    label = param_labels[param],
-    type  = factor(type, levels = c("Prior", "Posterior"))
-  )
-# --- Plot ---
-ggplot(df, aes(x = value, fill = type, color = type)) +
-  geom_density(alpha = 0.4, linewidth = 0.7) +
-  facet_wrap(~ label, scales = "free", ncol = 3) +
-  scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-  labs(
-    title = "Prior vs posterior — single species HMM THPL",
-    x = NULL, y = "Density", fill = NULL, color = NULL
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    legend.position  = "top",
-    strip.text       = element_text(size = 9),
-    panel.grid.minor = element_blank()
-  )

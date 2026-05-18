@@ -22,6 +22,10 @@ library(posterior)
 
 options(mc.cores = parallel::detectCores())
 
+util <- new.env()
+source('mcmc_analysis_tools_rstan.R', local=util)
+source('mcmc_visualization_tools.R', local=util)
+
 
 #Setting working directory
 getwd()
@@ -135,7 +139,7 @@ print (stan_data_all)
 # Fitting Model -----------------------------------------------------------
 
 fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMike.stan",
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpecies.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
@@ -144,7 +148,7 @@ fit_all <- stan(
 )
 
 fit_all2 <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWNCThetaAllHigh.stan",
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriors.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
@@ -156,11 +160,16 @@ fit_all2 <- stan(
 
 
 #If there is a divergence : 
-
+#where is this divergence?
+divergent <- get_sampler_params(fit_all2, inc_warmup = FALSE) |>
+  map(as_tibble) |>
+  bind_rows(.id = "chain") |>
+  mutate(draw = row_number()) |>
+  filter(divergent__ == 1)
 ##Add the divergence color 
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "log_phi_state[1]",
     "log_phi_state[2]"
@@ -169,7 +178,7 @@ pairs(
 )
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "mu_log_low",
     "mu_log_delta",
@@ -182,7 +191,7 @@ pairs(
 )
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "alpha_low_species [1]",
     "alpha_low_stand [1]",
@@ -197,7 +206,7 @@ pairs(
 )
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "alpha_theta1_species[1]",
     "sigma_theta1_species",
@@ -212,11 +221,32 @@ pairs(
 )
 
 # Diagnostic plots Non-centered  --------------------------------------------------------
+#If there is a divergence : 
+#where is this divergence?
 
+divergent <- get_sampler_params(fit_all2, inc_warmup = FALSE)
+lapply(divergent, function(x) sum(x[,"divergent__"]))
+
+
+# Extract chain 4 samples with divergence info
+sampler_params_ch4 <- get_sampler_params(fit_all2, inc_warmup = FALSE)[[4]]
+
+# Find which iteration diverged
+div_iter <- which(sampler_params_ch4[, "divergent__"] == 1)
+cat("Divergence at iteration:", div_iter, "\n")
+
+# Check the energy and stepsize at that iteration
+sampler_params_ch4[div_iter, ]
+
+divergent <- get_sampler_params(fit_all2, inc_warmup = FALSE) |>
+  map(as_tibble) |>
+  bind_rows(.id = "chain") |>
+  mutate(draw = row_number()) |>
+  filter(divergent__ == 1)
 #Non-centering on the thetas and the high seed production
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "log_phi_state[1]",
     "log_phi_state[2]"
@@ -226,7 +256,7 @@ pairs(
 
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "alpha_low_species [1]",
     "alpha_low_stand [1]",
@@ -241,7 +271,7 @@ pairs(
 )
 
 pairs(
-  fit_all,
+  fit_all2,
   pars = c(
     "alpha_theta1_species_nc[1]",
     "sigma_theta1_species",
@@ -256,13 +286,29 @@ pairs(
 )
 
 
+print(fit_all2, pars = c("grand_logit_theta1", "grand_logit_theta2",
+                        "mu_log_low", "mu_log_delta",
+                        "sigma_theta1_species", "sigma_theta2_species",
+                        "sigma_low_species", "sigma_log_delta_species",
+                        "sigma_theta1_stand", "sigma_theta2_stand",
+                        "sigma_low_stand", "sigma_log_delta_stand",
+                        "log_phi_state"))
 
+
+pairs(fit_all, pars=c("grand_logit_theta1",
+                  "grand_logit_theta2",
+                  "mu_log_delta"))
+
+pairs(fit_all,
+      pars=c("mu_log_delta",
+             "log_phi[1,1]",
+             "log_phi[1,2]"))
 
 # Results -----------------------------------------------------------------
 
-summary(fit_all2)
+summary(fit_all)
 
-s <- summary(fit_all2)$summary
+s <- summary(fit_all)$summary
 
 species_list <- c("ABAM", "ABLA", "CANO", "PSME", "THPL", "TSHE", "TSME")
 results <- list()
@@ -300,19 +346,12 @@ print(summary_table, digits = 3)
 
 # Mike's plot -------------------------------------------------------------
 
-
-
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
-
-
 ##1) checking the fit of my model
-diagnostics <- util$extract_hmc_diagnostics(fit_all2)
+diagnostics <- util$extract_hmc_diagnostics(fit_all)
 util$check_all_hmc_diagnostics(diagnostics)
 #there is 1% of divergence
 
-samples <- util$extract_expectand_vals(fit_all2)
+samples <- util$extract_expectand_vals(fit_all)
 
 base_samples <- util$filter_expectands(samples,
                                        c(# Transitions - species NC (what's in the model)
@@ -342,12 +381,13 @@ base_samples2 <- util$filter_expectands(samples,
                                           paste0('log_delta_stand_nc[',   1:18, ']'),
                                           
                                           # Overdispersion (per state, not per species)
-                                          'log_phi_state[1]',
-                                          'log_phi_state[2]'
-                                        ))
+                                          'log_phi'
+                                        ),check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples2)
 
 
+util$plot_pairs_by_chain(samples[["log_alpha_low[20]"]], "log_alpha_low[20]",
+                         samples[["log_alpha_high[20]"]], "log_alpha_high[20]")
 
 # PPC ---------------------------------------------------------------------
 
@@ -355,7 +395,7 @@ util$check_all_expectand_diagnostics(base_samples2)
 # ppc for all 
 names_yrep <- paste0("y_rep[", 1:stan_data_all$N, "]")
 
-samples <- util$extract_expectand_vals(fit_all2)
+samples <- util$extract_expectand_vals(fit_all)
 
 # Plot PPC
 par(mfrow = c(1,1))
@@ -399,7 +439,7 @@ points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)
 
 
 # State identification ----------------------------------------------------
-samples <- util$extract_expectand_vals(fit_all2)
+samples <- util$extract_expectand_vals(fit_all)
 par(mfrow = c(4,4))
 
 for (f in 1:length(stan_data_all$start_idxs)) {
@@ -416,24 +456,25 @@ for (f in 1:length(stan_data_all$start_idxs)) {
   readline(prompt = paste0("Stand ", f, "/", length(stan_data_all$start_idxs), " -- Press [Enter] for next..."))
 }
 
+
+
 # Prior vs posterior ------------------------------------------------------
 
 
 
-samples <- rstan::extract(fit_all2)
+samples <- rstan::extract(fit_all)
 
-# --- Simulate priors (same sample size as posterior) ---
 n <- length(samples$mu_log_low)
 
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.6, 1.0),
+  mu_log_low           = rnorm(n, 2.8, 1.0),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.0, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.0, 0.7),
-  sigma_low_species    = abs(rnorm(n, 0, 0.5)),
-  sigma_low_stand      = abs(rnorm(n, 0, 0.5)),
-  sigma_log_delta_sp   = abs(rnorm(n, 0, 1.0)),
-  sigma_log_delta_stand= abs(rnorm(n, 0, 1.0)),
+  grand_logit_theta1   = rnorm(n, 1.2, 0.7),
+  grand_logit_theta2   = rnorm(n, 0.5, 0.7),
+  sigma_low_species    = abs(rnorm(n, 0.5, 1)),
+  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
+  sigma_log_delta_sp   = abs(rnorm(n, 0, 1)),
+  sigma_log_delta_stand= abs(rnorm(n, 0, 1)),
   sigma_theta1_species = abs(rnorm(n, 0, 0.7)),
   sigma_theta2_species = abs(rnorm(n, 0, 0.7)),
   sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
@@ -508,3 +549,98 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
     strip.text       = element_text(size = 9),
     panel.grid.minor = element_blank()
   )
+
+
+
+
+# Posteriror vs prior multioverdispersion ---------------------------------
+
+samples <- rstan::extract(fit_all)
+n <- length(samples$mu_log_low)
+species_names <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
+
+param_labels <- c(
+  mu_log_low            = "µ log low (grand mean seeds, low state)",
+  mu_log_delta          = "µ log delta (grand mean fold-change)",
+  grand_logit_theta1    = "logit θ₁ (P stay low)",
+  grand_logit_theta2    = "logit θ₂ (P stay high)",
+  sigma_low_species     = "σ low species",
+  sigma_low_stand       = "σ low stand",
+  sigma_log_delta_sp    = "σ log delta species",
+  sigma_log_delta_stand = "σ log delta stand",
+  sigma_theta1_species  = "σ θ₁ species",
+  sigma_theta2_species  = "σ θ₂ species",
+  sigma_theta1_stand    = "σ θ₁ stand",
+  sigma_theta2_stand    = "σ θ₂ stand",
+  phi_low               = "φ low state (overdispersion)",
+  phi_high              = "φ high state (overdispersion)"
+)
+
+# Priors are the same for all species
+priors <- data.frame(
+  mu_log_low            = rnorm(n, 2.8, 1.0),
+  mu_log_delta          = rnorm(n, 1.5, 1.5),
+  grand_logit_theta1    = rnorm(n, 1.2, 0.7),
+  grand_logit_theta2    = rnorm(n, 0.5, 0.7),
+  sigma_low_species     = abs(rnorm(n, 0.5, 1)),
+  sigma_low_stand       = abs(rnorm(n, 0.5, 1)),
+  sigma_log_delta_sp    = abs(rnorm(n, 0, 1)),
+  sigma_log_delta_stand = abs(rnorm(n, 0, 1)),
+  sigma_theta1_species  = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_species  = abs(rnorm(n, 0, 0.7)),
+  sigma_theta1_stand    = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand    = abs(rnorm(n, 0, 0.7)),
+  phi_low               = exp(rnorm(n, log(4), 0.6)),
+  phi_high              = exp(rnorm(n, log(4), 0.6))
+)
+
+prior_long <- priors %>%
+  pivot_longer(everything(), names_to = "param", values_to = "value") %>%
+  mutate(type = "Prior")
+
+# Loop over species and save one plot per species
+for (sp_idx in 1:length(species_names)) {
+  
+  posteriors <- data.frame(
+    mu_log_low            = samples$mu_log_low,
+    mu_log_delta          = samples$mu_log_delta,
+    grand_logit_theta1    = samples$grand_logit_theta1,
+    grand_logit_theta2    = samples$grand_logit_theta2,
+    sigma_low_species     = samples$sigma_low_species,
+    sigma_low_stand       = samples$sigma_low_stand,
+    sigma_log_delta_sp    = samples$sigma_log_delta_species,
+    sigma_log_delta_stand = samples$sigma_log_delta_stand,
+    sigma_theta1_species  = samples$sigma_theta1_species,
+    sigma_theta2_species  = samples$sigma_theta2_species,
+    sigma_theta1_stand    = samples$sigma_theta1_stand,
+    sigma_theta2_stand    = samples$sigma_theta2_stand,
+    phi_low               = exp(samples$log_phi[, sp_idx, 1]),  # species-specific
+    phi_high              = exp(samples$log_phi[, sp_idx, 2])   # species-specific
+  )
+  
+  post_long <- posteriors %>%
+    pivot_longer(everything(), names_to = "param", values_to = "value") %>%
+    mutate(type = "Posterior")
+  
+  df <- bind_rows(prior_long, post_long) %>%
+    mutate(
+      label = param_labels[param],
+      type  = factor(type, levels = c("Prior", "Posterior"))
+    )
+  
+  p <- ggplot(df, aes(x = value, fill = type, color = type)) +
+    geom_density(alpha = 0.4, linewidth = 0.7) +
+    facet_wrap(~ label, scales = "free", ncol = 3) +
+    scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+    scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+    labs(
+      title = paste("Prior vs posterior —", species_names[sp_idx]),
+      x = NULL, y = "Density", fill = NULL, color = NULL
+    ) +
+    theme_bw(base_size = 11) +
+    theme(
+      legend.position  = "top",
+      strip.text       = element_text(size = 9),
+      panel.grid.minor = element_blank()
+    )
+}
