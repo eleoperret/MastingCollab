@@ -97,9 +97,27 @@ str(stand_year_all)
 stand_year_all <- bind_rows(stand_year_all, extra_stands) %>%
   arrange(spp, stand, year)
 
-stand_year_all <- stand_year_all %>%
-  filter(!(stand == "SUNR" & year == 2024))
+# stand_year_all <- stand_year_all %>%
+#   filter(!(stand == "SUNR" & year == 2024))
 
+missing_rows <- tibble(
+  spp   = c("ABAM", "ABLA", "CANO"),
+  stand = "SUNR",
+  year  = 2023,
+  y     = NA_integer_,
+  area  = NA_real_
+)
+
+stand_year_all <- bind_rows(stand_year_all, missing_rows) %>%
+  group_by(spp, stand) %>%
+  mutate(area = ifelse(is.na(area), mean(area, na.rm = TRUE), area)) %>%
+  ungroup() %>%
+  arrange(spp, stand, year)
+
+obs_missing <- as.integer(!is.na(stand_year_all$y))
+
+stand_year_all <- stand_year_all %>%
+  mutate(y = ifelse(is.na(y), 0L, as.integer(y)))
 
 # ABAM --------------------------------------------------------------------
 #Per species
@@ -127,29 +145,11 @@ stan_data_abam <- list(
   start_idxs = start_idxs_abam,
   end_idxs   = end_idxs_abam,
   y          = stand_year_abam$y,
-  area       = stand_year_abam$area
+  area       = stand_year_abam$area, 
+  obs_missing = obs_missing[stand_year_all$spp=="ABAM"]
 )
 
-print(stan_data_abam)
-
-#to verify
-ABAM_data<-stand_year_all%>%
-  filter(spp=="ABAM")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(y, na.rm = TRUE),
-    area = sum(area, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-  
-unique(ABAM_data$stand);length(unique(ABAM_data$stand))
-print(ABAM_data$total_viable_sds); length(ABAM_data$total_viable_sds)
-#works
-
-
-
+#print(stan_data_abam)
 
 # ABLA  --------------------------------------------------------------------
 #Per species
@@ -177,29 +177,12 @@ stan_data_abla <- list(
   start_idxs = start_idxs_abla,
   end_idxs   = end_idxs_abla,
   y          = stand_year_abla$y,
-  area       = stand_year_abla$area
+  area       = stand_year_abla$area,
+  obs_missing = obs_missing[stand_year_all$spp=="ABLA"]
 )
 
 print(stan_data_abla)
 
-#to verify
-ABLA_data<-seed_filtered%>%
-  filter(spp=="ABLA")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(total_viable_sds, na.rm = TRUE),
-    area = sum(size, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-
-unique(ABLA_data$stand);length(unique(ABLA_data$stand))
-print(ABLA_data$total_viable_sds); length(ABLA_data$total_viable_sds)
-
-
-
-#works
 # CANO  --------------------------------------------------------------------
 #Per species
 stand_year_cano <- stand_year_all %>%
@@ -226,27 +209,11 @@ stan_data_cano <- list(
   start_idxs = start_idxs_cano,
   end_idxs   = end_idxs_cano,
   y          = stand_year_cano$y,
-  area       = stand_year_cano$area
+  area       = stand_year_cano$area,
+  obs_missing = obs_missing[stand_year_all$spp=="CANO"]
 )
 
 print(stan_data_cano)
-
-#to verify
-CANO_data<-seed_filtered%>%
-  filter(spp=="CANO")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(total_viable_sds, na.rm = TRUE),
-    area = sum(size, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-
-unique(CANO_data$stand);length(unique(CANO_data$stand))
-print(CANO_data$total_viable_sds); length(CANO_data$total_viable_sds)
-
-
 
 #works
 # PSME  --------------------------------------------------------------------
@@ -564,7 +531,7 @@ ggplot(stand_year_tshe, aes(x = year, y = y)) +
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -573,7 +540,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -583,7 +550,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -593,7 +560,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -603,7 +570,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -612,7 +579,7 @@ fit_TSHE <- stan(
 )
 
 fit_TSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_tsme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -622,7 +589,7 @@ fit_TSME <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriors.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -1100,18 +1067,18 @@ for (f in 1:length(start_idxs_thpl)) {
 # Prior vs posterior ------------------------------------------------------
 
 #ABAM
-samples <- rstan::extract(fit_TSHE)  
+samples <- rstan::extract(fit_THPL)  
 n <- length(samples$mu_log_low)
 # --- Simulate priors ---
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.8, 1.0),
+  mu_log_low           = rnorm(n, 2, 1.0),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.2, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.5, 0.7),
-  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  grand_logit_theta1   = rnorm(n, 1, 0.9),
+  grand_logit_theta2   = rnorm(n, 0, 0.9),
+  sigma_low_stand      = abs(rnorm(n, 1, 0.5)),
+  sigma_log_delta      = abs(rnorm(n, 1, 0.5)),
+  sigma_theta1_stand   = abs(rnorm(n, 1.5, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 1.5, 0.7)),
   phi_low              = exp(rnorm(n, log(4), 0.6)),
   phi_high             = exp(rnorm(n, log(4), 0.6))
 )
@@ -1157,7 +1124,7 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
   scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
   scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
   labs(
-    title = "Prior vs posterior — single species HMM TSHE",
+    title = "Prior vs posterior — single species HMM THPL",
     x = NULL, y = "Density", fill = NULL, color = NULL
   ) +
   theme_bw(base_size = 11) +
