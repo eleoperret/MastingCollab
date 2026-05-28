@@ -62,7 +62,8 @@ parameters {
   real<lower=0>    sigma_log_delta_stand;
 
   // Dispersion: one per state
-  matrix [S, 2] log_phi;
+  vector [S] log_phi_species;
+  vector [2] log_phi_state;
 }
 
 transformed parameters {
@@ -83,7 +84,7 @@ transformed parameters {
   vector[F] log_alpha_high;
 
   for (f in 1:F) {
-    int s  = sp[start_idxs[f]];
+    int s  = sp[start_idxs[f]]; 
     int st = stand_id[f];
 
     log_alpha_low[f]  = mu_log_low
@@ -125,9 +126,9 @@ transformed parameters {
     int s = sp[start_idxs[f]];  
     for (t in start_idxs[f]:end_idxs[f]) {
       log_omega[1, t] = neg_binomial_2_log_lpmf(
-          y[t] | log_alpha_low[f]  + log_area_ratio[t], exp(log_phi[s, 1]));
+          y[t] | log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[1]));
       log_omega[2, t] = neg_binomial_2_log_lpmf(
-          y[t] | log_alpha_high[f] + log_area_ratio[t], exp(log_phi[s, 2]));
+          y[t] | log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[2]));
     }
   }
 }
@@ -162,9 +163,10 @@ model {
   sigma_log_delta_species ~ normal(0, 1);
   log_delta_stand_nc     ~ normal(0, 1);
   sigma_log_delta_stand  ~ normal(0, 1);
+  
   // Dispersion
-  to_vector(log_phi) ~ normal(log(4), 0.6); 
-
+  log_phi_species ~ normal(log(4), 0.6); 
+  log_phi_state ~ normal(0, 0.3); 
 
   // HMM marginal likelihood
   for (f in 1:F)
@@ -191,10 +193,10 @@ generated quantities {
   int s = sp[t];  
   if (state[t] == 1)
     y_rep[t] = neg_binomial_2_log_rng(
-        log_alpha_low[f]  + log_area_ratio[t], exp(log_phi[s, 1]));
+        log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[1]));
   else
     y_rep[t] = neg_binomial_2_log_rng(
-        log_alpha_high[f] + log_area_ratio[t], exp(log_phi[s, 2]));
+        log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[2]));
     }
   }
 }

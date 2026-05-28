@@ -4,7 +4,7 @@
 
 ##Next things to do : 
 
-#1 : Add the 2009 year, handle the SUNR missing year 
+#1 : Add the 2009 year
 #2 : Trap-level
 #3 : Extract values for the synchrony.
 #4 : Clean my code (structure of the code and clean the top part)
@@ -87,15 +87,32 @@ stand_year_all <- seed_filtered %>%
 stand_year_all <- bind_rows(stand_year_all, extra_stands) %>%
   arrange(spp, stand, year)
 
+# stand_year_all <- stand_year_all %>%
+#   filter(!(stand == "SUNR" & year == 2024))
+
+missing_rows <- tibble(
+  spp   = c("ABAM", "ABLA", "CANO"),
+  stand = "SUNR",
+  year  = 2023,
+  y     = NA_integer_,
+  area  = NA_real_
+)
+
+stand_year_all <- bind_rows(stand_year_all, missing_rows) %>%
+  group_by(spp, stand) %>%
+  mutate(area = ifelse(is.na(area), mean(area, na.rm = TRUE), area)) %>%
+  ungroup() %>%
+  arrange(spp, stand, year)
+
+obs_missing <- as.integer(!is.na(stand_year_all$y))
+
 stand_year_all <- stand_year_all %>%
-  filter(!(stand == "SUNR" & year == 2024))
-
-
+  mutate(y = ifelse(is.na(y), 0L, as.integer(y)))
 
 #Defining my stan list
 # Species index
 stand_year_all$species_id <- as.numeric(as.factor(stand_year_all$spp))
-S <- length(unique(stand_year_all$spp)) #which is 5 at the moment
+S <- length(unique(stand_year_all$spp)) #which is 7 at the moment
 
 # Checking my species order before running
 print(levels(as.factor(stand_year_all$spp)))
@@ -131,7 +148,8 @@ stan_data_all <- list(
   start_idxs = start_idxs,
   end_idxs   = end_idxs,
   y          = stand_year_all$y,
-  area       = stand_year_all$area
+  area       = stand_year_all$area,
+  obs_missing = obs_missing
 )
 
 print (stan_data_all)
@@ -141,9 +159,9 @@ print (stan_data_all)
 fit_all <- stan(
   file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpecies.stan",
   data    = stan_data_all,
-  iter    = 4000, #change based on how much iterations you need
-  warmup  = 1000, #make the warmup longer 
-  chains  = 4,
+  iter    = 1000, #change based on how much iterations you need
+  warmup  = 500, #make the warmup longer 
+  chains  = 1,
   seed    = 123,
 )
 
@@ -1191,3 +1209,13 @@ key_params <- c(
 for (par in key_params) {
   print(plot_bimodal_scatter(fit_all, par))
 }
+
+
+
+
+
+
+
+
+
+
