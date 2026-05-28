@@ -66,7 +66,7 @@ transformed parameters {
   
   vector[N_stands] alpha_theta1_stand = sigma_theta1_stand * alpha_theta1_stand_nc;
   vector[N_stands] alpha_theta2_stand = sigma_theta2_stand * alpha_theta2_stand_nc;
-  vector[N_stands] log_low_stand = mu_log_low + sigma_low_stand * alpha_low_stand_nc;
+  vector[N_stands] log_low_stand = mu_log_low + sigma_low_stand * alpha_low_stand_nc;//non-centered now
   vector[N_stands] log_1p_delta  = log1p_exp(mu_log_delta + sigma_log_delta * log_delta_tilde);
   
   for (f in 1:F) {
@@ -100,22 +100,22 @@ model {
   rho ~ dirichlet(rep_vector(2.0, 2));
 
   // Transitions
-  grand_logit_theta1 ~ normal(1.2, 0.7);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
-  grand_logit_theta2 ~ normal(-0.5, 0.7); //changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
+  grand_logit_theta1 ~ normal(1, 0.9);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan
+  grand_logit_theta2 ~ normal(0, 0.9); //changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan
 
   alpha_theta1_stand_nc ~ normal(0, 1);  
   alpha_theta2_stand_nc ~ normal(0, 1);   
-  sigma_theta1_stand ~ normal(3.5, 0.7);// widened those two on the 19.05
-  sigma_theta2_stand ~ normal(3.5, 0.7);// widened those two on the 19.05
+  sigma_theta1_stand ~ normal(1.5, 0.7);
+  sigma_theta2_stand ~ normal(1.5, 0.7);
 
   // Emission means
-  mu_log_low               ~ normal(3, 1.0);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
+  mu_log_low               ~ normal(2, 1.0);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan
   alpha_low_stand_nc           ~ normal(0, 1);
-  sigma_low_stand           ~ normal(0.5, 1);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
+  sigma_low_stand           ~ normal(1, 0.5);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan
 
   mu_log_delta              ~ normal(1.5, 1.5);
   log_delta_tilde           ~ normal(0, 1); 
-  sigma_log_delta           ~ normal (0,1);
+  sigma_log_delta           ~ normal (1,0.5);
 
   // Dispersion
   log_phi_state ~ normal(log(4), 0.6); 

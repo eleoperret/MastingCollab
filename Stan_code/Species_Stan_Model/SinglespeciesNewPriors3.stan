@@ -101,15 +101,15 @@ model {
 
   // Transitions
   grand_logit_theta1 ~ normal(1.2, 0.7);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
-  grand_logit_theta2 ~ normal(-0.5, 0.7); //changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
+  grand_logit_theta2 ~ normal(0.5, 0.7); //changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
 
   alpha_theta1_stand_nc ~ normal(0, 1);  
   alpha_theta2_stand_nc ~ normal(0, 1);   
-  sigma_theta1_stand ~ normal(3.5, 0.7);// widened those two on the 19.05
-  sigma_theta2_stand ~ normal(3.5, 0.7);// widened those two on the 19.05
+  sigma_theta1_stand ~ normal(0, 0.7);// widened those two on the 19.05
+  sigma_theta2_stand ~ normal(0, 0.7);// widened those two on the 19.05
 
   // Emission means
-  mu_log_low               ~ normal(3, 1.0);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
+  mu_log_low               ~ normal(2.8, 1.0);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
   alpha_low_stand_nc           ~ normal(0, 1);
   sigma_low_stand           ~ normal(0.5, 1);//changed from the preivous model : SinglespeciesPartialPooling2_delta_NCbisFULL.stan (18.05)
 
