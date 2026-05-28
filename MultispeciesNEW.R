@@ -141,20 +141,13 @@ print (stan_data_all)
 fit_all <- stan(
   file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpecies.stan",
   data    = stan_data_all,
-  iter    = 2000, #change based on how much iterations you need
+  iter    = 4000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
   chains  = 4,
   seed    = 123,
 )
 
-fit_all2 <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriors.stan",
-  data    = stan_data_all,
-  iter    = 2000, #change based on how much iterations you need
-  warmup  = 1000, #make the warmup longer 
-  chains  = 4,
-  seed    = 123,
-)
+
 
 # Diagnostic plots Centered --------------------------------------------------------
 
@@ -303,6 +296,88 @@ pairs(fit_all,
       pars=c("mu_log_delta",
              "log_phi[1,1]",
              "log_phi[1,2]"))
+mcmc_trace(
+  as.array(fit_all),
+  pars = c(
+    "mu_log_low",
+    "mu_log_delta",
+    "grand_logit_theta1",
+    "grand_logit_theta2",
+    "sigma_log_delta_species",
+    "sigma_log_delta_stand"
+  )
+)
+
+draws <- as_draws_df(fit_all)
+
+draws |>
+  dplyr::group_by(.chain) |>
+  dplyr::summarise(
+    mu_delta = mean(mu_log_delta),
+    theta1 = mean(grand_logit_theta1),
+    theta2 = mean(grand_logit_theta2)
+  )
+
+mcmc_rank_overlay(
+  as.array(fit_all),
+  pars = c(
+    "mu_log_delta",
+    "grand_logit_theta1",
+    "sigma_log_delta_species"
+  )
+)
+
+summ <- summarise_draws(as_draws(fit_all))
+
+summ |>
+  dplyr::arrange(desc(rhat)) |>
+  dplyr::select(variable, rhat, ess_bulk, ess_tail) |>
+  head(30)
+
+
+pairs(
+  fit_all,
+  pars = c(
+    "grand_logit_theta1",
+    "grand_logit_theta2",
+    "mu_log_delta",
+    "log_phi[1,1]",
+    "log_phi[1,2]"
+  ),
+  condition = "chain"
+)
+
+mcmc_trace(
+  as.array(fit_all),
+  pars = c(
+    "log_phi[1,1]",
+    "log_phi[1,2]"
+  )
+)
+
+mcmc_scatter(
+  as.array(fit_all),
+  pars = c("grand_logit_theta1", "mu_log_delta"),
+  np = nuts_params(fit_all)
+)
+
+
+mcmc_scatter(
+  as.array(fit_all),
+  pars = c("mu_log_delta", "log_phi[1,2]"),
+  np = nuts_params(fit_all)
+)
+
+draws <- as_draws_df(fit_all)
+
+draws %>%
+  mutate(
+    prop_state2 = rowMeans(
+      select(., starts_with("state[")) == 2
+    )
+  ) %>%
+  group_by(.chain) %>%
+  summarise(mean_occ = mean(prop_state2))
 
 # Results -----------------------------------------------------------------
 
@@ -643,4 +718,476 @@ for (sp_idx in 1:length(species_names)) {
       strip.text       = element_text(size = 9),
       panel.grid.minor = element_blank()
     )
+}
+
+
+# Chain subset retrodictive check -----------------------------------------
+
+#subset
+subset_chains <- function(expectand_vals, chains) {
+  expectand_vals[chains, , drop = FALSE]
+}
+
+plot_retrodictive_by_chain_group <- function(
+    f,                                     
+    samples,                                
+    stan_data_all,                              
+    chain_groups = list("Chains 1&3" = c(1, 3),
+                        "Chains 2&4" = c(2, 4))) {
+  
+  t_idx   <- stan_data_all$start_idxs[f]:stan_data_all$end_idxs[f]
+  sp_f    <- stan_data_all$sp[stan_data_all$start_idxs[f]]
+  stand_f <- stan_data_all$stand_id[f]
+  y_obs   <- stan_data_all$y[t_idx]
+  T_len   <- length(t_idx)
+  years   <- seq_along(t_idx)            
+  
+  par(mfrow = c(length(chain_groups), 1),
+      mar   = c(4, 4, 3, 1))
+  
+  for (grp_name in names(chain_groups)) {
+    chains <- chain_groups[[grp_name]]
+    
+    # y rep quantiles
+    yrep_lo  <- numeric(T_len)
+    yrep_med <- numeric(T_len)
+    yrep_hi  <- numeric(T_len)
+    
+    for (i in seq_along(t_idx)) {
+      t      <- t_idx[i]
+      col_nm <- paste0("y_rep[", t, "]")
+      vals   <- subset_chains(samples[[col_nm]], chains)   
+      flat   <- as.vector(vals)
+      yrep_lo[i]  <- quantile(flat, 0.05)
+      yrep_med[i] <- quantile(flat, 0.50)
+      yrep_hi[i]  <- quantile(flat, 0.95)
+    }
+    
+    # Plot
+    ylim_max <- max(yrep_hi, y_obs) * 1.05
+    
+    plot(years, yrep_med,
+         type = "n",
+         ylim = c(0, ylim_max),
+         xlab = "Time step",
+         ylab = "Count",
+         main = paste0(grp_name,
+                       "  |  f=", f,
+                       "  species=", sp_f,
+                       "  stand=",   stand_f))
+    
+    # 90% posterior predictive 
+    polygon(c(years, rev(years)),
+            c(yrep_lo, rev(yrep_hi)),
+            col = util$c_light, border = NA)
+    
+    # Median prediction
+    lines(years, yrep_med, col = util$c_dark, lwd = 2)
+    
+    # Observed data
+    points(years, y_obs, pch = 16, cex = 0.8, col = "black")
+  }
+}
+
+
+# samples comes from Mike's extract_expectand_vals()
+samples   <- util$extract_expectand_vals(fit_all)
+
+# Plot series f = 20, chains 1&3 vs 2&4
+plot_retrodictive_by_chain_group(
+  f         = 20,
+  samples   = samples,
+  stan_data_all = stan_data_all
+)
+
+# Loop over all series
+for (f in seq_len(stan_data_all$F)) {
+  plot_retrodictive_by_chain_group(f, samples, stan_data_all)
+}
+
+
+
+# Figuring out where the issue is  ----------------------------------------
+
+# Extract the relevant parameters
+par(mfrow = c(2, 2))
+
+# Grand mean delta
+util$plot_expectand_pushforward(
+  samples[["mu_log_delta"]], 30,
+  display_name = "mu_log_delta",
+  main = "grand mean delta"
+)
+
+# Species 1 effect
+util$plot_expectand_pushforward(
+  samples[["log_delta_species_nc[1]"]], 30,
+  display_name = "log_delta_species_nc[1]",
+  main = "species 1 delta (non-centered)"
+)
+
+# Stand 6 effect
+util$plot_expectand_pushforward(
+  samples[["log_delta_stand_nc[6]"]], 30,
+  display_name = "log_delta_stand_nc[6]",
+  main = "stand 6 delta (non-centered)"
+)
+
+# sigma for stand delta
+util$plot_expectand_pushforward(
+  samples[["sigma_log_delta_stand"]], 30,
+  display_name = "sigma_log_delta_stand",
+  main = "sigma log delta stand"
+)
+
+
+
+util$plot_pairs_by_chain(
+  samples[["log_alpha_low[6]"]],  "log_alpha_low[6]",
+  samples[["log_alpha_high[6]"]], "log_alpha_high[6]"
+)
+
+
+
+# log_alpha_high - log_alpha_low = the implied log gap
+# On the count scale that's exp(log_alpha_high) / exp(log_alpha_low)
+
+delta_vals <- samples[["log_alpha_high[6]"]] - samples[["log_alpha_low[6]"]]
+
+util$plot_expectand_pushforward(
+  delta_vals, 30,
+  display_name = "log_alpha_high[6] - log_alpha_low[6]",
+  main = "implied log gap for f=6"
+)
+
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[6]"]], 30,
+  display_name = "alpha_low_stand[6]",
+  main = "stand 6 baseline effect"
+)
+
+
+
+# Compute the ratio of upper ribbon between chain groups
+# as a systematic way to find the most bimodal series
+bimodality_score <- numeric(stan_data_all$F)
+
+for (f in seq_len(stan_data_all$F)) {
+  t_idx <- stan_data_all$start_idxs[f]:stan_data_all$end_idxs[f]
+  
+  hi_chains13 <- mean(sapply(t_idx, function(t)
+    quantile(as.vector(subset_chains(samples[[paste0("y_rep[",t,"]")]], c(1,3))), 0.95)))
+  
+  hi_chains24 <- mean(sapply(t_idx, function(t)
+    quantile(as.vector(subset_chains(samples[[paste0("y_rep[",t,"]")]], c(2,4))), 0.95)))
+  
+  bimodality_score[f] <- abs(log(hi_chains24 / hi_chains13))
+}
+
+# Most problematic series
+order(bimodality_score, decreasing = TRUE)[1:10]
+# [1]  6 71 18 72 22 21 30 31 13 27
+
+# What stand does f=71 belong to?
+stan_data_all$stand_id[6] #6
+stan_data_all$stand_id[71]#12
+stan_data_all$stand_id[18]#2
+stan_data_all$stand_id[72]#17
+stan_data_all$stand_id[22]#14
+stan_data_all$stand_id[21]#13
+stan_data_all$stand_id[30]#11
+stan_data_all$stand_id[31]#12
+stan_data_all$stand_id[13]#13
+stan_data_all$stand_id[27]#8
+
+par(mfrow = c(3, 4))
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[6]"]], 30,
+  display_name = "alpha_low_stand[6]",
+  main = "Stand 6"
+)
+
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[17]"]], 30,
+  display_name = "alpha_low_stand[72]",
+  main = "Stand 17"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[2]"]], 30,
+  display_name = "alpha_low_stand[18]",
+  main = "Stand 2"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[14]"]], 30,
+  display_name = "alpha_low_stand[22]",
+  main = "Stand 14"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[13]"]], 30,
+  display_name = "alpha_low_stand[21]",
+  main = "Stand 13"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[11]"]], 30,
+  display_name = "alpha_low_stand[30]",
+  main = "Stand 11"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[12]"]], 30,
+  display_name = "alpha_low_stand[31]",
+  main = "Stand 12"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[8]"]], 30,
+  display_name = "alpha_low_stand[27]",
+  main = "Stand 8"
+)
+
+util$plot_expectand_pushforward(
+  samples[["alpha_low_stand[13]"]], 30,
+  display_name = "alpha_low_stand[13]",
+  main = "Stand 13"
+)
+
+
+draws <- as_draws_df(fit_all)
+
+chain_13 <- subset(draws, chain %in% c(1,3))
+chain_24 <- subset(draws, chain %in% c(2,4))
+
+summary_by_group <- function(param) {
+  c(
+    c13 = mean(chain_13[[param]]),
+    c24 = mean(chain_24[[param]])
+  )
+}
+
+summary_by_group("log_phi[2,1]")
+summary_by_group("log_phi[2,2]")
+summary_by_group("log_delta_species[2]")
+
+
+
+# Checking chains ---------------------------------------------------------
+# ── helpers ──────────────────────────────────────────────────────────────────
+get_chain_draws <- function(fit_all, param, chain_ids) {
+  all_chains <- as.array(fit_all)[, , param]  # iter x chain
+  all_chains[, chain_ids, drop = FALSE]
+}
+
+# ── identify series (f) for species 1 ────────────────────────────────────────
+# assumes you have your data list in memory as stan_data
+sp_vec      <- stan_data_all$sp
+start_idxs  <- stan_data_all$start_idxs
+end_idxs    <- stan_data_all$end_idxs
+stand_id    <- stan_data_all$stand_id
+
+f_sp2 <- which(sp_vec[start_idxs] == 2)   # series indices for species 1
+
+# ── extract y_rep draws (iterations x chains x N) ───────────────────────────
+y_rep_array <- as.array(fit_all, pars = "y_rep")  # iter x chain x N
+# dim: [iter, chain, N]
+
+# ── build plot data ───────────────────────────────────────────────────────────
+chain_pairs <- list(c(1, 3), c(2, 4))
+pair_labels <- c("Chains 1&3", "Chains 2&4")
+
+plot_list <- list()
+
+for (f in f_sp2) {
+  s_id   <- stand_id[f]
+  t_idx  <- start_idxs[f]:end_idxs[f]
+  t_local <- seq_along(t_idx)
+  y_obs  <- stan_data_all$y[t_idx]
+  
+  for (p in seq_along(chain_pairs)) {
+    chains <- chain_pairs[[p]]
+    # subset to these chains and these time points
+    # y_rep_array dims: [iter, chain, N] -> flatten iter x chain for these t
+    draws <- y_rep_array[, chains, t_idx, drop = FALSE]  
+    # reshape to (iter*chain) x length(t_idx)
+    draws_mat <- matrix(draws, 
+                        nrow = dim(draws)[1] * length(chains), 
+                        ncol = length(t_idx))
+    
+    ribbon_df <- data.frame(
+      t      = t_local,
+      lo     = apply(draws_mat, 2, quantile, 0.025),
+      hi     = apply(draws_mat, 2, quantile, 0.975),
+      med    = apply(draws_mat, 2, median),
+      y_obs  = y_obs,
+      pair   = pair_labels[p],
+      stand  = s_id,
+      series = f
+    )
+    plot_list[[length(plot_list) + 1]] <- ribbon_df
+  }
+}
+
+plot_df <- bind_rows(plot_list)
+
+# ── plot: one page per stand, two panels (chain pairs) ───────────────────────
+par(mfrow= c(4,4))
+stands_sp2 <- stand_id[f_sp2]
+
+for (st in unique(stands_sp2)) {
+  df_st <- filter(plot_df, stand == st)
+  
+  p <- ggplot(df_st, aes(x = t)) +
+    geom_ribbon(aes(ymin = lo, ymax = hi), fill = "firebrick", alpha = 0.25) +
+    geom_line(aes(y = med), colour = "firebrick", linewidth = 0.8) +
+    geom_point(aes(y = y_obs), size = 1.5) +
+    facet_wrap(~pair, ncol = 1, scales = "free_y") +
+    labs(
+      title = paste0("Species 2 | Stand ", st),
+      x = "Time step", y = "Count"
+    ) +
+    theme_bw(base_size = 12)
+  
+  print(p)
+  # or save: ggsave(paste0("stand_", st, "_sp1.png"), p, width=7, height=6)
+}
+
+par(mfrow= c(4,4))
+ggplot(filter(plot_df, grepl("1&3|2&4", pair)), aes(x = t)) +
+  geom_ribbon(aes(ymin = lo, ymax = hi), fill = "firebrick", alpha = 0.25) +
+  geom_line(aes(y = med), colour = "firebrick", linewidth = 0.8) +
+  geom_point(aes(y = y_obs), size = 1.5) +
+  facet_wrap(stand ~ pair, scales = ("free_y"), ncol = 4) +
+  coord_cartesian(ylim= c(0,600))+
+  labs(x = "Time step", y = "Count", title = "Species 2 — all stands") +
+  theme_bw(base_size = 8)
+
+# Checking bimodality  ----------------------------------------------------
+plot_bimodal_check <- function(fit_all, par, warmup_frac = 0.5) {
+  arr      <- as.array(fit_all)   # iter x chain x param
+  n_iter   <- dim(arr)[1]
+  n_chains <- dim(arr)[2]
+  warmup   <- floor(n_iter * warmup_frac)
+  
+  df <- do.call(rbind, lapply(seq_len(n_chains), function(ch) {
+    data.frame(
+      value  = arr[, ch, par],
+      iter   = seq_len(n_iter),
+      phase  = ifelse(seq_len(n_iter) <= warmup, "warmup", "sampling"),
+      chain  = paste0("Chain ", ch)
+    )
+  }))
+  
+  # colour: grey = warmup, dark red = sampling
+  chain_colours <- c("Chain 1" = "#E41A1C", "Chain 2" = "#377EB8",
+                     "Chain 3" = "#4DAF4A", "Chain 4" = "#984EA3")
+  
+  # top: density per chain (sampling only)
+  p_density <- df %>%
+    filter(phase == "sampling") %>%
+    ggplot(aes(x = value, colour = chain, fill = chain)) +
+    geom_density(alpha = 0.15, linewidth = 0.8) +
+    scale_colour_manual(values = chain_colours) +
+    scale_fill_manual(values = chain_colours) +
+    labs(title = par, x = par, y = "Density") +
+    theme_bw(base_size = 11) +
+    theme(legend.position = "none")
+  
+  # bottom: trace coloured by chain
+  p_trace <- ggplot(df, aes(x = iter, y = value, colour = chain)) +
+    geom_line(alpha = 0.5, linewidth = 0.3) +
+    geom_vline(xintercept = warmup, linetype = "dashed", colour = "grey40") +
+    scale_colour_manual(values = chain_colours) +
+    labs(x = "Iteration", y = par, colour = NULL) +
+    theme_bw(base_size = 11) +
+    theme(legend.position = "bottom")
+  
+  p_density / p_trace   # patchwork stacking
+}
+
+library(patchwork)
+
+# one parameter at a time
+plot_bimodal_check(fit_all, "mu_log_low")
+plot_bimodal_check(fit_all, "mu_log_delta")
+plot_bimodal_check(fit_all, "grand_logit_theta1")
+plot_bimodal_check(fit_all, "grand_logit_theta2")
+
+# or loop over a set and save
+key_params <- c(
+  "mu_log_low", "mu_log_delta",
+  "grand_logit_theta1", "grand_logit_theta2",
+  "sigma_low_species", "sigma_log_delta_species"
+)
+
+for (par in key_params) {
+  p <- plot_bimodal_check(fit_all, par)
+  print(p)
+  # ggsave(paste0("bimodal_", par, ".png"), p, width = 7, height = 6)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+plot_bimodal_scatter <- function(fit_all, par, warmup_frac = 0.5) {
+  arr      <- as.array(fit_all)   # iter x chain x param
+  n_iter   <- dim(arr)[1]
+  n_chains <- dim(arr)[2]
+  warmup   <- floor(n_iter * warmup_frac)
+  
+  df <- do.call(rbind, lapply(seq_len(n_chains), function(ch) {
+    data.frame(
+      value = arr[, ch, par],
+      iter  = seq_len(n_iter),
+      chain = paste0("Chain ", ch)
+    )
+  }))
+  
+  ggplot(df, aes(x = iter, y = value, colour = iter)) +
+    geom_point(size = 0.6, alpha = 0.5, shape = 18) +   # diamond shape like yours
+    geom_vline(xintercept = warmup, linetype = "dashed",
+               colour = "black", linewidth = 0.4) +
+    scale_colour_gradient(low = "grey80", high = "darkred") +
+    facet_wrap(~chain, ncol = 2) +
+    labs(
+      title  = par,
+      x      = "Iteration",
+      y      = par,
+      colour = "Iteration"
+    ) +
+    theme_bw(base_size = 11) +
+    theme(
+      legend.position  = "bottom",
+      strip.background = element_rect(fill = "grey90"),
+      strip.text       = element_text(face = "bold")
+    )
+}
+
+
+library(patchwork)
+
+key_params <- c(
+  "mu_log_low", "mu_log_delta",
+  "grand_logit_theta1", "grand_logit_theta2",
+  "sigma_low_species", "sigma_log_delta_species"
+)
+
+for (par in key_params) {
+  print(plot_bimodal_scatter(fit_all, par))
 }

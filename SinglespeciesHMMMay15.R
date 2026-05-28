@@ -247,23 +247,6 @@ stan_data_psme <- list(
 
 print(stan_data_psme)
 
-#to verify
-PSME_data<-seed_filtered%>%
-  filter(spp=="PSME")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(total_viable_sds, na.rm = TRUE),
-    area = sum(size, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-
-unique(PSME_data$stand);length(unique(PSME_data$stand))
-print(PSME_data$total_viable_sds); length(PSME_data$total_viable_sds)
-#works
-
-
 
 # TSHE  --------------------------------------------------------------------
 #Per species
@@ -296,21 +279,6 @@ stan_data_tshe <- list(
 
 print(stan_data_tshe)
 
-#to verify
-TSHE_data<-seed_filtered%>%
-  filter(spp=="TSHE")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(total_viable_sds, na.rm = TRUE),
-    area = sum(size, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-
-unique(TSHE_data$stand);length(unique(TSHE_data$stand))
-print(TSHE_data$total_viable_sds); length(TSHE_data$total_viable_sds)
-#works
 
 
 
@@ -379,23 +347,6 @@ stan_data_thpl <- list(
 )
 
 print(stan_data_thpl)
-
-#to verify
-THPL_data<-seed_filtered%>%
-  filter(spp=="THPL")%>%
-  filter(year != 2009) %>% 
-  group_by(stand, year) %>%
-  summarise(
-    total_viable_sds    = sum(total_viable_sds, na.rm = TRUE),
-    area = sum(size, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  arrange(stand, year)
-
-unique(THPL_data$stand);length(unique(THPL_data$stand))
-print(THPL_data$total_viable_sds); length(THPL_data$total_viable_sds)
-#works
-
 
 
 
