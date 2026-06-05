@@ -5,6 +5,12 @@
 //Rho: per species (simplex array over S)
 //Forced state 2 above state 1 with log1p_exp(delta) — aligned with single-species model
 
+
+#changed the way log_alpha_high was computed
+#still problematic
+#trying to change the priors. 
+
+
 data {
   int<lower=1> N;
   int<lower=1> F;         // number of species x stand series
@@ -95,8 +101,8 @@ transformed parameters {
 
     log_alpha_high[f] = log_alpha_low[f]
                   + log1p_exp(mu_log_delta)
-                  + log1p_exp(log_delta_species[s])
-                  + log1p_exp(log_delta_stand[st])
+                  + log_delta_species[s]
+                  + log_delta_stand[st]
                   ;
   }
 
@@ -155,8 +161,8 @@ model {
 
   alpha_theta1_stand_nc ~ normal(0, 1);
   alpha_theta2_stand_nc ~ normal(0, 1);
-  sigma_theta1_stand    ~ normal(2.5, 0.7);
-  sigma_theta2_stand    ~ normal(2.5, 0.7);
+  sigma_theta1_stand    ~ normal(0, 0.7);
+  sigma_theta2_stand    ~ normal(0, 0.7);
 
   // Emission means
   mu_log_low           ~ normal(2.8, 1.0);
@@ -165,7 +171,7 @@ model {
   alpha_low_stand   ~ normal(0, sigma_low_stand);
   sigma_low_stand      ~ normal(0.5, 1);
 
-  mu_log_delta           ~ normal(1.5, 1.5);
+  mu_log_delta           ~ normal(0.5, 0.7);//changed from previous version 
   log_delta_species_nc   ~ normal(0, 1);
   sigma_log_delta_species ~ normal(0, 1);
   log_delta_stand_nc     ~ normal(0, 1);

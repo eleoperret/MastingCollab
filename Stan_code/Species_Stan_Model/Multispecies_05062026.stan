@@ -5,6 +5,9 @@
 //Rho: per species (simplex array over S)
 //Forced state 2 above state 1 with log1p_exp(delta) — aligned with single-species model
 
+//Changed the priors based on SinglespeciesFULL_05062026
+//Still need to add the missing years for SUNR
+
 data {
   int<lower=1> N;
   int<lower=1> F;         // number of species x stand series
@@ -14,13 +17,11 @@ data {
   array[N] int<lower=0> y;
   array[N] int<lower=1, upper=S> sp;
 
-  array[F] int<lower=1> start_idxs;
-  array[F] int<upper=N> end_idxs;
+  array[F] int<lower=1>              start_idxs;
+  array[F] int<upper=N>              end_idxs;
   array[F] int<lower=1, upper=N_stands> stand_id;
 
   vector<lower=0>[N] area;
-  
-  array [N] int <lower= 0, upper = 1> obs_missing; //NEW !!!!
 }
 
 transformed data {
@@ -32,28 +33,31 @@ transformed data {
 
 parameters {
   // Initial state distribution 
-  simplex[2] rho;
+  //simplex[2] rho;
+  array [S] simplex [2] rho;
 
   // Transitions (pooled by species and stand) 
-  real grand_logit_theta1;
-  real grand_logit_theta2;
+  // real grand_logit_theta1;
+  // real grand_logit_theta2;
+  vector [S] logit_theta1_species;
+  vector [S] logit_theta2_species;
+  // Removed the species and stand partial pooling on the transition dynamics
+  // vector[S]       alpha_theta1_species_nc;
+  // vector[S]       alpha_theta2_species_nc;
+  // real<lower=0>   sigma_theta1_species;
+  // real<lower=0>   sigma_theta2_species;
 
-  vector[S]       alpha_theta1_species_nc;
-  vector[S]       alpha_theta2_species_nc;
-  real<lower=0>   sigma_theta1_species;
-  real<lower=0>   sigma_theta2_species;
-
-  vector[N_stands] alpha_theta1_stand_nc;
-  vector[N_stands] alpha_theta2_stand_nc;
-  real<lower=0>    sigma_theta1_stand;
-  real<lower=0>    sigma_theta2_stand;
+  // vector[N_stands] alpha_theta1_stand_nc;
+  // vector[N_stands] alpha_theta2_stand_nc;
+  // real<lower=0>    sigma_theta1_stand;
+  // real<lower=0>    sigma_theta2_stand;
 
   // Emission means (pooled by species and stand) 
   // Low state: grand mean + species effect + stand effect
   real             mu_log_low;
-  vector[S]        alpha_low_species;
+  vector[S]        alpha_low_species_nc;
   real<lower=0>    sigma_low_species;
-  vector[N_stands] alpha_low_stand;
+  vector[N_stands] alpha_low_stand_nc;
   real<lower=0>    sigma_low_stand;
 
   // Delta (log-scale gap between states): grand mean + species  + stand 
@@ -70,13 +74,13 @@ parameters {
 
 transformed parameters {
   // Non-centered species and stand effects 
-  vector[S]        alpha_theta1_species = sigma_theta1_species * alpha_theta1_species_nc;
-  vector[S]        alpha_theta2_species = sigma_theta2_species * alpha_theta2_species_nc;
-  vector[N_stands] alpha_theta1_stand   = sigma_theta1_stand   * alpha_theta1_stand_nc;
-  vector[N_stands] alpha_theta2_stand   = sigma_theta2_stand   * alpha_theta2_stand_nc;
+  // vector[S]        alpha_theta1_species = sigma_theta1_species * alpha_theta1_species_nc;
+  // vector[S]        alpha_theta2_species = sigma_theta2_species * alpha_theta2_species_nc;
+  // vector[N_stands] alpha_theta1_stand   = sigma_theta1_stand   * alpha_theta1_stand_nc;
+  // vector[N_stands] alpha_theta2_stand   = sigma_theta2_stand   * alpha_theta2_stand_nc;
 
-  //vector[S]        alpha_low_species    = sigma_low_species     * alpha_low_species_nc;
-  //vector[N_stands] alpha_low_stand      = sigma_low_stand       * alpha_low_stand_nc;
+  vector[S]        alpha_low_species    = sigma_low_species     * alpha_low_species_nc;
+  vector[N_stands] alpha_low_stand      = sigma_low_stand       * alpha_low_stand_nc;
 
   vector[S]        log_delta_species    = sigma_log_delta_species * log_delta_species_nc;
   vector[N_stands] log_delta_stand      = sigma_log_delta_stand   * log_delta_stand_nc;
@@ -84,6 +88,9 @@ transformed parameters {
   //Per-series emission means 
   vector[F] log_alpha_low;
   vector[F] log_alpha_high;
+  vector<lower=0, upper=1>[F] theta1;
+  vector<lower=0, upper=1>[F] theta2;
+  array[F] matrix[2, 2] Gamma;
 
   for (f in 1:F) {
     int s  = sp[start_idxs[f]]; 
@@ -98,23 +105,9 @@ transformed parameters {
                   + log1p_exp(log_delta_species[s])
                   + log1p_exp(log_delta_stand[st])
                   ;
-  }
-
-  // --- Per-series transition matrices ---
-  vector<lower=0, upper=1>[F] theta1;
-  vector<lower=0, upper=1>[F] theta2;
-  array[F] matrix[2, 2] Gamma;
-
-  for (f in 1:F) {
-    int s  = sp[start_idxs[f]];
-    int st = stand_id[f];
-
-    theta1[f] = inv_logit(grand_logit_theta1
-                         + alpha_theta1_species[s]
-                         + alpha_theta1_stand[st]);
-    theta2[f] = inv_logit(grand_logit_theta2
-                         + alpha_theta2_species[s]
-                         + alpha_theta2_stand[st]);
+                  
+    theta1[f] = inv_logit (logit_theta1_species[s]);
+    theta2[f] = inv_logit (logit_theta2_species[s]);
 
     Gamma[f][1, 1] = theta1[f];
     Gamma[f][1, 2] = 1 - theta1[f];
@@ -122,48 +115,45 @@ transformed parameters {
     Gamma[f][2, 2] = theta2[f];
   }
 
-  // --- Emission log-likelihoods ---
+   // --- Emission log-likelihoods ---
   matrix[2, N] log_omega;
   for (f in 1:F) {
     int s = sp[start_idxs[f]];  
     for (t in start_idxs[f]:end_idxs[f]) {
-      if (obs_missing[t]){
-        log_omega[1,t]= 0;
-        log_omega [2,t] =0;
-      } else {
-        log_omega[1, t] = neg_binomial_2_log_lpmf(
+      log_omega[1, t] = neg_binomial_2_log_lpmf(
           y[t] | log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[1]));
       log_omega[2, t] = neg_binomial_2_log_lpmf(
           y[t] | log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[2]));
-      }
     }
   }
 }
 
 model {
   // --- Initial state ---
-  rho ~ dirichlet(rep_vector(2.0, 2));
+  for (s in 1:S)
+  rho [s] ~ dirichlet(rep_vector(2.0, 2));
 
   // --- Transitions ---
-  grand_logit_theta1 ~ normal(1.2,   0.7); 
-  grand_logit_theta2 ~ normal(0.5,   0.7); 
+  // grand_logit_theta1 ~ normal(-0.5,   0.7); //Changed from the previous version MultispeciesNEWMike.stan 
+  // grand_logit_theta2 ~ normal(-1.5,   0.7); //Changed from the previous version MultispeciesNEWMike.stan 
+  // alpha_theta1_species_nc ~ normal(0, 1);
+  // alpha_theta2_species_nc ~ normal(0, 1);
+  // sigma_theta1_species    ~ normal(0, 1);//Changed from the previous version MultispeciesNEWMike.stan
+  // sigma_theta2_species    ~ normal(0, 1);//Changed from the previous version MultispeciesNEWMike.stan
+  // alpha_theta1_stand_nc ~ normal(0, 1);
+  // alpha_theta2_stand_nc ~ normal(0, 1);
+  // sigma_theta1_stand    ~ normal(0, 0.7);//Changed from the previous version MultispeciesNEWMike.stan
+  // sigma_theta2_stand    ~ normal(0, 0.7);//Changed from the previous version MultispeciesNEWMike.stan
 
-  alpha_theta1_species_nc ~ normal(0, 1);
-  alpha_theta2_species_nc ~ normal(0, 1);
-  sigma_theta1_species    ~ normal(0, 0.7);
-  sigma_theta2_species    ~ normal(0, 0.7);
-
-  alpha_theta1_stand_nc ~ normal(0, 1);
-  alpha_theta2_stand_nc ~ normal(0, 1);
-  sigma_theta1_stand    ~ normal(2.5, 0.7);
-  sigma_theta2_stand    ~ normal(2.5, 0.7);
-
+  logit_theta1_species ~ normal (0.5,1);
+  logit_theta2_species ~ normal (-0.5,1);
+  
   // Emission means
   mu_log_low           ~ normal(2.8, 1.0);
-  alpha_low_species ~ normal(0, sigma_low_species);
-  sigma_low_species    ~ normal(0.5, 1);
-  alpha_low_stand   ~ normal(0, sigma_low_stand);
-  sigma_low_stand      ~ normal(0.5, 1);
+  alpha_low_species_nc  ~ normal(0, 1);
+  sigma_low_species    ~ normal(0,1.5);//Changed from the previous version MultispeciesNEWMike.stan
+  alpha_low_stand_nc   ~ normal(0, 1);
+  sigma_low_stand      ~ normal(0.5, 1);//Changed from the previous version MultispeciesNEWMike.stan
 
   mu_log_delta           ~ normal(1.5, 1.5);
   log_delta_species_nc   ~ normal(0, 1);
@@ -176,11 +166,13 @@ model {
   log_phi_state ~ normal(0, 0.3); 
 
   // HMM marginal likelihood
-  for (f in 1:F)
+  for (f in 1:F){
+    int s = sp[start_idxs [f]];
     target += hmm_marginal(
         log_omega[, start_idxs[f]:end_idxs[f]],
         Gamma[f],
-        rho);
+        rho [s]);
+  }
 }
 
 generated quantities {
@@ -188,27 +180,24 @@ generated quantities {
   array[N] int<lower=1, upper=2> state;
 
   for (f in 1:F) {
+    int s = sp[start_idxs[f]];
     int start_id = start_idxs[f];
     int end_id   = end_idxs[f];
 
     state[start_id:end_id] = hmm_latent_rng(
         log_omega[, start_id:end_id],
         Gamma[f],
-        rho);
+        rho[s]);
 
     for (t in start_id:end_id) {
-  int s = sp[t];  
-  
-  if (obs_missing[t]) {
-    y_rep[t] = 0;
-  } else if (state[t] == 1) {
+    if (state[t] == 1)
     y_rep[t] = neg_binomial_2_log_rng(
         log_alpha_low[f]  + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[1]));
-  }else{
+  else
     y_rep[t] = neg_binomial_2_log_rng(
         log_alpha_high[f] + log_area_ratio[t], exp(log_phi_species[s] + log_phi_state[2]));
-      }
     }
   }
 }
+
 
