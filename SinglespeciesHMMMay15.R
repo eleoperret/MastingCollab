@@ -28,6 +28,7 @@ library(tidyr)
 library(bayesplot)
 library(tidyverse)
 library(posterior)
+library(boot)
 
 options(mc.cores = parallel::detectCores())
 
@@ -242,7 +243,8 @@ stan_data_psme <- list(
   start_idxs = start_idxs_psme,
   end_idxs   = end_idxs_psme,
   y          = stand_year_psme$y,
-  area       = stand_year_psme$area
+  area       = stand_year_psme$area,
+  obs_missing = rep(1L, nrow(stand_year_psme)) 
 )
 
 print(stan_data_psme)
@@ -274,7 +276,8 @@ stan_data_tshe <- list(
   start_idxs = start_idxs_tshe,
   end_idxs   = end_idxs_tshe,
   y          = stand_year_tshe$y,
-  area       = stand_year_tshe$area
+  area       = stand_year_tshe$area,
+  obs_missing = rep(1L, nrow(stand_year_tshe))
 )
 
 print(stan_data_tshe)
@@ -308,7 +311,8 @@ stan_data_tsme <- list(
   start_idxs = start_idxs_tsme,
   end_idxs   = end_idxs_tsme,
   y          = stand_year_tsme$y,
-  area       = stand_year_tsme$area
+  area       = stand_year_tsme$area,
+  obs_missing = rep(1L, nrow(stand_year_tsme))
 )
 
 print(stan_data_tsme)
@@ -328,7 +332,7 @@ years_per_series_thpl <- stand_year_thpl %>%
   summarise(T_i = n(), .groups = "drop")%>%
   mutate(stand_id = as.numeric(as.factor(stand)))  # NEW
 
-N_stands_thpl <- length(unique(years_per_series_tshe$stand_id))  # NEW
+N_stands_thpl <- length(unique(years_per_series_thpl$stand_id))  # NEW
 
 G_thpl         <- nrow(years_per_series_thpl) 
 T_i_thpl    <- years_per_series_thpl$T_i 
@@ -343,7 +347,8 @@ stan_data_thpl <- list(
   start_idxs = start_idxs_thpl,
   end_idxs   = end_idxs_thpl,
   y          = stand_year_thpl$y,
-  area       = stand_year_thpl$area
+  area       = stand_year_thpl$area,
+  obs_missing = rep(1L, nrow(stand_year_thpl))
 )
 
 print(stan_data_thpl)
@@ -482,7 +487,7 @@ ggplot(stand_year_tshe, aes(x = year, y = y)) +
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -491,7 +496,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -501,7 +506,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -511,7 +516,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -521,7 +526,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -530,7 +535,7 @@ fit_TSHE <- stan(
 )
 
 fit_TSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_tsme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -540,7 +545,7 @@ fit_TSME <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesNewPriorsA.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -675,6 +680,35 @@ print(fit_ABAM, pars = c("grand_mean_low",
                          "sigma_log_delta_high_stand",
                          "log_phi_state"))
 
+
+print(fit_ABAM, pars = c("grand_logit_theta1",
+                          "grand_logit_theta2","mu_log_low",
+                          "mu_log_delta",
+                          "sigma_log_delta"))
+print(fit_ABLA, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
+print(fit_CANO, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
+print(fit_PSME, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
+print(fit_TSHE, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
+print(fit_TSME, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
+print(fit_THPL, pars = c("grand_logit_theta1",
+                         "grand_logit_theta2","mu_log_low",
+                         "mu_log_delta",
+                         "sigma_log_delta"))
 
 
 # PPC -------------------------------------------------------------
@@ -1017,22 +1051,32 @@ for (f in 1:length(start_idxs_thpl)) {
 
 # Prior vs posterior ------------------------------------------------------
 
-#ABAM
-samples <- rstan::extract(fit_THPL)  
+
+fitSP<- fit_ABAM
+fitSP<- fit_ABLA
+fitSP<- fit_CANO
+fitSP<- fit_PSME
+fitSP<- fit_TSHE
+fitSP<- fit_TSME
+fitSP<- fit_THPL
+
+samples <- rstan::extract(fitSP)  
 n <- length(samples$mu_log_low)
 # --- Simulate priors ---
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2, 1.0),
+  mu_log_low           = rnorm(n, 2.8, 1.0),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1, 0.9),
-  grand_logit_theta2   = rnorm(n, 0, 0.9),
-  sigma_low_stand      = abs(rnorm(n, 1, 0.5)),
-  sigma_log_delta      = abs(rnorm(n, 1, 0.5)),
-  sigma_theta1_stand   = abs(rnorm(n, 1.5, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 1.5, 0.7)),
+  grand_logit_theta1   = rnorm(n, 0.5, 1),
+  grand_logit_theta2   = rnorm(n, -0.5, 1),
+  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
+  sigma_log_delta      = abs(rnorm(n, 0, 1)),
+  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
   phi_low              = exp(rnorm(n, log(4), 0.6)),
   phi_high             = exp(rnorm(n, log(4), 0.6))
 )
+
+
 # --- Extract posteriors ---
 posteriors <- data.frame(
   mu_log_low           = samples$mu_log_low,
@@ -1048,24 +1092,40 @@ posteriors <- data.frame(
 )
 # --- Labels ---
 param_labels <- c(
-  mu_log_low          = "µ log low (grand mean, low state)",
-  mu_log_delta        = "µ log delta (fold-change)",
-  grand_logit_theta1  = "logit θ₁ (P stay low)",
-  grand_logit_theta2  = "logit θ₂ (P stay high)",
-  sigma_low_stand     = "σ low stand",
-  sigma_log_delta     = "σ log delta stand",
-  sigma_theta1_stand  = "σ θ₁ stand",
-  sigma_theta2_stand  = "σ θ₂ stand",
-  phi_low             = "φ low state",
-  phi_high            = "φ high state"
+  mu_log_low          = "Grand mean Low state (log)",
+  mu_log_delta        = "Diff. between Low/High (log)",
+  grand_logit_theta1  = "P stay low (logit)",
+  grand_logit_theta2  = "P stay high (logit)",
+  sigma_low_stand     = "Low state stand variation",
+  sigma_log_delta     = "Stand Fold change variation",
+  sigma_theta1_stand  = "Low state trans- Stand var",
+  sigma_theta2_stand  = "High state trans- Stand var",
+  phi_low             = "Overdisperion (low state)",
+  phi_high            = "Overdisperion (high state)"
 )
+
+label_order <- c(
+  "Grand mean Low state (log)",
+  "Diff. between Low/High (log)",
+  "Low state stand variation",
+  "Stand Fold change variation",
+  "P stay low (logit)",
+  "P stay high (logit)",
+  "Low state trans- Stand var",
+  "High state trans- Stand var",
+  "Overdisperion (low state)",
+  "Overdisperion (high state)"
+)
+
 # --- Reshape ---
 df <- bind_rows(
   priors     %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Prior"),
   posteriors %>% pivot_longer(everything(), names_to = "param", values_to = "value") %>% mutate(type = "Posterior")
 ) %>%
   mutate(
-    label = param_labels[param],
+    label = factor(
+      param_labels[param],
+      levels = label_order),
     type  = factor(type, levels = c("Prior", "Posterior"))
   )
 # --- Plot ---
@@ -1074,8 +1134,9 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
   facet_wrap(~ label, scales = "free", ncol = 3) +
   scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
   scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
+  coord_cartesian(ylim = c(0,2.5))+
   labs(
-    title = "Prior vs posterior — single species HMM THPL",
+    title = "Prior vs posterior — single species HMM ABLA",
     x = NULL, y = "Density", fill = NULL, color = NULL
   ) +
   theme_bw(base_size = 11) +
@@ -1086,4 +1147,717 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
   )
 
 
+
+
+# Victor's Graphs ---------------------------------------------------------
+
+
+
+#Low seed production state
+
+#Common things in the plot
+elevation_df <- tibble(
+  stand = c("TO11","TO04","TA01","AV02","AE10","TB13","AO03","AG05",
+            "AV06","AX15","AB08","PP17","AV14","AM16","AR07","PARA","SPRY","SUNR"),
+  elevation = c(600, 668, 700, 850, 1450, 850, 900, 950,
+                1060, 1090, 1100, 1150, 1150, 1200, 1450, 1600, 1700, 1800)
+)
+stand_levels <- elevation_df %>%
+  arrange(elevation) %>%
+  pull(stand)
+ylim_common <- c(-4, 8)
+
+
+
+# Selecting the draws from a specific specie
+draws <- as.matrix(fit_ABAM, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta_abam <- years_per_series_abam 
+abam_summary <- tibble(
+  stand = meta_abam$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+abam_summary <- abam_summary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+abam_summary <- tibble(stand = stand_levels) %>%
+  left_join(abam_summary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+par(mfrow=c(4,4))
+#par(mfrow=c(3,3))
+plot(NULL,
+     xlim = c(0.5, nrow(abam_summary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "ABAM low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = stand_levels,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(abam_summary$x,
+         abam_summary$q10,
+         abam_summary$x,
+         abam_summary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(abam_summary$x,
+       abam_summary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_ABLA, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta_abla <- years_per_series_abla 
+abla_summary <- tibble(
+  stand = meta_abla$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+abla_summary <- abla_summary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+abla_summary <- tibble(stand = stand_levels) %>%
+  left_join(abla_summary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(abla_summary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "ABLa low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = stand_levels,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(abla_summary$x,
+         abla_summary$q10,
+         abla_summary$x,
+         abla_summary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(abla_summary$x,
+       abla_summary$median,
+       pch = 19,
+       col = "navy")
+
+
+# Extract draws
+draws <- as.matrix(fit_CANO, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta <- years_per_series_cano
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble(stand = stand_levels) %>%
+  left_join(Isummary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "CANO low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+# Extract draws
+draws <- as.matrix(fit_PSME, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta <- years_per_series_psme
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary<-tibble (stand = stand_levels) %>%
+  left_join(Isummary, by = "stand") %>%
+  mutate (x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "PSME low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+
+
+# Extract draws
+draws <- as.matrix(fit_TSHE, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta <- years_per_series_tshe
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels) %>%
+  left_join(Isummary, by= "stand") %>%
+  mutate ( x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "TSHE low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_TSME, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta <- years_per_series_tsme
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels)%>%
+  left_join (Isummary, by= "stand") %>%
+  mutate (x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "TSME low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_THPL, pars = "log_alpha_low")
+# Metadata used to fit ABAM
+meta <- years_per_series_thpl
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels)%>%
+  left_join (Isummary, by= "stand")%>%
+  mutate (x= 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_low",
+     main = "THPL low-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+#High seed production state
+#Common things in the plot
+stand_levels <- elevation_df %>%
+  arrange(elevation) %>%
+  pull(stand)
+ylim_common <- c(-4, 8)
+
+
+# Selecting the draws from a specific specie
+draws <- as.matrix(fit_ABAM, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta_abam <- years_per_series_abam 
+abam_summary <- tibble(
+  stand = meta_abam$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+abam_summary <- abam_summary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+abam_summary <- tibble(stand = stand_levels) %>%
+  left_join(abam_summary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+#par(mfrow=c(3,3))
+plot(NULL,
+     xlim = c(0.5, nrow(abam_summary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "ABAM high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = stand_levels,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(abam_summary$x,
+         abam_summary$q10,
+         abam_summary$x,
+         abam_summary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(abam_summary$x,
+       abam_summary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_ABLA, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta_abla <- years_per_series_abla 
+abla_summary <- tibble(
+  stand = meta_abla$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+abla_summary <- abla_summary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+abla_summary <- tibble(stand = stand_levels) %>%
+  left_join(abla_summary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(abla_summary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "ABLa high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = stand_levels,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(abla_summary$x,
+         abla_summary$q10,
+         abla_summary$x,
+         abla_summary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(abla_summary$x,
+       abla_summary$median,
+       pch = 19,
+       col = "navy")
+
+
+# Extract draws
+draws <- as.matrix(fit_CANO, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta <- years_per_series_cano
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9))
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble(stand = stand_levels) %>%
+  left_join(Isummary, by = "stand") %>%
+  mutate(x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "CANO high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+# Extract draws
+draws <- as.matrix(fit_PSME, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta <- years_per_series_psme
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary<-tibble (stand = stand_levels) %>%
+  left_join(Isummary, by = "stand") %>%
+  mutate (x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "PSME high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+
+
+# Extract draws
+draws <- as.matrix(fit_TSHE, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta <- years_per_series_tshe
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels) %>%
+  left_join(Isummary, by= "stand") %>%
+  mutate ( x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "TSHE high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_TSME, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta <- years_per_series_tsme
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels)%>%
+  left_join (Isummary, by= "stand") %>%
+  mutate (x = 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "TSME high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+
+# Extract draws
+draws <- as.matrix(fit_THPL, pars = "log_alpha_high")
+# Metadata used to fit ABAM
+meta <- years_per_series_thpl
+Isummary <- tibble(
+  stand = meta$stand,
+  median = apply(draws, 2, median),
+  q10 = apply(draws, 2, quantile, probs = 0.1),
+  q90 = apply(draws, 2, quantile, probs = 0.9)
+)
+Isummary <- Isummary %>%
+  left_join(elevation_df, by = "stand") %>%
+  arrange(elevation) %>%
+  mutate(x = row_number())
+Isummary <- tibble (stand = stand_levels)%>%
+  left_join (Isummary, by= "stand")%>%
+  mutate (x= 1:length(stand_levels))
+#par(mfrow=c(1,1))
+plot(NULL,
+     xlim = c(0.5, nrow(Isummary) + 0.5),
+     ylim = ylim_common,
+     xaxt = "n",
+     xlab = "Stand (low → high elevation)",
+     ylab = "log_alpha_high",
+     main = "THPL high-state seed production")
+axis(1,
+     at = 1:length(stand_levels),
+     labels = Isummary$stand,
+     las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+segments(Isummary$x,
+         Isummary$q10,
+         Isummary$x,
+         Isummary$q90,
+         lwd = 1,
+         col = "steelblue")
+points(Isummary$x,
+       Isummary$median,
+       pch = 19,
+       col = "navy")
+
+
+library(tidyverse)
+
+# ── Setup ────────────────────────────────────────────────────────────────────
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
+
+fits <- list(
+  ABAM = fit_ABAM, ABLA = fit_ABLA, CANO = fit_CANO,
+  PSME = fit_PSME, TSHE = fit_TSHE, TSME = fit_TSME, THPL = fit_THPL
+)
+
+metas <- list(
+  ABAM = years_per_series_abam, ABLA = years_per_series_abla, CANO = years_per_series_cano,
+  PSME = years_per_series_psme, TSHE = years_per_series_tshe, TSME = years_per_series_tsme,
+  THPL = years_per_series_thpl
+)
+
+stand_levels <- elevation_df %>% arrange(elevation) %>% pull(stand)
+colors       <- setNames(RColorBrewer::brewer.pal(7, "Dark2"), species_list)
+
+# ── Helper: extract summary for one species + one parameter ──────────────────
+extract_summary <- function(spp, par) {
+  draws <- as.matrix(fits[[spp]], pars = par)
+  meta  <- metas[[spp]]
+  
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws, 2, median),
+    q10     = apply(draws, 2, quantile, probs = 0.1),
+    q90     = apply(draws, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+# ── Build combined data for both states ──────────────────────────────────────
+all_low <- map_dfr(species_list, extract_summary, par = "log_alpha_low") %>%
+  mutate(stand = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand))
+
+all_high <- map_dfr(species_list, extract_summary, par = "log_alpha_high") %>%
+  mutate(stand = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand))
+
+# ── Jitter x positions so species don't overlap ──────────────────────────────
+n_spp    <- length(species_list)
+offsets  <- setNames(seq(-0.3, 0.3, length.out = n_spp), species_list)
+
+all_low  <- all_low  %>% mutate(x = x_base + offsets[species])
+all_high <- all_high %>% mutate(x = x_base + offsets[species])
+
+# ── Plot function ─────────────────────────────────────────────────────────────
+plot_state <- function(dat, title, ylim = c(-4, 8)) {
+  n_stands <- length(stand_levels)
+  
+  plot(NULL,
+       xlim = c(0.5, n_stands + 0.5),
+       ylim = ylim,
+       xaxt = "n",
+       xlab = "Stand (low → high elevation)",
+       ylab = "log alpha",
+       main = title)
+  
+  axis(1, at = 1:n_stands, labels = stand_levels, las = 2, cex.axis = 0.75)
+  abline(h = 0, lty = 2, col = "grey70")
+  abline(v = 1:n_stands, col = "grey92", lwd = 0.5)  # subtle grid
+  
+  for (spp in species_list) {
+    d <- filter(dat, species == spp)
+    segments(d$x, d$q10, d$x, d$q90, lwd = 1.2, col = colors[spp])
+    points(d$x, d$median, pch = 19, cex = 0.7, col = colors[spp])
+  }
+  
+  legend("topright",
+         legend = species_list,
+         col    = colors,
+         pch    = 19,
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8, 
+         horiz= TRUE)
+}
+
+# ── Render ────────────────────────────────────────────────────────────────────
+par(mfrow = c(1, 1), mar = c(6, 4, 3, 1))
+
+plot_state(all_low,  "Low-state seed production — all species")
+plot_state(all_high, "High-state seed production — all species")
 

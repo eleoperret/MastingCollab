@@ -104,7 +104,7 @@ stand_year_all <- bind_rows(stand_year_all, missing_rows) %>%
   ungroup() %>%
   arrange(spp, stand, year)
 
-obs_missing <- as.integer(!is.na(stand_year_all$y))
+obs_missing <- as.integer(is.na(stand_year_all$y))
 
 stand_year_all <- stand_year_all %>%
   mutate(y = ifelse(is.na(y), 0L, as.integer(y)))
@@ -157,14 +157,22 @@ print (stan_data_all)
 # Fitting Model -----------------------------------------------------------
 
 fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpecies.stan",
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpeciesTrial.stan",
   data    = stan_data_all,
-  iter    = 1000, #change based on how much iterations you need
-  warmup  = 500, #make the warmup longer 
+  iter    = 500, #change based on how much iterations you need
+  warmup  = 100, #make the warmup longer 
   chains  = 1,
   seed    = 123,
 )
 
+fit_multi <- stan(
+  file    = "Stan_code/Species_Stan_Model/Multispecies_05062026.stan",
+  data    = stan_data_all,
+  iter    = 2000, #change based on how much iterations you need
+  warmup  = 1000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
 
 
 # Diagnostic plots Centered --------------------------------------------------------
@@ -235,7 +243,7 @@ pairs(
 #If there is a divergence : 
 #where is this divergence?
 
-divergent <- get_sampler_params(fit_all2, inc_warmup = FALSE)
+divergent <- get_sampler_params(fit_all, inc_warmup = FALSE)
 lapply(divergent, function(x) sum(x[,"divergent__"]))
 
 
@@ -257,10 +265,19 @@ divergent <- get_sampler_params(fit_all2, inc_warmup = FALSE) |>
 #Non-centering on the thetas and the high seed production
 
 pairs(
-  fit_all2,
+  fit_all,
   pars = c(
     "log_phi_state[1]",
     "log_phi_state[2]"
+  ),
+  condition = "divergent__"
+)
+
+pairs(
+  fit_all,
+  pars = c(
+    "log_phi_species[3]",
+    "log_phi_species[2]"
   ),
   condition = "divergent__"
 )
@@ -532,7 +549,7 @@ points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)
 
 
 # State identification ----------------------------------------------------
-samples <- util$extract_expectand_vals(fit_all)
+samples <- util$extract_expectand_vals(fit_multi)
 par(mfrow = c(4,4))
 
 for (f in 1:length(stan_data_all$start_idxs)) {
@@ -1219,3 +1236,894 @@ for (par in key_params) {
 
 
 
+
+
+# Rhat is Na --------------------------------------------------------------
+
+#This means that the sampler is stuck with similar values for a or more parameters and that the variance cannot be defined. 
+
+# Extract the summary
+fit_summary <- summary(fit_all)$summary
+
+# Find parameters with NA Rhat
+na_rhat_params <- rownames(fit_summary)[is.na(fit_summary[, "Rhat"])]
+na_rhat_params
+
+stan_data_all$y[c(183, 289, 432)] 
+
+# Also look at zero-variance parameters (n_eff will be NA or 0 too)
+fit_summary[is.na(fit_summary[, "Rhat"]), ]
+
+
+# Extract posterior draws for a suspicious parameter
+draws <- rstan::extract(fit_all)
+
+# Check variance of specific parameters - if 0, it's stuck
+sapply(draws, function(x) var(as.vector(x)))
+
+
+# Check if the parameter hits 0, 1, or extreme boundary
+for (p in na_rhat_params) {
+  cat(p, ":", range(as.vector(rstan::extract(fit_all, p)[[1]])), "\n")
+}
+
+# Check your data for NAs, zeros where log() is applied, etc.
+lapply(stan_data_all, function(x) sum(is.na(x)))
+lapply(stan_data_all, summary)
+
+
+# Are some species/groups completely missing data?
+# (common in multispecies models)
+table(stan_data_all$S)  # or however species is indexed
+
+# Check n_eff alongside Rhat - both NA = never sampled properly
+fit_summary[fit_summary[,"n_eff"] < 10, ]
+
+
+# Find continuous params with low ESS (the ones that actually matter)
+fit_summary_clean <- fit_summary[!is.na(fit_summary[,"Rhat"]), ]
+
+# Parameters with poor mixing
+fit_summary_clean[fit_summary_clean[,"Rhat"] > 1.05, 
+                  c("mean","sd","n_eff","Rhat")]
+
+# Lowest ESS continuous params
+head(fit_summary_clean[order(fit_summary_clean[,"n_eff"]), 
+                       c("mean","sd","n_eff","Rhat")], 20)
+
+
+# Which species have fewest detections?
+table(stan_data_all$sp)
+# You already know: species 2 (n=65) and 7 (n=67) are smallest
+
+# Check detections (not just presences) per species
+tapply(stan_data_all$y, stan_data_all$sp, sum)
+
+
+# Extract state draws
+state_draws <- rstan::extract(fit_all, "state")[[1]]  # shape: [samples x N]
+
+# Find sites that DO vary (i.e., the sampler sees transitions)
+state_sd <- apply(state_draws, 2, sd)
+cat("Sites with no state variation:", sum(state_sd == 0), "\n")
+cat("Sites with some variation:", sum(state_sd > 0), "\n")
+
+# For the varying sites, what's the mean state?
+par(mfrow= c(1,1))
+hist(apply(state_draws, 2, mean), 
+     main = "Mean state across sites", xlab = "Mean state (1=absent, 2=present)")
+
+# Cross-reference stuck sites with species and year
+stuck_indices <- which(state_sd == 0)
+
+# What species do the stuck sites belong to?
+table(stan_data_all$sp[stuck_indices])
+
+# What years?
+table(stan_data_all$start_idxs[stuck_indices])  # adjust field name
+
+# Any detections at stuck sites?
+tapply(stan_data_all$y[stuck_indices], 
+       stan_data_all$sp[stuck_indices], sum)
+
+dim(Gamma_draws)  # what are the actual dimensions?
+Gamma_draws <- rstan::extract(fit_all, "Gamma")[[1]]
+# shape likely: [samples, n_sites, 2, 2]
+
+# Persistence probabilities (staying in same state)
+# Gamma[s, 1, 1] = P(stay absent | absent)
+# Gamma[s, 2, 2] = P(stay present | present)
+
+# Are persistence probs near 1.0 for all species?
+for (f in 1:stan_data_all$F) {
+  s <- stan_data_all$sp[stan_data_all$start_idxs[f]]
+  cat("Series", f, "- Species", s,
+      "- P(stay absent):",  round(mean(Gamma_draws[, f, 1, 1]), 3),
+      "- P(stay present):", round(mean(Gamma_draws[, f, 2, 2]), 3), "\n")
+}
+
+# How long is the state vector vs. what you'd expect?
+length(stan_data_all$y)              # total observations
+stan_data_all$stand_id * stan_data_all$F  # expected if state[site,year]
+# (adjust field names to yours)
+
+
+# Correct check: how many unique series do you have?
+cat("Total observations:", stan_data_all$N, "\n")               # 950
+cat("Number of stands:", stan_data_all$N_stands, "\n")
+cat("Number of species:", stan_data_all$S, "\n")
+cat("Number of years (F):", stan_data_all$F, "\n")
+
+# How long is each time series?
+series_lengths <- stan_data_all$end_idxs - stan_data_all$start_idxs + 1
+summary(series_lengths)
+table(series_lengths)  # are all series 15 years? or variable length?
+
+# How many series total?
+length(stan_data_all$start_idxs)
+
+
+# Check missing data pattern for stuck series
+stuck_start_positions <- c(87, 399, 449, 490, 516, 635, 661, 
+                           702, 713, 728, 799, 821, 847, 884, 914)
+
+for (s in stuck_start_positions) {
+  end_s <- stan_data_all$end_idxs[which(stan_data_all$start_idxs == s)]
+  missing_rate <- mean(stan_data_all$obs_missing[s:end_s])
+  y_sum <- sum(stan_data_all$y[s:end_s])
+  cat("start:", s, "- missing rate:", round(missing_rate, 2), 
+      "- total detections:", y_sum, "\n")
+}
+
+
+#what series are causing the issues
+# Which series contains observations 785-839?
+for (f in 1:stan_data_all$F) {
+  s <- stan_data_all$start_idxs[f]
+  e <- stan_data_all$end_idxs[f]
+  if (any(785:839 >= s & 785:839 <= e)) {
+    cat("Series", f, "- species", stan_data_all$sp[s], 
+        "- stand", stan_data_all$stand_id[f],
+        "- obs", s, "to", e, "\n")
+  }
+}
+
+
+gap <- colMeans(log_alpha_high_draws) - colMeans(log_alpha_low_draws)
+summary(exp(gap))  # compare to before: was min=8x, median=19x
+
+
+mu_delta_draws <- rstan::extract(fit_all, "mu_log_delta")[[1]]
+cat("mu_log_delta posterior mean:", mean(mu_delta_draws), "\n")
+cat("Implied grand mean count ratio:", mean(exp(log1p(exp(mu_delta_draws)))), "\n")
+
+# And the full gap distribution now
+hist(exp(gap), main = "Count ratio high/low after fix",
+     xlab = "Multiplicative factor", breaks = 30)
+
+# Prior checking ----------------------------------------------------------
+
+
+# What does sigma_theta_stand = 2.5 mean for transition probabilities?
+sigma_prior_draws <- abs(rnorm(10000, 2.5, 0.7))
+stand_effects <- rnorm(10000, 0, 1) * sigma_prior_draws  # non-centered
+grand_mean <- rnorm(10000, 1.2, 0.7)  # theta1 grand mean
+theta_prior <- plogis(grand_mean + stand_effects)
+hist(theta_prior, main = "Prior on theta1 across stands",
+     xlab = "Transition probability")
+
+# What does sigma ~ normal(0.5, 0.3) imply instead?
+sigma_prior_draws <- abs(rnorm(10000, 0, 0.5))  # half-normal centered at 0
+stand_effects <- rnorm(10000, 0, 1) * sigma_prior_draws
+grand_mean <- rnorm(10000, 1.2, 0.7)
+theta_prior <- plogis(grand_mean + stand_effects)
+hist(theta_prior, main = "Revised prior on theta1 across stands",
+     xlab = "Transition probability")
+
+#New proposed prior on sigma_theta 1 and 2 of normal (0,0.5)
+
+
+# Check what different priors imply on the count ratio scale
+par(mfrow = c(1,3))
+
+# Current prior
+mu <- rnorm(10000, 1.5, 1.5)
+hist(exp(log1p(exp(mu))), xlim = c(0,30), breaks = 50,
+     main = "Current: normal(1.5, 1.5)", xlab = "Count ratio high/low")
+
+# More constrained
+mu <- rnorm(10000, 0.5, 0.7)
+hist(exp(log1p(exp(mu))), xlim = c(0,30), breaks = 50,
+     main = "Proposed: normal(0.5, 0.7)", xlab = "Count ratio high/low")
+
+# Even tighter
+mu <- rnorm(10000, 0.0, 0.5)
+hist(exp(log1p(exp(mu))), xlim = c(0,30), breaks = 50,
+     main = "Tight: normal(0.0, 0.5)", xlab = "Count ratio high/low")
+
+# What does the grand mean gap imply alone?
+mu_draws <- rnorm(10000, 1.5, 1.5)  # your current prior
+hist(exp(log1p(exp(mu_draws))), 
+     main = "Grand mean count ratio (high/low)",
+     xlab = "Multiplicative factor")
+
+# Species/stand effects now freely shrink or stretch this
+
+# Divergence --------------------------------------------------------------
+
+pairs(fit_all, pars = c("sigma_theta1_stand", "sigma_theta2_stand",
+                        "grand_logit_theta1", "grand_logit_theta2",
+                        "sigma_theta1_species", "sigma_theta2_species"))
+
+
+# What does your current prior imply vs a more moderate one?
+# Current: sigma_theta1_stand ~ normal(2.5, 0.7)
+hist(plogis(rnorm(10000, 1.2, 0.7) + rnorm(10000, 0, abs(rnorm(10000, 2.5, 0.7)))),
+     main = "Current prior", xlab = "theta1")
+
+# Alternative: sigma_theta1_stand ~ normal(0, 1) — half-normal
+hist(plogis(rnorm(10000, 1.2, 0.7) + rnorm(10000, 0, abs(rnorm(10000, 0, 1)))),
+     main = "Alternative prior", xlab = "theta1")
+
+
+fit_summary <- summary(fit_all)$summary
+# Check which params still have NA Rhat
+na_params <- rownames(fit_summary)[is.na(fit_summary[,"Rhat"])]
+head(na_params, 10)
+
+# Check if they are all state/log_omega (benign) or something new
+table(gsub("\\[.*\\]", "", na_params))  # strips indices to show param names
+
+# Only look at non-missing y_rep
+fit_summary_yrep <- fit_summary[grep("y_rep", rownames(fit_summary)), ]
+fit_summary_yrep_obs <- fit_summary_yrep[fit_summary_yrep[,"mean"] != 0, ]
+summary(fit_summary_yrep_obs[, c("mean", "sd", "n_eff", "Rhat")])
+
+
+# Are ALL log_omega stuck at zero (missing) or at real values?
+fit_summary[grep("log_omega", rownames(fit_summary))[1:10], 
+            c("mean", "sd", "n_eff", "Rhat")]
+
+# How many log_omega are zero vs non-zero?
+lo_means <- fit_summary[grep("log_omega", rownames(fit_summary)), "mean"]
+table(lo_means == 0)
+
+# Same for y_rep
+yr_means <- fit_summary[grep("y_rep", rownames(fit_summary)), "mean"]
+table(yr_means == 0)
+
+table(stan_data_all$obs_missing)
+# If most values are 1, the encoding is still wrong
+mean(stan_data_all$obs_missing)  # should be a small fraction, not ~1.0
+
+
+# Check current encoding
+table(stan_data_all$obs_missing)
+
+# If 1 = observed (wrong), flip it:
+stan_data_all$obs_missing2 <- 1L - stan_data_all$obs_missing
+
+# Verify: missing should be a small fraction
+mean(stan_data_all$obs_missing2)  # expect something like 0.1–0.3, not 0.99
+
+
+# What does obs_missing mean in your raw data?
+# Check the 3 observations where obs_missing = 0
+idx_observed <- which(stan_data_all$obs_missing == 0)
+stan_data_all$y[idx_observed]        # what are their counts?
+stan_data_all$sp[idx_observed]       # which species?
+
+# And a sample of the 947 where obs_missing = 1
+idx_missing <- which(stan_data_all$obs_missing == 1)
+head(stan_data_all$y[idx_missing], 20)   # do these have real counts?
+
+
+table(stan_data_all$obs_missing)
+
+
+# State ID issue ----------------------------------------------------------
+log_alpha_low_draws  <- rstan::extract(fit_all, "log_alpha_low")[[1]]
+log_alpha_high_draws <- rstan::extract(fit_all, "log_alpha_high")[[1]]
+
+# Mean gap between states per series
+gap <- colMeans(log_alpha_high_draws) - colMeans(log_alpha_low_draws)
+summary(gap)
+par(mfrow= c(1,1))
+hist(gap, main = "Log-scale gap between states", xlab = "log_alpha_high - log_alpha_low")
+
+# What does this mean on the count scale?
+summary(exp(gap))  # ratio of high to low state mean counts
+
+
+
+draws <- as_draws_df(as.array(fit_all))
+low_cols  <- grep("^log_alpha_low\\[", names(draws), value = TRUE)
+high_cols <- grep("^log_alpha_high\\[", names(draws), value = TRUE)
+ratios <- exp(draws[, high_cols] - draws[, low_cols])
+
+apply(ratios, 2, median)
+
+par(mfrow=c(1,1))
+boxplot(ratios,
+        las = 2,
+        ylab = "High/Low mean ratio",
+        main = "State separation")
+
+
+draws <- as.data.frame(fit_all)
+
+state_cols <- grep("^state\\[", names(draws), value = TRUE)
+
+states <- draws[, state_cols]
+state1_prop <- apply(states, 1, function(x) mean(x == 1))
+state2_prop <- apply(states, 1, function(x) mean(x == 2))
+summary(state1_prop)
+summary(state2_prop)
+
+
+
+theta1_cols <- grep("^theta1\\[", names(draws), value = TRUE)
+theta2_cols <- grep("^theta2\\[", names(draws), value = TRUE)
+
+theta1 <- draws[, theta1_cols]
+theta2 <- draws[, theta2_cols]
+
+
+diff_state <- diff(as.numeric(states[1, ]))
+mean(diff_state != 0)
+
+
+acf(as.numeric(states[1, ]))
+rle(as.numeric(states[1, ]))$lengths
+mean(rle(as.numeric(states[1, ]))$lengths)
+
+
+
+state_matrix <- states  # draws x time OR summarized posterior
+
+cor(state_series_i, state_series_j)
+mean_state_t <- apply(states, 2, mean)
+plot(mean_state_t, type="l")
+
+mast_t <- colMeans(state_matrix == 2)
+plot(mast_t, type="l")
+
+cor(state_i == 2, state_j == 2)
+
+ccf(state_i, state_j)
+
+
+
+state_by_species <- t(sapply(1:S, function(s) {
+  cols <- which(stan_data_all$sp == s)
+  rowMeans(state_matrix[cols, , drop = FALSE] == 2)
+}))
+
+species_sync <- apply(state_by_species, 2, var)
+species_sync2 <- apply(state_by_species, 2, function(x) {
+  mean(abs(x - mean(x)))
+})
+
+
+
+# Victor's plot -----------------------------------------------------------
+
+plot(stand_year_all$stand,stand_year_all$y, NA= TRUE)
+# Order the stand factor by elevation
+stand_year_all$stand <- factor(stand_year_all$stand, levels = stand_levels)
+
+# Plot
+plot(stand_year_all$stand, stand_year_all$y,
+     xlab = "Stand (low → high elevation)",
+     ylab = "Seed count",
+     main = "Raw seed production per stand",
+     las = 2)
+
+
+# 1. Extract draws as matrix [n_draws x N_stands]
+draws <- as.matrix(fit_all, pars = "alpha_low_stand")
+
+# 2. Stand labels ordered by stand_id
+stand_labels <- years_per_series %>%
+  distinct(stand, stand_id) %>%
+  arrange(stand_id) %>%
+  pull(stand)
+
+# 3. Compute quantiles [9 x N_stands]
+quants <- apply(draws, 2, quantile, probs = c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
+
+# 4. Plot
+N <- ncol(draws)
+plot(NULL,
+     xlim = c(0.5, N + 0.5), ylim = range(quants),
+     xaxt = "n", xlab = "Stand", ylab = "alpha_low_stand (log scale)",
+     main = "Shared stand effect on low-state seed production")
+axis(1, at = 1:N, labels = stand_labels, las = 2)
+abline(h = 0, lty = 2, col = "grey60")
+
+for (k in 1:N) {
+  lines(c(k, k), c(quants[1, k], quants[9, k]), lwd = 1, col = "steelblue")  # 80% CI
+  lines(c(k, k), c(quants[3, k], quants[7, k]), lwd = 3, col = "steelblue")  # 60% CI
+  points(k, quants[5, k], pch = 19, col = "navy")                             # median
+}
+
+
+# Series belonging to species 1, ordered by stand
+meta_sp1 <- years_per_series %>%
+  mutate(f = row_number()) %>%
+  filter(spp == species_list[1]) %>%   # change index or use e.g. "ABAM"
+  arrange(stand_id)
+
+# Extract draws for those series only
+draws_sp1 <- as.matrix(fit_all, pars = "log_alpha_low")[, meta_sp1$f]
+
+# Quantiles
+quants_sp1 <- apply(draws_sp1, 2, quantile,
+                    probs = c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
+
+N <- ncol(draws_sp1)
+plot(NULL,
+     xlim = c(0.5, N + 0.5), ylim = range(quants_sp1),
+     xaxt = "n", xlab = "Stand", ylab = "log_alpha_low (log scale)",
+     main = paste("Implied stand effect —", species_list[1]))
+axis(1, at = 1:N, labels = meta_sp1$stand, las = 2)
+abline(h = 0, lty = 2, col = "grey60")
+
+for (k in 1:N) {
+  lines(c(k, k), c(quants_sp1[1, k], quants_sp1[9, k]), lwd = 1, col = "steelblue")
+  lines(c(k, k), c(quants_sp1[3, k], quants_sp1[7, k]), lwd = 3, col = "steelblue")
+  points(k, quants_sp1[5, k], pch = 19, col = "navy")
+}
+
+
+# Species list — in the same order as Stan's factor levels
+species_list <- levels(as.factor(stand_year_all$spp))
+# Double-check: should match what you printed during data prep
+print(species_list)
+
+# All series with species and stand info
+meta_all <- years_per_series %>%
+  mutate(f = row_number()) %>%
+  arrange(stand_id)
+
+# Extract all log_alpha_low draws [n_draws x F]
+draws_all <- as.matrix(fit_all, pars = "log_alpha_low")
+
+# Compute median per series
+meta_all$median <- apply(draws_all[, meta_all$f], 2, median)
+meta_all$q10    <- apply(draws_all[, meta_all$f], 2, quantile, probs = 0.1)
+meta_all$q90    <- apply(draws_all[, meta_all$f], 2, quantile, probs = 0.9)
+
+# Stand x-axis positions (consistent across species)
+stand_levels <- years_per_series %>%
+  distinct(stand, stand_id) %>%
+  arrange(stand_id) %>%
+  pull(stand)
+N_stands <- length(stand_levels)
+
+meta_all <- meta_all %>%
+  mutate(x = match(stand, stand_levels))
+
+# Colors per species
+cols <- setNames(
+  RColorBrewer::brewer.pal(length(species_list), "Dark2"),
+  species_list
+)
+
+# Plot
+par(mar = c(6, 4, 3, 12), xpd = TRUE)
+plot(NULL,
+     xlim = c(0.5, N_stands + 0.5),
+     ylim = range(c(meta_all$q10, meta_all$q90)),
+     xaxt = "n", xlab = "Stand", ylab = "log_alpha_low (log scale)",
+     main = "Implied stand effects by species")
+axis(1, at = 1:N_stands, labels = stand_levels, las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+abline(v = 1:N_stands, col = "grey92", lwd = 1)
+
+for (sp in species_list) {
+  d <- meta_all %>% filter(spp == sp) %>% arrange(x)
+  col <- cols[sp]
+  
+  # 80% CI as thin segment
+  segments(d$x, d$q10, d$x, d$q90, col = adjustcolor(col, 0.4), lwd = 1)
+  # Line connecting medians
+  #lines(d$x, d$median, col = col, lwd = 1.5, lty = 2)
+  # Median points
+  points(d$x, d$median, col = col, pch = 19, cex = 1.1)
+}
+
+# Legend outside right margin
+par(xpd = TRUE)
+legend(x = N_stands + 1.5, y = mean(range(c(meta_all$q10, meta_all$q90))),
+       legend = species_list, col = cols[species_list],
+       lwd = 2, pch = 19, bty = "n", cex = 0.85,
+       yjust = 0.5, title = "Species")
+
+
+
+elevation_df <- tibble(
+  stand = c("TO11","TO04","TA01","AV02","AE10","TB13","AO03","AG05",
+            "AV06","AX15","AB08","PP17","AV14","AM16","AR07","PARA","SPRY","SUNR"),
+  elevation = c(600, 668, 700, 850, 1450, 850, 900, 950,
+                1060, 1090, 1100, 1150, 1150, 1200, 1450, 1600, 1700, 1800)
+)
+
+stand_levels <- elevation_df %>%
+  arrange(elevation) %>%
+  pull(stand)
+
+# Stand metadata with stand_id (used to match Stan's column order)
+stand_meta <- years_per_series %>%
+  distinct(stand, stand_id) %>%
+  arrange(stand_id)   # this matches the column order in the draws matrix
+
+# Reorder columns of draws to match elevation order
+draws <- as.matrix(fit_all, pars = "alpha_low_stand")  # columns = stand_id order
+col_order <- match(stand_levels, stand_meta$stand)     # elevation order → stand_id position
+draws_ordered <- draws[, col_order]
+
+# Quantiles on reordered draws
+quants <- apply(draws_ordered, 2, quantile,
+                probs = c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
+
+N <- ncol(draws_ordered)
+plot(NULL,
+     xlim = c(0.5, N + 0.5), ylim = range(quants),
+     xaxt = "n", xlab = "Stand (low → high elevation)",
+     ylab = "alpha_low_stand (log scale)",
+     main = "Shared stand effect on low-state seed production")
+axis(1, at = 1:N, labels = stand_levels, las = 2)
+abline(h = 0, lty = 2, col = "grey60")
+
+for (k in 1:N) {
+  lines(c(k, k), c(quants[1, k], quants[9, k]), lwd = 1, col = "steelblue")
+  lines(c(k, k), c(quants[3, k], quants[7, k]), lwd = 3, col = "steelblue")
+  points(k, quants[5, k], pch = 19, col = "navy")
+}
+
+
+# Species list — in the same order as Stan's factor levels
+species_list <- levels(as.factor(stand_year_all$spp))
+# Double-check: should match what you printed during data prep
+print(species_list)
+
+# All series with species and stand info
+meta_all <- years_per_series %>%
+  mutate(f = row_number()) %>%
+  arrange(stand_id)
+
+# Extract all log_alpha_low draws [n_draws x F]
+draws_all <- as.matrix(fit_all, pars = "log_alpha_low")
+
+# Compute median per series
+meta_all$median <- apply(draws_all[, meta_all$f], 2, median)
+meta_all$q10    <- apply(draws_all[, meta_all$f], 2, quantile, probs = 0.1)
+meta_all$q90    <- apply(draws_all[, meta_all$f], 2, quantile, probs = 0.9)
+
+# Stand x-axis positions (consistent across species)
+stand_levels <- elevation_df %>%
+  arrange(elevation) %>%
+  pull(stand)
+N_stands <- length(stand_levels)
+
+meta_all <- meta_all %>%
+  mutate(x = match(stand, stand_levels))
+
+# Colors per species
+cols <- setNames(
+  RColorBrewer::brewer.pal(length(species_list), "Dark2"),
+  species_list
+)
+
+# Plot
+par(mar = c(6, 4, 3, 12), xpd = TRUE)
+plot(NULL,
+     xlim = c(0.5, N_stands + 0.5),
+     ylim = range(c(meta_all$q10, meta_all$q90)),
+     xaxt = "n", xlab = "Stand", ylab = "log_alpha_low (log scale)",
+     main = "Implied stand effects by species")
+axis(1, at = 1:N_stands, labels = stand_levels, las = 2)
+abline(h = 0, lty = 2, col = "grey70")
+abline(v = 1:N_stands, col = "grey92", lwd = 1)
+
+for (sp in species_list) {
+  d <- meta_all %>% filter(spp == sp) %>% arrange(x)
+  col <- cols[sp]
+  
+  # 80% CI as thin segment
+  segments(d$x, d$q10, d$x, d$q90, col = adjustcolor(col, 0.4), lwd = 1)
+  # Line connecting medians
+  #lines(d$x, d$median, col = col, lwd = 1.5, lty = 2)
+  # Median points
+  points(d$x, d$median, col = col, pch = 19, cex = 1.1)
+}
+
+# Legend outside right margin
+par(xpd = TRUE)
+legend(x = N_stands + 1.5, y = mean(range(c(meta_all$q10, meta_all$q90))),
+       legend = species_list, col = cols[species_list],
+       lwd = 2, pch = 19, bty = "n", cex = 0.85,
+       yjust = 0.5, title = "Species")
+
+
+# Posterior median of y_rep per observation
+draws_yrep <- as.matrix(fit_all, pars = "y_rep")  # [n_draws x N]
+y_rep_median <- apply(draws_yrep, 2, median)
+
+# Attach to data
+stand_year_all$y_rep_median <- y_rep_median
+stand_year_all$residual     <- stand_year_all$y - y_rep_median
+
+stand_year_all$log_y      <- log(stand_year_all$y + 1)
+stand_year_all$log_y_rep  <- log(y_rep_median + 1)
+stand_year_all$resid_log  <- stand_year_all$log_y - stand_year_all$log_y_rep
+
+resid_summary_log <- stand_year_all %>%
+  group_by(spp, stand) %>%
+  summarise(mean_resid = mean(resid_log, na.rm = TRUE), .groups = "drop") %>%
+  mutate(x = match(stand, stand_levels))
+
+# Summarise residuals by species x stand
+resid_summary <- stand_year_all %>%
+  group_by(spp, stand) %>%
+  summarise(
+    mean_resid = mean(resid_log, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(elevation_df, by = "stand") %>%
+  mutate(stand = factor(stand, levels = stand_levels))  # elevation order
+
+# Plot
+cols <- setNames(
+  RColorBrewer::brewer.pal(length(species_list), "Dark2"),
+  species_list
+)
+
+par(mar = c(6, 4, 3, 12), xpd = FALSE)
+plot(NULL,
+     xlim = c(0.5, N_stands + 0.5),
+     ylim = range(resid_summary$mean_resid, na.rm = TRUE),
+     xaxt = "n", xlab = "Stand (low → high elevation)",
+     ylab = "Mean residual (observed - predicted)",
+     main = "Residuals by species and stand")
+axis(1, at = 1:N_stands, labels = stand_levels, las = 2)
+abline(h = 0, lty = 2, col = "grey60")
+abline(v = 1:N_stands, col = "grey92", lwd = 1)
+
+for (sp in species_list) {
+  d <- resid_summary %>%
+    filter(spp == sp) %>%
+    mutate(x = match(stand, stand_levels))
+  col <- cols[sp]
+  points(d$x, d$mean_resid, col = col, pch = 19, cex = 1.1)
+}
+
+par(xpd = TRUE)
+legend(x = N_stands + 1.5,
+       y = mean(range(resid_summary$mean_resid, na.rm = TRUE)),
+       legend = species_list, col = cols[species_list],
+       pch = 19, bty = "n", cex = 0.85, yjust = 0.5, title = "Species")
+
+
+
+
+
+# Get most probable state per observation
+draws_state <- as.matrix(fit_all, pars = "state")
+state_median <- apply(draws_state, 2, median)
+stand_year_all$state <- round(state_median)
+
+# Plot only low-state years
+stand_year_low <- stand_year_all %>% filter(state == 1)
+stand_year_low$stand <- factor(stand_year_low$stand, levels = stand_levels)
+
+plot(stand_year_low$stand, stand_year_low$y,
+     xlab = "Stand (low → high elevation)",
+     ylab = "Seed count (low state years only)",
+     main = "Raw seed production — low state years only",
+     las = 2)
+
+# diagnosis 04.06.2026 ----------------------------------------------------
+
+# 1. What persistence probabilities did the model learn?
+print(fit_all, pars = c("grand_logit_theta1", "grand_logit_theta2",
+                        "sigma_theta1_species", "sigma_theta2_species"))
+
+# 2. What is the state sequence for a problematic species x stand?
+# e.g. TSHE at SUNR
+meta_problem <- years_per_series %>%
+  mutate(f = row_number()) %>%
+  filter(spp == "TSHE", stand == "TO04")
+
+states_problem <- stand_year_all %>%
+  filter(spp == "TSHE", stand == "TO04") %>%
+  mutate(state = state_median[row_number()])  
+
+print(states_problem %>% select(year, y, state))
+
+# 3. Check the delta (gap between states) per species
+print(fit_all, pars = c("mu_log_delta", 
+                        "sigma_log_delta_species",
+                        "log_delta_species_nc"))
+
+
+tshecheck<- stand_year_all %>%
+  filter(spp == "TSHE", stand == "TO04") %>%
+  arrange(y) %>%
+  print(n = Inf)
+
+plot(tshecheck$year,tshecheck$y)
+
+
+# Extract prior predictive states
+state_prior <- as.matrix(fit_prior, pars = "state")
+state_prior_median <- apply(state_prior, 2, median)
+stand_year_all$state_prior <- round(state_prior_median)
+
+# Check switching for TSHE at TO04
+stand_year_all %>%
+  filter(spp == "TSHE", stand == "TO04") %>%
+  select(year, y, state_prior)
+
+# What fraction of years are assigned state 2 (mast) overall?
+mean(stand_year_all$state_prior == 2)
+
+# Check transitions: does the prior produce switching?
+table(head(stand_year_all$state_prior, -1), 
+      tail(stand_year_all$state_prior, -1))
+
+
+print(fit_all, pars = c("alpha_low_species", "mu_log_low", "sigma_low_species"))
+
+print(fit_TSHE, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_TSME, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_THPL, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_ABAM, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_ABLA, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_CANO, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+print(fit_PSME, pars = c("grand_logit_theta1", "grand_logit_theta2"))
+
+print(fit_all, pars = c("grand_logit_theta1", "grand_logit_theta2", "theta1[1]","theta1[2]","theta1[3]","theta1[4]","theta1[5]","theta1[6]","theta1[7]","theta2[1]","theta2[2]","theta2[3]","theta2[4]","theta2[5]","theta2[6]","theta2[7]"))
+
+
+# Recompute state median from new fit
+state_new <- as.matrix(fit_all, pars = "state")
+state_new_median <- apply(state_new, 2, median)
+stand_year_all$state_new <- round(state_new_median)
+
+# Check TSHE at TO04
+stand_year_all %>%
+  filter(spp == "TSHE", stand == "TO04") %>%
+  select(year, y, state_new)
+
+# Get log_alpha_low and log_alpha_high for TSHE series
+meta_tshe <- years_per_series %>%
+  mutate(f = row_number()) %>%
+  filter(spp == "TSHE")
+
+draws_low  <- as.matrix(fit_all, pars = "log_alpha_low")
+draws_high <- as.matrix(fit_all, pars = "log_alpha_high")
+
+# Posterior median of implied means for TSHE
+tshe_low  <- apply(draws_low[,  meta_tshe$f], 2, median)
+tshe_high <- apply(draws_high[, meta_tshe$f], 2, median)
+
+data.frame(
+  stand     = meta_tshe$stand,
+  low_mean  = round(exp(tshe_low)),
+  high_mean = round(exp(tshe_high)),
+  ratio     = round(exp(tshe_high - tshe_low), 1)
+)
+
+# What is mu_log_low + alpha_low_species[6] for TSHE?
+mu_draws    <- as.matrix(fit_all, pars = "mu_log_low")[,1]
+alpha_draws <- as.matrix(fit_all, pars = "alpha_low_species")[, 6]  # TSHE = species 6
+
+tshe_baseline <- median(exp(mu_draws + alpha_draws))
+cat("TSHE implied baseline (no stand effect):", round(tshe_baseline), "seeds\n")
+
+# Compare to actual TSHE low years
+stand_year_all %>%
+  filter(spp == "TSHE") %>%
+  summarise(
+    min_y    = min(y),
+    q10_y    = quantile(y, 0.1),
+    q25_y    = quantile(y, 0.25),
+    median_y = median(y)
+  )
+
+
+# Check state assignment for ALL TSHE stands
+stand_year_all %>%
+  filter(spp == "TSHE") %>%
+  group_by(stand) %>%
+  summarise(
+    n_low  = sum(state_new == 1),
+    n_high = sum(state_new == 2),
+    min_y  = min(y),
+    max_y  = max(y),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(n_low))
+
+
+#works better when removing the partial pooling of species on the low 
+
+# Which species are working correctly now (without alpha_low_species)?
+stand_year_all %>%
+  group_by(spp) %>%
+  summarise(
+    n_low  = sum(state_new == 1),
+    n_high = sum(state_new == 2),
+    pct_high = round(mean(state_new == 2) * 100),
+    .groups = "drop"
+  )
+
+stand_year_all %>%
+  filter(spp == "THPL") %>%
+  group_by(stand) %>%
+  summarise(
+    n_low  = sum(state_new == 1),
+    n_high = sum(state_new == 2),
+    min_y  = min(y),
+    max_y  = max(y),
+    .groups = "drop"
+  )
+
+
+# Fit a version WITH alpha_low_species but print the implied
+# low state means per species to see what's happening
+print(fit_all, pars = c("mu_log_low",
+                                     "alpha_low_species",
+                                     "sigma_low_species",
+                                     "mu_log_delta",
+                                     "sigma_log_delta_species"))
+
+print(fit_multi, pars = c("mu_log_low",
+                        "alpha_low_species",
+                        "sigma_low_species",
+                        "mu_log_delta",
+                        "sigma_log_delta_species"))
+
+print(
+  fit_multi,
+  pars = c(
+    "log_phi_state",
+    "sigma_theta1_species",
+    "sigma_theta2_species",
+    "sigma_theta1_stand",
+    "sigma_theta2_stand"
+  )
+)
+
+
+print(fit_multi, pars = c("mu_log_delta", 
+                        "sigma_log_delta_species",
+                        "grand_logit_theta1",
+                        "grand_logit_theta2"))
+
+# And state assignments per species
+stand_year_all %>%
+  group_by(spp) %>%
+  summarise(
+    n_low    = sum(state_new == 1),
+    n_high   = sum(state_new == 2),
+    pct_high = round(mean(state_new == 2) * 100),
+    .groups  = "drop"
+  )
+
+
+print(fit_multi, pars = c("logit_theta1_species",
+                          "logit_theta2_species",
+                          "mu_log_delta",
+                          "sigma_log_delta_species"))
+
+stand_year_all %>%
+  group_by(spp) %>%
+  summarise(
+    n_low    = sum(state_new == 1),
+    n_high   = sum(state_new == 2),
+    pct_high = round(mean(state_new == 2) * 100),
+    .groups  = "drop"
+  )
