@@ -489,8 +489,8 @@ ggplot(stand_year_tshe, aes(x = year, y = y)) +
 fit_ABAM <- stan(
   file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_abam,
-  iter    = 4000, #change based on how much iterations you need
-  warmup  = 2000, #make the warmup longer 
+  iter    = 2000, #change based on how much iterations you need
+  warmup  = 1000, #make the warmup longer 
   chains  = 4,
   seed    = 123,
 )
@@ -1221,14 +1221,14 @@ samples <- rstan::extract(fitSP)
 n <- length(samples$mu_log_low)
 # --- Simulate priors ---
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.8, 0.5),
+  mu_log_low           = rnorm(n, 2, 1.5),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
   grand_logit_theta1   = rnorm(n, 0.5, 1),
-  grand_logit_theta2   = rnorm(n, -0.5, 0.5),
-  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
-  sigma_log_delta      = abs(rnorm(n, 0, 1)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
+  grand_logit_theta2   = rnorm(n, -1, 0.5),
+  sigma_low_stand      = abs(rnorm(n, 1, 0.3)),
+  sigma_log_delta      = abs(rnorm(n, 1.5, 0.7)),
+  sigma_theta1_stand   = abs(rnorm(n, 2, 0.7)),
+  sigma_theta2_stand   = abs(rnorm(n, 2, 0.7)),
   phi_low              = exp(rnorm(n, log(4), 0.6)),
   phi_high             = exp(rnorm(n, log(4), 0.6))
 )

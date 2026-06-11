@@ -118,17 +118,17 @@ model {
 
   alpha_theta1_stand_nc ~ normal(0, 1);  
   alpha_theta2_stand_nc ~ normal(0, 1);   
-  sigma_theta1_stand ~ normal(0, 0.7);
-  sigma_theta2_stand ~ normal(0, 0.7);
+  sigma_theta1_stand ~ normal(2, 0.7);
+  sigma_theta2_stand ~ normal(2, 0.7);
 
   // Emission means
-  mu_log_low               ~ normal(2.8, 0.5);
-  alpha_low_stand_nc           ~ normal(0, 1);
-  sigma_low_stand           ~ normal(0.5, 1);
+  mu_log_low                ~ normal(2, 1.5);
+  alpha_low_stand_nc        ~ normal(0, 1);
+  sigma_low_stand           ~ normal(1, 0.3);
 
   mu_log_delta              ~ normal(1.5, 1.5);
   log_delta_tilde           ~ normal(0, 1); 
-  sigma_log_delta           ~ normal (0,1);
+  sigma_log_delta           ~ normal (1.5,0.7);
 
   // Dispersion
   log_phi_state ~ normal(log(4), 0.6); 
