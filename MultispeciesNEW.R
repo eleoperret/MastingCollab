@@ -139,6 +139,7 @@ cat("S =", S, "\n")
 cat("Indices correct:", all(end_idxs - start_idxs + 1 == T_i), "\n")
 cat("Final index matches N:", tail(end_idxs, 1) == nrow(stand_year_all), "\n")
 
+
 #Final Stan data list #added a stand parameter 
 stan_data_all <- list(
   N          = nrow(stand_year_all),
