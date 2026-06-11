@@ -1,4 +1,3 @@
-
 .Rproj.user
 .Rhistory
 .RData
@@ -13,9 +12,9 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
-
 *.exe
 .aux
 .log
 .out
 .synctex.gz
+.RDataTmp2
