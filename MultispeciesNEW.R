@@ -121,13 +121,15 @@ print(levels(as.factor(stand_year_all$spp)))
 years_per_series <- stand_year_all %>%
   group_by(spp, stand) %>%
   summarise(T_i = n(), .groups = "drop")%>%
-  mutate(stand_id = as.numeric(as.factor(stand)))  # NEW
+  mutate(stand_id = as.numeric(as.factor(stand)),
+         species_id = as.numeric(as.factor(spp)) #NEW
+         ) 
 
-N_stands <- length(unique(years_per_series$stand_id))  # NEW
+N_stands <- length(unique(years_per_series$stand_id))  
 
-G          <- nrow(years_per_series) #More rows now because I added ABLA
-T_i        <- years_per_series$T_i #different for every stands and species (56 rows)
-start_idxs <- cumsum(c(1, T_i[-G])) #cumulative sum: ragged vector 
+G          <- nrow(years_per_series) 
+T_i        <- years_per_series$T_i 
+start_idxs <- cumsum(c(1, T_i[-G])) 
 end_idxs   <- cumsum(T_i)
 
 # Checking everything
@@ -142,9 +144,9 @@ stan_data_all <- list(
   N          = nrow(stand_year_all),
   F          = G,
   S          = S,
-  N_stands   = N_stands, #Nouveau
-  stand_id   = years_per_series$stand_id,  # Nouveau
-  sp         = stand_year_all$species_id,
+  N_stands   = N_stands, 
+  stand_id   = years_per_series$stand_id,  
+  species_id = years_per_series$species_id, 
   start_idxs = start_idxs,
   end_idxs   = end_idxs,
   y          = stand_year_all$y,
@@ -157,11 +159,11 @@ print (stan_data_all)
 # Fitting Model -----------------------------------------------------------
 
 fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeNewPriorsPhiSpeciesTrial.stan",
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeFull_10062026.stan",
   data    = stan_data_all,
-  iter    = 500, #change based on how much iterations you need
-  warmup  = 100, #make the warmup longer 
-  chains  = 1,
+  iter    = 2000, #change based on how much iterations you need
+  warmup  = 1000, #make the warmup longer 
+  chains  = 4,
   seed    = 123,
 )
 
@@ -549,7 +551,7 @@ points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)
 
 
 # State identification ----------------------------------------------------
-samples <- util$extract_expectand_vals(fit_multi)
+samples <- util$extract_expectand_vals(fit_all)
 par(mfrow = c(4,4))
 
 for (f in 1:length(stan_data_all$start_idxs)) {
