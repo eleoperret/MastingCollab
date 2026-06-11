@@ -487,7 +487,7 @@ ggplot(stand_year_tshe, aes(x = year, y = y)) +
 # Fitting Model -----------------------------------------------------------
 
 fit_ABAM <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_abam,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -496,7 +496,7 @@ fit_ABAM <- stan(
 )
 
 fit_ABLA <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_abla,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -506,7 +506,7 @@ fit_ABLA <- stan(
 
 
 fit_CANO <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_cano,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -516,7 +516,7 @@ fit_CANO <- stan(
 
 
 fit_PSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_psme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -526,7 +526,7 @@ fit_PSME <- stan(
 
 
 fit_TSHE <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_tshe,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -535,7 +535,7 @@ fit_TSHE <- stan(
 )
 
 fit_TSME <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_tsme,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -545,7 +545,7 @@ fit_TSME <- stan(
 
 
 fit_THPL <- stan(
-  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_05062026.stan",
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_09062026.stan",
   data    = stan_data_thpl,
   iter    = 4000, #change based on how much iterations you need
   warmup  = 2000, #make the warmup longer 
@@ -554,7 +554,7 @@ fit_THPL <- stan(
 )
 
 
-# Diagnostic plots per species --------------------------------------------
+# Summary per species --------------------------------------------
 
 
 species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE","TSME","THPL")
@@ -626,8 +626,6 @@ print(summary_table, digits = 3)
 
 
 # Diagnostic plots --------------------------------------------------------
-
-
 # Divergence --------------------------------------------------------------
 
 
@@ -709,6 +707,165 @@ print(fit_THPL, pars = c("grand_logit_theta1",
                          "grand_logit_theta2","mu_log_low",
                          "mu_log_delta",
                          "sigma_log_delta"))
+
+
+
+# Plots for git issue #67 -------------------------------------------------
+
+ls(util)
+util$plot_line_hist
+util$plot_line_hists
+util$plot_disc_pushforward_quantiles
+
+
+
+plot_predicted_vs_observed <- function(spp, bin_max_zoom = 200, bin_delta = 2, y_max = NULL) {
+  
+  fit      <- fits[[spp]]
+  stan_dat <- stan_data_list[[spp]]
+  
+  state_draws <- as.matrix(fit, pars = "state")
+  y_rep_draws <- as.matrix(fit, pars = "y_rep")
+  
+  y_rep_flat <- as.vector(y_rep_draws)
+  state_flat <- as.vector(state_draws)
+  
+  y_rep_low  <- y_rep_flat[state_flat == 1]
+  y_rep_high <- y_rep_flat[state_flat == 2]
+  
+  util$plot_line_hists(
+    values1   = y_rep_low,
+    values2   = y_rep_high,
+    bin_min   = 0,
+    bin_max   = bin_max_zoom,
+    bin_delta = bin_delta,
+    prob      = TRUE,
+    xlab      = "#seeds",
+    main      = paste0(spp, " — predicted vs observed"),
+    col1      = "lightblue",
+    col2      = "darkred"
+  )
+  
+  legend("topright",
+         legend = c("Predicted low state", "Predicted high state"),
+         col    = c("lightblue", "darkred"),
+         lwd    = 2, bty = "n")
+}
+
+par(mfrow = c(1, 1))
+# Call with fixed y axis
+plot_predicted_vs_observed("ABAM", bin_max_zoom = 200, bin_delta = 20)
+plot_predicted_vs_observed("ABLA", bin_max_zoom = 200, bin_delta = 20)
+plot_predicted_vs_observed("CANO", bin_max_zoom = 200, bin_delta = 20)
+plot_predicted_vs_observed("PSME", bin_max_zoom = 200, bin_delta = 20)
+plot_predicted_vs_observed("TSHE", bin_max_zoom = 600, bin_delta = 20)
+plot_predicted_vs_observed("TSME", bin_max_zoom = 200, bin_delta = 20)
+plot_predicted_vs_observed("THPL", bin_max_zoom = 200, bin_delta = 20)
+
+
+
+#Seed production over the years
+plot_time_predictive <- function(spp) {
+  
+  fit      <- fits[[spp]]
+  stan_dat <- stan_data_list[[spp]]
+  meta     <- metas[[spp]]
+  
+  samples  <- util$extract_expectand_vals(fit)
+  n_obs    <- stan_dat$N
+  y_names  <- paste0("y_rep[", 1:n_obs, "]")
+  
+  par(mfrow = c(3, 2), mar = c(5, 4, 4, 1))
+  
+  for (f in 1:stan_dat$F) {
+    idx      <- stan_dat$start_idxs[f]:stan_dat$end_idxs[f]
+    y_obs_f  <- stan_dat$y[idx]
+    
+    util$plot_disc_pushforward_quantiles(
+      samples         = samples,
+      names           = y_names[idx],
+      baseline_values = y_obs_f,
+      baseline_col    = "black",
+      xlab            = "Year index",
+      ylab            = "#seeds",
+      main            = paste0(spp, " — ", meta$stand[f])
+    )
+  }
+}
+
+plot_time_predictive("ABAM")
+plot_time_predictive("ABLA")
+plot_time_predictive("CANO")
+plot_time_predictive("PSME")
+plot_time_predictive("TSHE")
+plot_time_predictive("TSME")
+plot_time_predictive("THPL")
+
+
+
+#Lines 
+plot_time_predictive_lines <- function(spp, n_lines = 50) {
+  fit      <- fits[[spp]]
+  stan_dat <- stan_data_list[[spp]]
+  meta     <- metas[[spp]]
+  y_rep_draws <- as.matrix(fit, pars = "y_rep")  # [n_draws x N]
+  n_draws     <- nrow(y_rep_draws)
+  # Randomly sample a subset of draws to plot
+  draw_idx <- sample(1:n_draws, n_lines)
+  par(mfrow = c(3, 2), mar = c(5, 4, 4, 1))
+  for (f in 1:stan_dat$F) {
+    idx     <- stan_dat$start_idxs[f]:stan_dat$end_idxs[f]
+    y_obs_f <- stan_dat$y[idx]
+    x       <- seq_along(idx)
+    # Set up empty plot
+    plot(NULL,
+         xlim = c(1, length(idx)),
+         ylim = c(0, max(c(y_obs_f, y_rep_draws[draw_idx, idx])) * 1.1),
+         xlab = "Year index",
+         ylab = "#seeds",
+         main = paste0(spp, " — ", meta$stand[f]))
+    # Draw posterior predictive lines
+    for (d in draw_idx) {
+      lines(x, y_rep_draws[d, idx], col = adjustcolor("darkred", alpha = 0.1), lwd = 0.8)
+    }
+    # Observed data on top
+    #lines(x, y_obs_f, col = "black", lwd = 2)
+    points(x, y_obs_f, pch = 19, col = "black", cex = 0.8)
+  }
+}
+plot_time_predictive_lines("ABAM")
+
+
+plot_time_predictive_lines <- function(spp) {
+  
+  fit      <- fits[[spp]]
+  stan_dat <- stan_data_list[[spp]]
+  meta     <- metas[[spp]]
+  
+  samples <- util$extract_expectand_vals(fit)
+  y_names <- paste0("y_rep[", 1:stan_dat$N, "]")
+  
+  par(mfrow = c(3, 2), mar = c(5, 4, 4, 1))
+  
+  for (f in 1:stan_dat$F) {
+    idx     <- stan_dat$start_idxs[f]:stan_dat$end_idxs[f]
+    y_obs_f <- stan_dat$y[idx]
+    plot_xs <- seq_along(idx)  # x axis = year index within stand
+    
+    util$plot_realizations(
+      samples         = samples,
+      names           = y_names[idx],
+      plot_xs         = plot_xs,
+      baseline_values = y_obs_f,
+      baseline_col    = "black",
+      xlab            = "Year index",
+      ylab            = "#seeds",
+      main            = paste0(spp, " — ", meta$stand[f])
+    )
+  }
+}
+
+plot_time_predictive_lines("ABAM")
 
 
 # PPC -------------------------------------------------------------
@@ -1064,10 +1221,10 @@ samples <- rstan::extract(fitSP)
 n <- length(samples$mu_log_low)
 # --- Simulate priors ---
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.8, 1.0),
+  mu_log_low           = rnorm(n, 2.8, 0.5),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
   grand_logit_theta1   = rnorm(n, 0.5, 1),
-  grand_logit_theta2   = rnorm(n, -0.5, 1),
+  grand_logit_theta2   = rnorm(n, -0.5, 0.5),
   sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
   sigma_log_delta      = abs(rnorm(n, 0, 1)),
   sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
@@ -1136,7 +1293,7 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
   scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
   coord_cartesian(ylim = c(0,2.5))+
   labs(
-    title = "Prior vs posterior — single species HMM ABLA",
+    title = "Prior vs posterior — single species HMM ABAM",
     x = NULL, y = "Density", fill = NULL, color = NULL
   ) +
   theme_bw(base_size = 11) +
@@ -1185,7 +1342,7 @@ abam_summary <- abam_summary %>%
 abam_summary <- tibble(stand = stand_levels) %>%
   left_join(abam_summary, by = "stand") %>%
   mutate(x = 1:length(stand_levels))
-par(mfrow=c(4,4))
+par(mfrow=c(1,2))
 #par(mfrow=c(3,3))
 plot(NULL,
      xlim = c(0.5, nrow(abam_summary) + 0.5),
@@ -1859,5 +2016,248 @@ plot_state <- function(dat, title, ylim = c(-4, 8)) {
 par(mfrow = c(1, 1), mar = c(6, 4, 3, 1))
 
 plot_state(all_low,  "Low-state seed production — all species")
+
 plot_state(all_high, "High-state seed production — all species")
 
+
+
+
+library(tidyverse)
+library(RColorBrewer)
+
+# ── Setup ────────────────────────────────────────────────────────────────────
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
+
+fits <- list(
+  ABAM = fit_ABAM, ABLA = fit_ABLA, CANO = fit_CANO,
+  PSME = fit_PSME, TSHE = fit_TSHE, TSME = fit_TSME, THPL = fit_THPL
+)
+
+metas <- list(
+  ABAM = years_per_series_abam, ABLA = years_per_series_abla, CANO = years_per_series_cano,
+  PSME = years_per_series_psme, TSHE = years_per_series_tshe, TSME = years_per_series_tsme,
+  THPL = years_per_series_thpl
+)
+
+stand_levels <- elevation_df %>% arrange(elevation) %>% pull(stand)
+colors       <- setNames(RColorBrewer::brewer.pal(7, "Dark2"), species_list)
+
+n_spp   <- length(species_list)
+offsets <- setNames(seq(-0.3, 0.3, length.out = n_spp), species_list)
+
+# ── Helper: absolute log alpha (low or high state) ───────────────────────────
+extract_summary <- function(spp, par) {
+  draws <- as.matrix(fits[[spp]], pars = par)
+  meta  <- metas[[spp]]
+  
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws, 2, median),
+    q10     = apply(draws, 2, quantile, probs = 0.1),
+    q90     = apply(draws, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+# ── Helper: stand deviations from grand mean (low state only) ────────────────
+extract_deviation <- function(spp) {
+  draws_alpha <- as.matrix(fits[[spp]], pars = "log_alpha_low")
+  draws_mu    <- as.matrix(fits[[spp]], pars = "mu_log_low")
+  # subtract grand mean per draw (row-wise) to propagate uncertainty
+  draws_dev <- sweep(draws_alpha, 1, draws_mu[, 1], FUN = "-")
+  
+  meta <- metas[[spp]]
+  
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+extract_deviation2 <- function(spp) {
+  draws_alpha <- as.matrix(fits[[spp]], pars = "log_alpha_high")
+  draws_mu_delta    <- as.matrix(fits[[spp]], pars = "mu_log_delta")
+  draws_mu_low <- as.matrix(fits[[spp]], pars= "mu_log_low")
+  # subtract grand mean per draw (row-wise) to propagate uncertainty
+  draws_dev <- sweep(draws_alpha, 1, draws_mu_low [,1]+draws_mu_delta[, 1], FUN = "-")
+  
+  meta <- metas[[spp]]
+  
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+# ── Build all datasets ────────────────────────────────────────────────────────
+all_low <- map_dfr(species_list, extract_summary, par = "log_alpha_low") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_high <- map_dfr(species_list, extract_summary, par = "log_alpha_high") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_dev <- map_dfr(species_list, extract_deviation) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_dev2 <- map_dfr(species_list, extract_deviation2) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+# ── Plot function ─────────────────────────────────────────────────────────────
+plot_state <- function(dat, title, ylab = "log alpha", ylim = c(-4, 8)) {
+  n_stands <- length(stand_levels)
+  
+  plot(NULL,
+       xlim = c(0.5, n_stands + 0.5),
+       ylim = ylim,
+       xaxt = "n",
+       xlab = "Stand (low → high elevation)",
+       ylab = ylab,
+       main = title)
+  
+  axis(1, at = 1:n_stands, labels = stand_levels, las = 2, cex.axis = 0.75)
+  abline(h = 0, lty = 2, col = "grey70")
+  abline(v = 1:n_stands, col = "grey92", lwd = 0.5)
+  
+  for (spp in species_list) {
+    d <- filter(dat, species == spp)
+    segments(d$x, d$q10, d$x, d$q90, lwd = 1.2, col = colors[spp])
+    points(d$x, d$median, pch = 19, cex = 0.7, col = colors[spp])
+  }
+  
+  legend("top",
+         legend = species_list,
+         col    = colors,
+         pch    = 19,
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8,
+         horiz  = TRUE)
+}
+
+# ── Render all three plots ────────────────────────────────────────────────────
+par(mfrow = c(1, 1), mar = c(6, 4, 4, 1))
+
+plot_state(all_low,
+           title = "Low-state seed production — all species",
+           ylab  = "log alpha (low)",
+           ylim  = c(-4, 8))
+
+plot_state(all_high,
+           title = "High-state seed production — all species",
+           ylab  = "log alpha (high)",
+           ylim  = c(-4, 8))
+
+plot_state(all_dev,
+           title = "Stand deviations from grand mean (low state) — all species",
+           ylab  = "log alpha (low) - mu_log_low",
+           ylim  = c(-8, 4))
+
+plot_state(all_dev2,
+           title = "Stand deviations from grand mean (high state) — all species",
+           ylab  = "log alpha (high) - mu_log_low - mu_log_delta",
+           ylim  = c(-6, 6))
+
+
+
+# What stands does TSME actually have data for?
+unique(years_per_series_tsme$stand)
+
+# What stands are appearing in the TSME deviation plot?
+all_dev %>% filter(species == "TSME") %>% select(stand, median, q10, q90)
+
+# How many series does TSME have?
+nrow(years_per_series_tsme)
+
+# Check the stan data
+stan_data_tsme$N_stands
+stan_data_tsme$stand_id
+
+stand_year_tsme %>% filter(stand == "TO04") %>% select(stand, year, y)
+
+
+#New plot 
+plot_dev_both <- function(dat_low, dat_high, title, ylim = c(-8, 4)) {
+  n_stands <- length(stand_levels)
+  
+  plot(NULL,
+       xlim = c(0.5, n_stands + 0.5),
+       ylim = ylim,
+       xaxt = "n",
+       xlab = "Stand (low → high elevation)",
+       ylab = "Stand deviation from grand mean",
+       main = title)
+  
+  axis(1, at = 1:n_stands, labels = stand_levels, las = 2, cex.axis = 0.75)
+  abline(h = 0, lty = 2, col = "grey70")
+  abline(v = 1:n_stands, col = "grey92", lwd = 0.5)
+  
+  # small extra offset to separate low vs high within each species
+  state_offset <- 0.08
+  
+  for (spp in species_list) {
+    d_low  <- filter(dat_low,  species == spp)
+    d_high <- filter(dat_high, species == spp)
+    
+    # low state: circles, solid
+    segments(d_low$x - state_offset, d_low$q10,
+             d_low$x - state_offset, d_low$q90,
+             lwd = 1.2, col = colors[spp])
+    points(d_low$x - state_offset, d_low$median,
+           pch = 19, cex = 0.7, col = colors[spp])
+    
+    # high state: triangles, slightly transparent
+    segments(d_high$x + state_offset, d_high$q10,
+             d_high$x + state_offset, d_high$q90,
+             lwd = 1.2, col = adjustcolor(colors[spp], alpha.f = 0.5))
+    points(d_high$x + state_offset, d_high$median,
+           pch = 17, cex = 0.7, col = adjustcolor(colors[spp], alpha.f = 0.5))
+  }
+  
+  # species legend
+  legend("top",
+         legend = species_list,
+         col    = colors,
+         pch    = 19,
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8,
+         horiz  = TRUE)
+  
+  # state legend
+  legend("bottomleft",
+         legend = c("Low state", "High state"),
+         pch    = c(19, 17),
+         col    = c("grey40", adjustcolor("grey40", alpha.f = 0.5)),
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8)
+}
+
+# Render
+par(mfrow = c(1, 1), mar = c(6, 4, 4, 1))
+
+plot_dev_both(
+  all_dev,
+  all_dev2,
+  title = "Stand deviations from grand mean — low (circle) vs high (triangle)",
+  ylim  = c(-8, 4)
+)
+
+# Extract just the stand-level delta deviations
+draws_delta_stand <- as.matrix(fits[["ABAM"]], pars = "log_delta_stand")
+# This would be near zero for most stands if sigma_log_delta_stand is small
