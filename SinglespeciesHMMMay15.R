@@ -42,6 +42,10 @@ source('mcmc_visualization_tools.R', local=util)
 getwd()
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
+
+# Data import and cleaning-------------------------------------------------------------
+
+
 seed_data<-read.csv("SeedData_all.csv")
 
 # 1) Keep species I'm interested in :
@@ -632,7 +636,7 @@ print(summary_table, digits = 3)
 #If there is a divergence : 
 
 #where is this divergence?
-divergent <- get_sampler_params(fit_ABAM2, inc_warmup = FALSE) |>
+divergent <- get_sampler_params(fit_CANO, inc_warmup = FALSE) |>
   map(as_tibble) |>
   bind_rows(.id = "chain") |>
   mutate(draw = row_number()) |>
@@ -642,7 +646,7 @@ cat("Divergence in chain:", divergent$chain, "\n")
 cat("At draw:", divergent$draw, "\n")
 
 #Checking the pair plots : 
-pairs(fit_ABAM, 
+pairs(fit_TSME, 
       pars = c("sigma_theta1_stand", "sigma_theta2_stand", "sigma_low_stand",  "sigma_log_delta"),
       condition = "accept_stat__")
 
@@ -1225,10 +1229,10 @@ priors <- data.frame(
   mu_log_delta         = rnorm(n, 1.5, 1.5),
   grand_logit_theta1   = rnorm(n, 0.5, 1),
   grand_logit_theta2   = rnorm(n, -1, 0.5),
-  sigma_low_stand      = abs(rnorm(n, 1, 0.3)),
+  sigma_low_stand      = abs(rnorm(n, 1, 0.5)),
   sigma_log_delta      = abs(rnorm(n, 1.5, 0.7)),
-  sigma_theta1_stand   = abs(rnorm(n, 2, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 2, 0.7)),
+  sigma_theta1_stand   = abs(rnorm(n, 1, 0.3)),
+  sigma_theta2_stand   = abs(rnorm(n, 1, 0.5)),
   phi_low              = exp(rnorm(n, log(4), 0.6)),
   phi_high             = exp(rnorm(n, log(4), 0.6))
 )
@@ -1293,7 +1297,7 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
   scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
   coord_cartesian(ylim = c(0,2.5))+
   labs(
-    title = "Prior vs posterior — single species HMM ABAM",
+    title = "Prior vs posterior — single species HMM THPL",
     x = NULL, y = "Density", fill = NULL, color = NULL
   ) +
   theme_bw(base_size = 11) +
@@ -2025,7 +2029,7 @@ plot_state(all_high, "High-state seed production — all species")
 library(tidyverse)
 library(RColorBrewer)
 
-# ── Setup ────────────────────────────────────────────────────────────────────
+# Plots for Victor
 species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
 
 fits <- list(
@@ -2045,11 +2049,10 @@ colors       <- setNames(RColorBrewer::brewer.pal(7, "Dark2"), species_list)
 n_spp   <- length(species_list)
 offsets <- setNames(seq(-0.3, 0.3, length.out = n_spp), species_list)
 
-# ── Helper: absolute log alpha (low or high state) ───────────────────────────
+#Absolute log alpha (low or high state) 
 extract_summary <- function(spp, par) {
   draws <- as.matrix(fits[[spp]], pars = par)
   meta  <- metas[[spp]]
-  
   tibble(
     species = spp,
     stand   = meta$stand,
@@ -2060,15 +2063,13 @@ extract_summary <- function(spp, par) {
     left_join(elevation_df, by = "stand")
 }
 
-# ── Helper: stand deviations from grand mean (low state only) ────────────────
+#Extracting what I want
 extract_deviation <- function(spp) {
   draws_alpha <- as.matrix(fits[[spp]], pars = "log_alpha_low")
   draws_mu    <- as.matrix(fits[[spp]], pars = "mu_log_low")
-  # subtract grand mean per draw (row-wise) to propagate uncertainty
+  # stand deviation in the baseline for the low
   draws_dev <- sweep(draws_alpha, 1, draws_mu[, 1], FUN = "-")
-  
   meta <- metas[[spp]]
-  
   tibble(
     species = spp,
     stand   = meta$stand,
@@ -2082,11 +2083,9 @@ extract_deviation2 <- function(spp) {
   draws_alpha <- as.matrix(fits[[spp]], pars = "log_alpha_high")
   draws_mu_delta    <- as.matrix(fits[[spp]], pars = "mu_log_delta")
   draws_mu_low <- as.matrix(fits[[spp]], pars= "mu_log_low")
-  # subtract grand mean per draw (row-wise) to propagate uncertainty
+  #  stand deviation in the baseline for the high
   draws_dev <- sweep(draws_alpha, 1, draws_mu_low [,1]+draws_mu_delta[, 1], FUN = "-")
-  
   meta <- metas[[spp]]
-  
   tibble(
     species = spp,
     stand   = meta$stand,
@@ -2096,7 +2095,24 @@ extract_deviation2 <- function(spp) {
   ) %>%
     left_join(elevation_df, by = "stand")
 }
-# ── Build all datasets ────────────────────────────────────────────────────────
+extract_delta_deviation <-function(spp){
+  draws_sigma <-as.matrix(fits[[spp]], pars= "sigma_log_delta")
+  draws_tilde <-as.matrix(fits[[spp]],pars= "log_delta_tilde")
+  #stand deviation in the gap
+  draws_dev <-draws_sigma[,1]* draws_tilde
+  meta<-metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+  
+}
+
+#builsing the datasets
 all_low <- map_dfr(species_list, extract_summary, par = "log_alpha_low") %>%
   mutate(stand  = factor(stand, levels = stand_levels),
          x_base = as.numeric(stand),
@@ -2117,7 +2133,13 @@ all_dev2 <- map_dfr(species_list, extract_deviation2) %>%
          x_base = as.numeric(stand),
          x      = x_base + offsets[species])
 
-# ── Plot function ─────────────────────────────────────────────────────────────
+all_delta_dev <- map_dfr(species_list, extract_delta_deviation) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+
+#Plotting a certain way
 plot_state <- function(dat, title, ylab = "log alpha", ylim = c(-4, 8)) {
   n_stands <- length(stand_levels)
   
@@ -2149,7 +2171,7 @@ plot_state <- function(dat, title, ylab = "log alpha", ylim = c(-4, 8)) {
          horiz  = TRUE)
 }
 
-# ── Render all three plots ────────────────────────────────────────────────────
+#Results
 par(mfrow = c(1, 1), mar = c(6, 4, 4, 1))
 
 plot_state(all_low,
@@ -2173,24 +2195,14 @@ plot_state(all_dev2,
            ylim  = c(-6, 6))
 
 
-
-# What stands does TSME actually have data for?
-unique(years_per_series_tsme$stand)
-
-# What stands are appearing in the TSME deviation plot?
-all_dev %>% filter(species == "TSME") %>% select(stand, median, q10, q90)
-
-# How many series does TSME have?
-nrow(years_per_series_tsme)
-
-# Check the stan data
-stan_data_tsme$N_stands
-stan_data_tsme$stand_id
-
-stand_year_tsme %>% filter(stand == "TO04") %>% select(stand, year, y)
+plot_state(all_delta_dev,
+           title = "Stand deviations in gap between states",
+           ylab  = "sigma_log_delta * log_delta_tilde",
+           ylim  = c(-4, 4))
 
 
-#New plot 
+
+#New plot for putting all togther
 plot_dev_both <- function(dat_low, dat_high, title, ylim = c(-8, 4)) {
   n_stands <- length(stand_levels)
   
@@ -2248,7 +2260,7 @@ plot_dev_both <- function(dat_low, dat_high, title, ylim = c(-8, 4)) {
          cex    = 0.8)
 }
 
-# Render
+#Results
 par(mfrow = c(1, 1), mar = c(6, 4, 4, 1))
 
 plot_dev_both(
@@ -2258,6 +2270,3 @@ plot_dev_both(
   ylim  = c(-8, 4)
 )
 
-# Extract just the stand-level delta deviations
-draws_delta_stand <- as.matrix(fits[["ABAM"]], pars = "log_delta_stand")
-# This would be near zero for most stands if sigma_log_delta_stand is small
