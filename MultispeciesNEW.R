@@ -31,6 +31,10 @@ source('mcmc_visualization_tools.R', local=util)
 getwd()
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
+
+# Data import -------------------------------------------------------------
+
+
 seed_data<-read.csv("SeedData_all.csv")
 
 # 1) Keep species I'm interested in :
@@ -159,17 +163,8 @@ print (stan_data_all)
 
 # Fitting Model -----------------------------------------------------------
 
-fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeFull_10062026.stan",
-  data    = stan_data_all,
-  iter    = 2000, #change based on how much iterations you need
-  warmup  = 1000, #make the warmup longer 
-  chains  = 4,
-  seed    = 123,
-)
-
-fit_multi <- stan(
-  file    = "Stan_code/Species_Stan_Model/Multispecies_05062026.stan",
+fit_all2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/MultispeciesNEWMikeFull_16062026.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
@@ -575,25 +570,27 @@ for (f in 1:length(stan_data_all$start_idxs)) {
 
 
 
-samples <- rstan::extract(fit_all)
+samples <- rstan::extract(fit_all2)
 
 n <- length(samples$mu_log_low)
 
 priors <- data.frame(
-  mu_log_low           = rnorm(n, 2.8, 1.0),
+  mu_log_low           = rnorm(n, 2, 1.5),
   mu_log_delta         = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1   = rnorm(n, 1.2, 0.7),
-  grand_logit_theta2   = rnorm(n, 0.5, 0.7),
+  grand_logit_theta1   = rnorm(n, 0.5, 1),
+  grand_logit_theta2   = rnorm(n, -1, 0.5),
   sigma_low_species    = abs(rnorm(n, 0.5, 1)),
-  sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
-  sigma_log_delta_sp   = abs(rnorm(n, 0, 1)),
-  sigma_log_delta_stand= abs(rnorm(n, 0, 1)),
+  sigma_stand          = abs(rnorm(n,1,0.5)),
+  #sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
+  sigma_log_delta_sp   = abs(rnorm(n, 1.5, 0.7)),
+  #sigma_log_delta_stand= abs(rnorm(n, 0, 1)),
   sigma_theta1_species = abs(rnorm(n, 0, 0.7)),
   sigma_theta2_species = abs(rnorm(n, 0, 0.7)),
-  sigma_theta1_stand   = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand   = abs(rnorm(n, 0, 0.7)),
-  phi_low              = exp(rnorm(n, log(4), 0.6)),
-  phi_high             = exp(rnorm(n, log(4), 0.6))
+  sigma_theta1_stand   = abs(rnorm(n, 1, 0.3)),
+  sigma_theta2_stand   = abs(rnorm(n, 1, 0.3)),
+  phi_species          = exp(rnorm(n, log(4), 0.6)),
+  phi_low              = exp(rnorm(n,0,0.3)),
+  phi_high             = exp(rnorm(n,0,0.3))
 )
 
 posteriors <- data.frame(
@@ -602,33 +599,33 @@ posteriors <- data.frame(
   grand_logit_theta1   = samples$grand_logit_theta1,
   grand_logit_theta2   = samples$grand_logit_theta2,
   sigma_low_species    = samples$sigma_low_species,
-  sigma_low_stand      = samples$sigma_low_stand,
+  sigma_stand          = samples$sigma_stand,
   sigma_log_delta_sp   = samples$sigma_log_delta_species,
-  sigma_log_delta_stand= samples$sigma_log_delta_stand,
   sigma_theta1_species = samples$sigma_theta1_species,
   sigma_theta2_species = samples$sigma_theta2_species,
   sigma_theta1_stand   = samples$sigma_theta1_stand,
   sigma_theta2_stand   = samples$sigma_theta2_stand,
+  phi_species          = exp(rowMeans(samples$log_phi_species)),
   phi_low              = exp(samples$log_phi_state[, 1]),
   phi_high             = exp(samples$log_phi_state[, 2])
 )
 
 # --- Nice labels ---
 param_labels <- c(
-  mu_log_low            = "µ log low (grand mean seeds, low state)",
-  mu_log_delta          = "µ log delta (grand mean fold-change)",
-  grand_logit_theta1    = "logit θ₁ (P stay low)",
-  grand_logit_theta2    = "logit θ₂ (P stay high)",
+  mu_log_low            = "grand mean seeds, low state",
+  mu_log_delta          = "grand mean fold-change",
+  grand_logit_theta1    = "P stay low",
+  grand_logit_theta2    = "P stay high",
   sigma_low_species     = "σ low species",
-  sigma_low_stand       = "σ low stand",
+  sigma_stand       = "σ low stand",
   sigma_log_delta_sp    = "σ log delta species",
-  sigma_log_delta_stand = "σ log delta stand",
   sigma_theta1_species  = "σ θ₁ species",
   sigma_theta2_species  = "σ θ₂ species",
   sigma_theta1_stand    = "σ θ₁ stand",
   sigma_theta2_stand    = "σ θ₂ stand",
-  phi_low               = "φ low state (overdispersion)",
-  phi_high              = "φ high state (overdispersion)"
+  phi_species           = "φ species",   
+  phi_low               = "φ low state ",
+  phi_high              = "φ high state "
 )
 
 # --- Reshape to long ---

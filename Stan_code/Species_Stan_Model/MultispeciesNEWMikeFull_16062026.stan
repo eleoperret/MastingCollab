@@ -154,20 +154,20 @@ model {
 
   alpha_theta1_stand_nc ~ normal(0, 1);
   alpha_theta2_stand_nc ~ normal(0, 1);
-  sigma_theta1_stand    ~ normal(0, 0.7);
-  sigma_theta2_stand    ~ normal(0, 0.7);
+  sigma_theta1_stand    ~ normal(1, 0.3);
+  sigma_theta2_stand    ~ normal(1, 0.3);
 
   // Emission means
-  mu_log_low           ~ normal(2.8, 0.5);
+  mu_log_low           ~ normal(2, 1.5);
   alpha_low_species ~ normal(0, sigma_low_species);
   sigma_low_species    ~ normal(0.5, 1);
   for (s in 1:S) 
     alpha_stand [s]   ~ normal(0, sigma_stand);
-  sigma_stand    ~ normal(0.5, 1);
+  sigma_stand    ~ normal(1, 0.5);
 
   mu_log_delta           ~ normal(1.5, 1.5);
   log_delta_species_nc   ~ normal(0, 1);
-  sigma_log_delta_species ~ normal(0, 1);
+  sigma_log_delta_species ~ normal(1.5, 0.7);
 
   
   // Dispersion
