@@ -20,7 +20,8 @@ data {
 
   vector<lower=0>[N] area;
   
-  array [N] int <lower= 0, upper = 1> obs_missing; //NEW !!!!
+  array [N] int <lower= 0, upper = 1> obs_missing; 
+  
 }
 
 transformed data {
@@ -34,7 +35,7 @@ parameters {
   // Initial state distribution 
   simplex[2] rho;
 
-  // Transitions (pooled by species and stand) 
+  // Transitions (pooled by species ONLY) 
   real grand_logit_theta1;
   real grand_logit_theta2;
 
@@ -43,25 +44,21 @@ parameters {
   real<lower=0>   sigma_theta1_species;
   real<lower=0>   sigma_theta2_species;
 
-  vector[N_stands] alpha_theta1_stand_nc;
-  vector[N_stands] alpha_theta2_stand_nc;
-  real<lower=0>    sigma_theta1_stand;
-  real<lower=0>    sigma_theta2_stand;
 
   // Emission means (pooled by species and stand) 
   // Low state: grand mean + species effect + stand effect
-  real             mu_log_low;
-  vector[S]        alpha_low_species;
-  real<lower=0>    sigma_low_species;
+  real                mu_log_low;
+  vector[S]            alpha_low_species;
+  real<lower=0>        sigma_low_species;
   matrix [S, N_stands] alpha_stand;
-  real <lower=0> sigma_stand;
+  real <lower=0>     sigma_stand;
 
   // Delta (log-scale gap between states): grand mean + species  + stand 
-  real             mu_log_delta;
-  vector[S]        log_delta_species_nc;
-  real<lower=0>    sigma_log_delta_species;
-  matrix [S, N_stands] log_delta_stand;
-  real <lower=0> sigma_delta_stand;
+  real                  mu_log_delta;
+  vector[S]             log_delta_species_nc;
+  real<lower=0>          sigma_log_delta_species;
+  //matrix [S, N_stands]   log_delta_stand;
+  //real <lower=0>       sigma_delta_stand;
 
   // Dispersion: one per state
   vector [S] log_phi_species;
@@ -69,13 +66,9 @@ parameters {
 }
 
 transformed parameters {
-  // Non-centered species and stand effects 
+  // Non-centered species effects 
   vector[S]        alpha_theta1_species = sigma_theta1_species * alpha_theta1_species_nc;
   vector[S]        alpha_theta2_species = sigma_theta2_species * alpha_theta2_species_nc;
-  vector[N_stands] alpha_theta1_stand   = sigma_theta1_stand   * alpha_theta1_stand_nc;
-  vector[N_stands] alpha_theta2_stand   = sigma_theta2_stand   * alpha_theta2_stand_nc;
-
-  //vector[S]        alpha_low_species    = sigma_low_species     * alpha_low_species_nc;
   vector[S]        log_delta_species    = sigma_log_delta_species * log_delta_species_nc;
   
   //Per-series emission means 
@@ -92,8 +85,8 @@ transformed parameters {
 
     log_alpha_high[f] = log_alpha_low[f]
                   + log1p_exp(mu_log_delta)
-                  + log1p_exp(log_delta_species[s])
-                  + log1p_exp(log_delta_stand[s,st]);
+                  + log1p_exp(log_delta_species[s]);
+                  //+ log1p_exp(log_delta_stand[s,st]);
   }
 
   // --- Per-series transition matrices ---
@@ -103,14 +96,13 @@ transformed parameters {
 
   for (f in 1:F) {
     int s  = species_id[f];
-    int st = stand_id[f];
 
     theta1[f] = inv_logit(grand_logit_theta1
                          + alpha_theta1_species[s]
-                         + alpha_theta1_stand[st]);
+                         );
     theta2[f] = inv_logit(grand_logit_theta2
                          + alpha_theta2_species[s]
-                         + alpha_theta2_stand[st]);
+                         );
 
     Gamma[f][1, 1] = theta1[f];
     Gamma[f][1, 2] = 1 - theta1[f];
@@ -149,14 +141,9 @@ model {
   sigma_theta1_species    ~ normal(0, 0.7);
   sigma_theta2_species    ~ normal(0, 0.7);
 
-  alpha_theta1_stand_nc ~ normal(0, 1);
-  alpha_theta2_stand_nc ~ normal(0, 1);
-  sigma_theta1_stand    ~ normal(1, 0.3);
-  sigma_theta2_stand    ~ normal(1, 0.3);
-
   // Emission means
   mu_log_low           ~ normal(2, 1.5);
-  alpha_low_species ~ normal(0, sigma_low_species);
+  alpha_low_species    ~ normal(0, sigma_low_species);
   sigma_low_species    ~ normal(0.5, 1);
   for (s in 1:S) 
     alpha_stand [s]   ~ normal(0, sigma_stand);
@@ -165,10 +152,9 @@ model {
   mu_log_delta           ~ normal(1.5, 1.5);
   log_delta_species_nc   ~ normal(0, 1);
   sigma_log_delta_species ~ normal(1.5, 0.7);
-  for (s in 1:S)
-    log_delta_stand [s] ~ normal(0, sigma_delta_stand);
-  sigma_delta_stand ~ normal(1, 0.5); 
-
+  //for (s in 1:S) 
+  //  log_delta_stand [s]   ~ normal(0, sigma_delta_stand);
+  //sigma_delta_stand ~normal (0,1);
   
   // Dispersion
   log_phi_species ~ normal(log(4), 0.6); 
@@ -210,3 +196,4 @@ generated quantities {
     }
   }
 }
+

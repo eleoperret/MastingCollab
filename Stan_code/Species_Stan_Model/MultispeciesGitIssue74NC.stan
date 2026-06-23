@@ -60,7 +60,7 @@ parameters {
   real             mu_log_delta;
   vector[S]        log_delta_species_nc;
   real<lower=0>    sigma_log_delta_species;
-  matrix [S, N_stands] log_delta_stand;
+  matrix [S, N_stands] log_delta_stand_nc;
   real <lower=0> sigma_delta_stand;
 
   // Dispersion: one per state
@@ -77,6 +77,7 @@ transformed parameters {
 
   //vector[S]        alpha_low_species    = sigma_low_species     * alpha_low_species_nc;
   vector[S]        log_delta_species    = sigma_log_delta_species * log_delta_species_nc;
+  matrix[S, N_stands] log_delta_stand   = sigma_delta_stand * log_delta_stand_nc;
   
   //Per-series emission means 
   vector[F] log_alpha_low;
@@ -166,7 +167,7 @@ model {
   log_delta_species_nc   ~ normal(0, 1);
   sigma_log_delta_species ~ normal(1.5, 0.7);
   for (s in 1:S)
-    log_delta_stand [s] ~ normal(0, sigma_delta_stand);
+    log_delta_stand_nc [s] ~ normal(0, 1);
   sigma_delta_stand ~ normal(1, 0.5); 
 
   
