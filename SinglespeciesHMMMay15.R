@@ -557,6 +557,73 @@ fit_THPL <- stan(
   seed    = 123,
 )
 
+fit_ABAM2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_abam,
+  iter    = 2000, #change based on how much iterations you need
+  warmup  = 1000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+fit_ABLA2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_abla,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+
+fit_CANO2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_cano,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+
+fit_PSME2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_psme,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+
+fit_TSHE2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_tshe,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+fit_TSME2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_tsme,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
+
+fit_THPL2 <- stan(
+  file    = "Stan_code/Species_Stan_Model/SinglespeciesFULL_15062026.stan",
+  data    = stan_data_thpl,
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
+  chains  = 4,
+  seed    = 123,
+)
+
 
 # Summary per species --------------------------------------------
 
@@ -2111,6 +2178,18 @@ extract_delta_deviation <-function(spp){
     left_join(elevation_df, by = "stand")
   
 }
+extract_theta_deviation <- function(spp, par) {
+  draws <- as.matrix(fits[[spp]], pars = par)
+  meta  <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws, 2, median),
+    q10     = apply(draws, 2, quantile, probs = 0.1),
+    q90     = apply(draws, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
 
 #builsing the datasets
 all_low <- map_dfr(species_list, extract_summary, par = "log_alpha_low") %>%
@@ -2138,6 +2217,15 @@ all_delta_dev <- map_dfr(species_list, extract_delta_deviation) %>%
          x_base = as.numeric(stand),
          x      = x_base + offsets[species])
 
+all_theta1 <- map_dfr(species_list, extract_theta_deviation, par = "alpha_theta1_stand") %>%
+  mutate(stand = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x = x_base + offsets[species])
+
+all_theta2 <- map_dfr(species_list, extract_theta_deviation, par = "alpha_theta2_stand") %>%
+  mutate(stand = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x = x_base + offsets[species])
 
 #Plotting a certain way
 plot_state <- function(dat, title, ylab = "log alpha", ylim = c(-4, 8)) {
@@ -2270,3 +2358,413 @@ plot_dev_both(
   ylim  = c(-8, 4)
 )
 
+
+
+
+
+
+
+
+
+
+
+
+
+library(tidyverse)
+library(RColorBrewer)
+
+# Setup
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
+
+fits <- list(
+  ABAM = fit_ABAM, ABLA = fit_ABLA, CANO = fit_CANO,
+  PSME = fit_PSME, TSHE = fit_TSHE, TSME = fit_TSME, THPL = fit_THPL
+)
+
+metas <- list(
+  ABAM = years_per_series_abam, ABLA = years_per_series_abla, CANO = years_per_series_cano,
+  PSME = years_per_series_psme, TSHE = years_per_series_tshe, TSME = years_per_series_tsme,
+  THPL = years_per_series_thpl
+)
+
+stand_levels <- elevation_df %>% arrange(elevation) %>% pull(stand)
+colors       <- setNames(RColorBrewer::brewer.pal(7, "Dark2"), species_list)
+
+n_spp   <- length(species_list)
+offsets <- setNames(seq(-0.3, 0.3, length.out = n_spp), species_list)
+
+# ── Extract functions ────────────────────────────────────────────────────────
+
+extract_summary <- function(spp, par) {
+  draws <- as.matrix(fits[[spp]], pars = par)
+  meta  <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws, 2, median),
+    q10     = apply(draws, 2, quantile, probs = 0.1),
+    q90     = apply(draws, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+extract_deviation <- function(spp) {
+  draws_alpha <- as.matrix(fits[[spp]], pars = "log_alpha_low")
+  draws_mu    <- as.matrix(fits[[spp]], pars = "mu_log_low")
+  draws_dev   <- sweep(draws_alpha, 1, draws_mu[, 1], FUN = "-")
+  meta <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+extract_deviation2 <- function(spp) {
+  draws_alpha     <- as.matrix(fits[[spp]], pars = "log_alpha_high")
+  draws_mu_delta  <- as.matrix(fits[[spp]], pars = "mu_log_delta")
+  draws_mu_low    <- as.matrix(fits[[spp]], pars = "mu_log_low")
+  draws_dev       <- sweep(draws_alpha, 1, draws_mu_low[, 1] + draws_mu_delta[, 1], FUN = "-")
+  meta <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+extract_delta_deviation <- function(spp) {
+  draws_sigma <- as.matrix(fits[[spp]], pars = "sigma_log_delta")
+  draws_tilde <- as.matrix(fits[[spp]], pars = "log_delta_tilde")
+  draws_dev   <- draws_sigma[, 1] * draws_tilde
+  meta <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws_dev, 2, median),
+    q10     = apply(draws_dev, 2, quantile, probs = 0.1),
+    q90     = apply(draws_dev, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+extract_theta_deviation <- function(spp, par) {
+  draws <- as.matrix(fits[[spp]], pars = par)
+  meta  <- metas[[spp]]
+  tibble(
+    species = spp,
+    stand   = meta$stand,
+    median  = apply(draws, 2, median),
+    q10     = apply(draws, 2, quantile, probs = 0.1),
+    q90     = apply(draws, 2, quantile, probs = 0.9)
+  ) %>%
+    left_join(elevation_df, by = "stand")
+}
+
+# ── Build datasets ───────────────────────────────────────────────────────────
+
+all_low <- map_dfr(species_list, extract_summary, par = "log_alpha_low") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_high <- map_dfr(species_list, extract_summary, par = "log_alpha_high") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_dev <- map_dfr(species_list, extract_deviation) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_dev2 <- map_dfr(species_list, extract_deviation2) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_delta_dev <- map_dfr(species_list, extract_delta_deviation) %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_theta1 <- map_dfr(species_list, extract_theta_deviation, par = "alpha_theta1_stand") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+all_theta2 <- map_dfr(species_list, extract_theta_deviation, par = "alpha_theta2_stand") %>%
+  mutate(stand  = factor(stand, levels = stand_levels),
+         x_base = as.numeric(stand),
+         x      = x_base + offsets[species])
+
+# ── Plot functions ───────────────────────────────────────────────────────────
+
+plot_state <- function(dat, title, ylab = "log alpha", ylim = c(-4, 8)) {
+  n_stands <- length(stand_levels)
+  
+  plot(NULL,
+       xlim = c(0.5, n_stands + 0.5),
+       ylim = ylim,
+       xaxt = "n",
+       xlab = "Stand (low → high elevation)",
+       ylab = ylab,
+       main = title)
+  
+  axis(1, at = 1:n_stands, labels = stand_levels, las = 2, cex.axis = 0.75)
+  abline(h = 0, lty = 2, col = "grey70")
+  abline(v = 1:n_stands, col = "grey92", lwd = 0.5)
+  
+  for (spp in species_list) {
+    d <- filter(dat, species == spp)
+    segments(d$x, d$q10, d$x, d$q90, lwd = 1.2, col = colors[spp])
+    points(d$x, d$median, pch = 19, cex = 0.7, col = colors[spp])
+  }
+  
+  legend("top",
+         legend = species_list,
+         col    = colors,
+         pch    = 19,
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8,
+         horiz  = TRUE)
+}
+
+plot_dev_both <- function(dat_low, dat_high, title, ylab = "Stand deviation from grand mean",
+                          ylim = c(-8, 4),
+                          legend_labels = c("Low state", "High state")) {
+  n_stands     <- length(stand_levels)
+  state_offset <- 0.08
+  
+  plot(NULL,
+       xlim = c(0.5, n_stands + 0.5),
+       ylim = ylim,
+       xaxt = "n",
+       xlab = "Stand (low → high elevation)",
+       ylab = ylab,
+       main = title)
+  
+  axis(1, at = 1:n_stands, labels = stand_levels, las = 2, cex.axis = 0.75)
+  abline(h = 0, lty = 2, col = "grey70")
+  abline(v = 1:n_stands, col = "grey92", lwd = 0.5)
+  
+  for (spp in species_list) {
+    d_low  <- filter(dat_low,  species == spp)
+    d_high <- filter(dat_high, species == spp)
+    
+    segments(d_low$x - state_offset, d_low$q10,
+             d_low$x - state_offset, d_low$q90,
+             lwd = 1.2, col = colors[spp])
+    points(d_low$x - state_offset, d_low$median,
+           pch = 19, cex = 0.7, col = colors[spp])
+    
+    segments(d_high$x + state_offset, d_high$q10,
+             d_high$x + state_offset, d_high$q90,
+             lwd = 1.2, col = adjustcolor(colors[spp], alpha.f = 0.5))
+    points(d_high$x + state_offset, d_high$median,
+           pch = 17, cex = 0.7, col = adjustcolor(colors[spp], alpha.f = 0.5))
+  }
+  
+  legend("top",
+         legend = species_list,
+         col    = colors,
+         pch    = 19,
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8,
+         horiz  = TRUE)
+  
+  legend("bottomleft",
+         legend = legend_labels,
+         pch    = c(19, 17),
+         col    = c("grey40", adjustcolor("grey40", alpha.f = 0.5)),
+         lwd    = 1.2,
+         bty    = "n",
+         cex    = 0.8)
+}
+
+# ── Plots ────────────────────────────────────────────────────────────────────
+
+par(mfrow = c(1, 1), mar = c(6, 4, 4, 1))
+
+plot_state(all_low,
+           title = "Low-state seed production — all species",
+           ylab  = "log alpha (low)",
+           ylim  = c(-4, 8))
+
+plot_state(all_high,
+           title = "High-state seed production — all species",
+           ylab  = "log alpha (high)",
+           ylim  = c(-4, 8))
+
+plot_state(all_dev,
+           title = "Stand deviations from grand mean (low state) — all species",
+           ylab  = "log alpha (low) - mu_log_low",
+           ylim  = c(-8, 4))
+
+plot_state(all_dev2,
+           title = "Stand deviations from grand mean (high state) — all species",
+           ylab  = "log alpha (high) - mu_log_low - mu_log_delta",
+           ylim  = c(-6, 6))
+
+plot_state(all_delta_dev,
+           title = "Stand deviations in gap between states",
+           ylab  = "sigma_log_delta * log_delta_tilde",
+           ylim  = c(-4, 4))
+
+plot_state(all_theta1,
+           title = "Stand deviations in theta1 (stay-low probability) — all species",
+           ylab  = "alpha_theta1_stand (log-odds)",
+           ylim  = c(-3, 3))
+
+plot_state(all_theta2,
+           title = "Stand deviations in theta2 (stay-high probability) — all species",
+           ylab  = "alpha_theta2_stand (log-odds)",
+           ylim  = c(-3, 3))
+
+plot_dev_both(
+  all_dev,
+  all_dev2,
+  title  = "Stand deviations from grand mean — low (circle) vs high (triangle)",
+  ylim   = c(-8, 4)
+)
+
+plot_dev_both(
+  all_theta1,
+  all_theta2,
+  title         = "Stand deviations in transition probs — theta1 (circle) vs theta2 (triangle)",
+  ylab          = "Stand deviation (log-odds)",
+  ylim          = c(-3, 3),
+  legend_labels = c("theta1 (stay-low)", "theta2 (stay-high)")
+)
+
+
+# Comparing_models --------------------------------------------------------
+
+par(mfrow=c(1,1))
+s_old <- summary(fit_ABAM)$summary
+s_new <- summary(fit_ABAM2)$summary
+
+exclude <- c("^log_omega", "^y_rep", "^state\\[", "^lp__")
+
+keep_names <- function(s) {
+  nm <- rownames(s)
+  nm[!Reduce(`|`, lapply(exclude, grepl, x = nm))]
+}
+
+shared <- intersect(keep_names(s_old), keep_names(s_new))
+
+# Building a tidy comparison table
+comp <- data.frame(
+  param   = shared,
+  old_med = s_old[shared, "50%"], old_q25 = s_old[shared, "25%"], old_q75 = s_old[shared, "75%"],
+  new_med = s_new[shared, "50%"], new_q25 = s_new[shared, "25%"], new_q75 = s_new[shared, "75%"]
+)
+
+# Order parameters top-to-bottom
+comp <- comp[order(comp$param, decreasing = TRUE), ]
+y_pos <- seq_len(nrow(comp))
+
+par(mar = c(4, 12, 3, 2))  # extra left margin for parameter names
+plot(NA, xlim = range(c(comp$old_q25, comp$old_q75, comp$new_q25, comp$new_q75)),
+     ylim = c(0.5, nrow(comp) + 0.5),
+     yaxt = "n", ylab = "", xlab = "Estimate (median + 50% interval)",
+     main = "Old vs new: per-parameter comparison")
+axis(2, at = y_pos, labels = comp$param, las = 1, cex.axis = 0.7)
+abline(h = y_pos, col = "grey90", lty = 3)
+
+offset <- 0.15
+#old 
+segments(comp$old_q25, y_pos - offset, comp$old_q75, y_pos - offset, col = "black", lwd = 2)
+points(comp$old_med, y_pos - offset, pch = 19, col = "black")
+#new 
+segments(comp$new_q25, y_pos + offset, comp$new_q75, y_pos + offset, col ="steelblue", lwd = 2)
+points(comp$new_med, y_pos + offset, pch = 19, col = "steelblue")
+
+legend("topright", legend = c("Old", "New"), col = c("black", "blue"), pch = 19, bty = "n")
+
+
+
+
+
+get_param_summary <- function(fit, pars = NULL) {
+  if (is.null(pars)) {
+    s <- summary(fit, probs = c(0.25, 0.75))$summary
+  } else {
+    s <- summary(fit, pars = pars, probs = c(0.25, 0.75))$summary
+  }
+  df <- as.data.frame(s)
+  df$parameter <- rownames(df)
+  df %>%
+    select(parameter, mean, lower = `25%`, upper = `75%`) %>%
+    filter(!grepl("^lp__$", parameter))   # drop log-posterior
+}
+
+# Replace fit_A, fit_B with your actual stanfit objects
+sum_A <- get_param_summary(fit_ABAM)
+sum_B <- get_param_summary(fit_ABAM2)
+
+
+# Only works directly if both models share parameter names.
+# If naming differs, you'll need a lookup table mapping names -> common label.
+
+comp <- inner_join(
+  sum_A, sum_B,
+  by = "parameter",
+  suffix = c("_A", "_B")
+)
+
+p <- ggplot(comp, aes(x = mean_A, y = mean_B)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  geom_errorbar(aes(ymin = lower_B, ymax = upper_B), width = 0, alpha = 0.6) +
+  geom_errorbar(aes(xmin = lower_A, xmax = upper_A), width = 0, alpha = 0.6,
+                orientation = "y") +
+  geom_point(size = 2, color = "steelblue") +
+  labs(
+    x = "Model A: posterior mean (with 50% CI)",
+    y = "Model B: posterior mean (with 50% CI)",
+    title = "Parameter estimates: Model A vs Model B"
+  ) +
+  coord_equal() +
+  theme_minimal(base_size = 13)
+
+p
+
+fit_ABAM@model_pars
+
+
+# Extract all posterior draws as a matrix (draws x parameters)
+draws_A <- as.data.frame(rstan::extract(fit_ABAM, permuted = FALSE))
+draws_B <- as.data.frame(rstan::extract(fit_ABAM2, permuted = FALSE))
+
+# Simpler: use extract() with permuted = TRUE for a list of arrays
+draws_A <- rstan::extract(fit_ABAM)
+draws_B <- rstan::extract(fit_ABAM2)
+
+# Pick the parameters you want to compare (must exist in both)
+common_pars <- intersect(names(draws_A), names(draws_B))
+common_pars <- setdiff(common_pars, "lp__")
+
+# Build a long data frame: one row per draw per parameter
+draws_list <- lapply(common_pars, function(p) {
+  data.frame(
+    parameter = p,
+    draw_A = as.vector(draws_A[[p]]),
+    draw_B = as.vector(draws_B[[p]])
+  )
+})
+draws_df <- bind_rows(draws_list)
+
+# Plot - facet by parameter if there are several
+ggplot(draws_df, aes(x = draw_A, y = draw_B)) +
+  geom_point(alpha = 0.1, size = 0.5, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  facet_wrap(~ parameter, scales = "free") +
+  theme_minimal(base_size = 12)
