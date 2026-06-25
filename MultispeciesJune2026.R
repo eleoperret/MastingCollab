@@ -163,16 +163,16 @@ print (stan_data_all)
 
 # Fitting Model -----------------------------------------------------------
 
-fit_all3 <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue74.stan",
+fit_all <- stan(
+  file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue74NC.stan",
   data    = stan_data_all,
-  iter    = 1000, #change based on how much iterations you need
+  iter    = 2000, #change based on how much iterations you need
   warmup  = 500, #make the warmup longer 
-  chains  = 1,
+  chains  = 4,
   seed    = 123,
 )
 
-fit_all2 <- stan(
+fit_75 <- stan(
   file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue75.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
@@ -180,6 +180,81 @@ fit_all2 <- stan(
   chains  = 4,
   seed    = 123,
 )
+
+
+# Per species summary table -----------------------------------------------
+
+draws <- as.data.frame(fit_all)   # or rstan::extract(fit_all, permuted = FALSE) reshaped;
+# as.data.frame(fit_all) is simplest and keeps names like
+# "alpha_low_species[1]"
+
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "THPL", "TSHE", "TSME")
+# !! CONFIRM this order matches the factor levels used to build species_id in your data prep !!
+
+summarize_q <- function(x) {
+  c(mean = mean(x), q25 = quantile(x, 0.25), q50 = quantile(x, 0.5), q75 = quantile(x, 0.75))
+}
+
+results <- list()
+
+for (i in seq_along(species_list)) {
+  sp <- species_list[i]
+  
+  # --- low-state mean: exact transform from Stan ---
+  log_alpha_low_sp <- draws[["mu_log_low"]] + draws[[paste0("alpha_low_species[", i, "]")]]
+  low_mean <- exp(log_alpha_low_sp)   # NB: this excludes the stand effect (alpha_stand),
+  # i.e. it's the species-level low mean at stand effect = 0
+  
+  # --- delta: EXACT match to Stan's three separate log1p_exp() terms, summed ---
+  # Stan: log1p_exp(mu_log_delta) + log1p_exp(log_delta_species[s]) + log1p_exp(log_delta_stand[s,st])
+  # Species-level summary => omit the stand term (or fix a stand, see note below)
+  log_delta_species_sp <- draws[["sigma_log_delta_species"]] *
+    draws[[paste0("log_delta_species_nc[", i, "]")]]
+  
+  delta_species_part <- log1p(exp(draws[["mu_log_delta"]])) +
+    log1p(exp(log_delta_species_sp))
+  
+  fold_change <- exp(delta_species_part)        # high = low * exp(delta), since
+  # log_alpha_high = log_alpha_low + delta
+  high_mean <- low_mean * fold_change
+  
+  # --- transition probabilities ---
+  logit_theta1_sp <- draws[["grand_logit_theta1"]] +
+    draws[["sigma_theta1_species"]] * draws[[paste0("alpha_theta1_species_nc[", i, "]")]]
+  logit_theta2_sp <- draws[["grand_logit_theta2"]] +
+    draws[["sigma_theta2_species"]] * draws[[paste0("alpha_theta2_species_nc[", i, "]")]]
+  
+  p_stay_low  <- plogis(logit_theta1_sp)
+  p_stay_high <- plogis(logit_theta2_sp)
+  
+  # --- dispersion (species-specific multiplier; combine with state on log scale) ---
+  phi_low_sp  <- exp(draws[[paste0("log_phi_species[", i, "]")]] + draws[["log_phi_state[1]"]])
+  phi_high_sp <- exp(draws[[paste0("log_phi_species[", i, "]")]] + draws[["log_phi_state[2]"]])
+  
+  results[[sp]] <- data.frame(
+    species          = sp,
+    t(summarize_q(low_mean)),
+    t(summarize_q(fold_change)),
+    t(summarize_q(high_mean)),
+    t(summarize_q(p_stay_low)),
+    t(summarize_q(p_stay_high)),
+    t(summarize_q(phi_low_sp)),
+    t(summarize_q(phi_high_sp))
+  )
+  names(results[[sp]]) <- c("species",
+                            paste0("low_mean_", c("mean","q25","q50","q75")),
+                            paste0("fold_change_", c("mean","q25","q50","q75")),
+                            paste0("high_mean_", c("mean","q25","q50","q75")),
+                            paste0("p_stay_low_", c("mean","q25","q50","q75")),
+                            paste0("p_stay_high_", c("mean","q25","q50","q75")),
+                            paste0("phi_low_", c("mean","q25","q50","q75")),
+                            paste0("phi_high_", c("mean","q25","q50","q75"))
+  )
+}
+
+summary_table <- do.call(rbind, results)
+rownames(summary_table) <- NULL
+print(summary_table, digits = 3)
 
 # Results -----------------------------------------------------------------
 
@@ -208,11 +283,18 @@ for (i in seq_along(species_list)) {
     high_state_mean        = round(high_mean, 3),
     p_stay_low             = round(p_stay_low, 3),
     p_stay_high            = round(p_stay_high, 3),
-    sigma_low_stand        = round(s["sigma_low_stand",         "50%"], 3),
+    sigma_low_stand        = round(s["sigma_stand",         "50%"], 3),
     sigma_log_delta_sp     = round(s["sigma_log_delta_species", "50%"], 3),
-    sigma_log_delta_stand  = round(s["sigma_log_delta_stand",   "50%"], 3),
+    sigma_log_delta_stand  = round(s["sigma_delta_stand",   "50%"], 3),
     phi_low                = round(exp(s["log_phi_state[1]",    "50%"]), 3),
-    phi_high               = round(exp(s["log_phi_state[2]",    "50%"]), 3)
+    phi_high               = round(exp(s["log_phi_state[2]",    "50%"]), 3),
+    phi_abam = round(exp(s["log_phi_species[1]", "50%"]),3),
+    phi_abla = round(exp(s["log_phi_species[2]", "50%"]),3),
+    phi_cano = round(exp(s["log_phi_species[3]", "50%"]),3),
+    phi_psme = round(exp(s["log_phi_species[4]", "50%"]),3),
+    phi_tshe = round(exp(s["log_phi_species[5]", "50%"]),3),
+    phi_tsme = round(exp(s["log_phi_species[6]", "50%"]),3),
+    phi_thpl = round(exp(s["log_phi_species[7]", "50%"]),3),
   )
 }
 
@@ -227,8 +309,9 @@ print(summary_table, digits = 3)
 #Overall
 # ppc for all 
 names_yrep <- paste0("y_rep[", 1:stan_data_all$N, "]")
+dev.off()
 
-samples <- util$extract_expectand_vals(fit_all)
+samples <- util$extract_expectand_vals(fit_75)
 
 # Plot PPC
 par(mfrow = c(1,1))
@@ -290,12 +373,120 @@ for (f in 1:length(stan_data_all$start_idxs)) {
 }
 
 
+# State per species -------------------------------------------------------
+samples <- util$extract_expectand_vals(fit_all)
 
-# Prior vs posterior ------------------------------------------------------
+start_idxs <- stan_data_all$start_idxs
+end_idxs   <- stan_data_all$end_idxs
+species_id <- stan_data_all$species_id   
+stand_id   <- stan_data_all$stand_id     
+
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "THPL", "TSHE", "TSME")
+
+p_state2 <- function(samples, idx_range) {
+  vapply(idx_range, function(t) {
+    draws_t <- samples[[paste0("state[", t, "]")]]
+    mean(draws_t == 2)
+  }, numeric(1))
+}
+
+for (sp_i in seq_along(species_list)) {
+  
+  sp_name   <- species_list[sp_i]
+  f_indices <- which(species_id == sp_i)
+  
+  if (length(f_indices) == 0) next
+  
+  # One panel per stand 
+  n_panels <- length(f_indices)
+  n_col <- ceiling(sqrt(n_panels))
+  n_row <- ceiling(n_panels / n_col)
+  
+  par(mfrow = c(n_row, n_col), oma = c(0, 0, 3, 0), mar = c(2, 2, 2, 1))
+  
+  for (f in f_indices) {
+    start_id <- start_idxs[f]
+    end_id   <- end_idxs[f]
+    
+    util$plot_disc_pushforward_quantiles(
+      samples, paste0("state[", start_id:end_id, "]"),
+      display_ylim = c(1, 2)
+    )
+    title(main = paste0("stand_id=", stand_id[f]), cex.main = 0.8)
+  }
+  mtext(paste0(sp_name, " -- state by stand"), outer = TRUE, cex = 1.3, font = 2)
+  
+  #All stands
+  par(mfrow = c(1, 1), oma = c(0, 0, 0, 0), mar = c(4, 4, 3, 1))
+  
+  max_len <- max(sapply(f_indices, function(f) end_idxs[f] - start_idxs[f] + 1))
+  plot(NA, xlim = c(1, max_len), ylim = c(0, 1),
+       xlab = "observation index within series", ylab = "P(state = 2)",
+       main = paste0(sp_name, " -- all stands overlaid"))
+  abline(h = 0.5, lty = 3, col = "grey60")
+  
+  stand_colors <- rainbow(length(f_indices), alpha = 0.7)
+  
+  for (k in seq_along(f_indices)) {
+    f <- f_indices[k]
+    idx_range <- start_idxs[f]:end_idxs[f]
+    p2 <- p_state2(samples, idx_range)
+    lines(seq_along(p2), p2, col = stand_colors[k], lwd = 1.5)
+  }
+  legend("topright", legend = paste0("stand_id=", stand_id[f_indices]),
+         col = stand_colors, lwd = 1.5, cex = 0.6, ncol = 2, bty = "n")
+  
+  if (sp_i < length(species_list)) {
+    readline(prompt = paste0("Species ", sp_name, " done -- Press [Enter] for next species..."))
+  }
+}
 
 
-samples <- rstan::extract(fit_all2)
+# State per species 2 -----------------------------------------------------
 
+samples <- util$extract_expectand_vals(fit_all)
+
+start_idxs <- stan_data_all$start_idxs
+end_idxs   <- stan_data_all$end_idxs
+species_id <- stan_data_all$species_id   
+stand_id   <- stan_data_all$stand_id      
+
+species_list <- c("ABAM", "ABLA", "CANO", "PSME", "THPL", "TSHE", "TSME")
+
+par(mfrow = c(4, 4))
+
+for (sp_i in seq_along(species_list)) {
+  
+  sp_name   <- species_list[sp_i]
+  f_indices <- which(species_id == sp_i)
+  
+  if (length(f_indices) == 0) next
+  
+  for (k in seq_along(f_indices)) {
+    f <- f_indices[k]
+    
+    start_id <- start_idxs[f]
+    end_id   <- end_idxs[f]
+    
+    util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
+                                         display_ylim = c(1, 2))
+    title(main = paste0(sp_name, " - stand ", stand_id[f]))
+    
+    util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
+    points(x = 1:length(start_id:end_id), y = stan_data_all$y[start_id:end_id], pch = 20)
+    title(main = paste0(sp_name, " - stand ", stand_id[f]))
+    
+    readline(prompt = paste0(sp_name, ": stand ", k, "/", length(f_indices),
+                             " (species ", sp_i, "/", length(species_list), ")",
+                             " -- Press [Enter] for next..."))
+  }
+}
+
+
+
+# Prior vs posterior ------------------------------------------------
+
+samples <- rstan::extract(fit_75)
 n <- length(samples$mu_log_low)
 
 priors <- data.frame(
@@ -305,9 +496,8 @@ priors <- data.frame(
   grand_logit_theta2   = rnorm(n, -1, 0.5),
   sigma_low_species    = abs(rnorm(n, 0.5, 1)),
   sigma_stand          = abs(rnorm(n,1,0.5)),
-  #sigma_low_stand      = abs(rnorm(n, 0.5, 1)),
-  sigma_log_delta_sp   = abs(rnorm(n, 1.5, 0.7)),
-  #sigma_log_delta_stand= abs(rnorm(n, 0, 1)),
+  sigma_log_delta_species   = abs(rnorm(n, 1.5, 0.7)),
+  sigma_delta_stand    = abs(rnorm(n,1,0.5)),
   sigma_theta1_species = abs(rnorm(n, 0, 0.7)),
   sigma_theta2_species = abs(rnorm(n, 0, 0.7)),
   sigma_theta1_stand   = abs(rnorm(n, 1, 0.3)),
@@ -324,7 +514,8 @@ posteriors <- data.frame(
   grand_logit_theta2   = samples$grand_logit_theta2,
   sigma_low_species    = samples$sigma_low_species,
   sigma_stand          = samples$sigma_stand,
-  sigma_log_delta_sp   = samples$sigma_log_delta_species,
+  sigma_log_delta_species   = samples$sigma_log_delta_species,
+  sigma_delta_stand    = samples$sigma_delta_stand,
   sigma_theta1_species = samples$sigma_theta1_species,
   sigma_theta2_species = samples$sigma_theta2_species,
   sigma_theta1_stand   = samples$sigma_theta1_stand,
@@ -334,25 +525,26 @@ posteriors <- data.frame(
   phi_high             = exp(samples$log_phi_state[, 2])
 )
 
-# --- Nice labels ---
+#labels 
 param_labels <- c(
-  mu_log_low            = "grand mean seeds, low state",
-  mu_log_delta          = "grand mean fold-change",
-  grand_logit_theta1    = "P stay low",
-  grand_logit_theta2    = "P stay high",
-  sigma_low_species     = "σ low species",
-  sigma_stand       = "σ low stand",
-  sigma_log_delta_sp    = "σ log delta species",
-  sigma_theta1_species  = "σ θ₁ species",
-  sigma_theta2_species  = "σ θ₂ species",
-  sigma_theta1_stand    = "σ θ₁ stand",
-  sigma_theta2_stand    = "σ θ₂ stand",
-  phi_species           = "φ species",   
-  phi_low               = "φ low state ",
-  phi_high              = "φ high state "
+  mu_log_low              = "grand mean seeds, low state",
+  mu_log_delta            = "grand mean fold-change",
+  grand_logit_theta1      = "P stay low",
+  grand_logit_theta2      = "P stay high",
+  sigma_low_species       = "σ low species",
+  sigma_stand             = "σ low stand",
+  sigma_log_delta_species = "σ log delta species",
+  sigma_delta_stand       = "σ log delta stand",
+  sigma_theta1_species    = "σ θ₁ species",
+  sigma_theta2_species    = "σ θ₂ species",
+  sigma_theta1_stand      = "σ θ₁ stand",
+  sigma_theta2_stand      = "σ θ₂ stand",
+  phi_species             = "φ species",   
+  phi_low                 = "φ low state ",
+  phi_high                = "φ high state "
 )
 
-# --- Reshape to long ---
+#Reshape to long 
 prior_long <- priors %>%
   pivot_longer(everything(), names_to = "param", values_to = "value") %>%
   mutate(type = "Prior")
@@ -367,7 +559,7 @@ df <- bind_rows(prior_long, post_long) %>%
     type  = factor(type, levels = c("Prior", "Posterior"))
   )
 
-# --- Plot ---
+#Plot
 ggplot(df, aes(x = value, fill = type, color = type)) +
   geom_density(alpha = 0.4, linewidth = 0.7) +
   facet_wrap(~ label, scales = "free", ncol = 3) +
@@ -384,100 +576,107 @@ ggplot(df, aes(x = value, fill = type, color = type)) +
     panel.grid.minor = element_blank()
   )
 
+# Comparison of models ----------------------------------------------------
+par(mfrow=c(1,1))
+s_old <- summary(fit_all)$summary
+s_new <- summary(fit_75)$summary
 
+exclude <- c("^log_omega", "^y_rep", "^state\\[", "^lp__")
 
-
-# Posteriror vs prior per SPECIES ---------------------------------
-
-samples <- rstan::extract(fit_all)
-n <- length(samples$mu_log_low)
-species_names <- c("ABAM", "ABLA", "CANO", "PSME", "TSHE", "TSME", "THPL")
-
-param_labels <- c(
-  mu_log_low            = "µ log low (grand mean seeds, low state)",
-  mu_log_delta          = "µ log delta (grand mean fold-change)",
-  grand_logit_theta1    = "logit θ₁ (P stay low)",
-  grand_logit_theta2    = "logit θ₂ (P stay high)",
-  sigma_low_species     = "σ low species",
-  sigma_low_stand       = "σ low stand",
-  sigma_log_delta_sp    = "σ log delta species",
-  sigma_log_delta_stand = "σ log delta stand",
-  sigma_theta1_species  = "σ θ₁ species",
-  sigma_theta2_species  = "σ θ₂ species",
-  sigma_theta1_stand    = "σ θ₁ stand",
-  sigma_theta2_stand    = "σ θ₂ stand",
-  phi_low               = "φ low state (overdispersion)",
-  phi_high              = "φ high state (overdispersion)"
-)
-
-# Priors are the same for all species
-priors <- data.frame(
-  mu_log_low            = rnorm(n, 2.8, 1.0),
-  mu_log_delta          = rnorm(n, 1.5, 1.5),
-  grand_logit_theta1    = rnorm(n, 1.2, 0.7),
-  grand_logit_theta2    = rnorm(n, 0.5, 0.7),
-  sigma_low_species     = abs(rnorm(n, 0.5, 1)),
-  sigma_low_stand       = abs(rnorm(n, 0.5, 1)),
-  sigma_log_delta_sp    = abs(rnorm(n, 0, 1)),
-  sigma_log_delta_stand = abs(rnorm(n, 0, 1)),
-  sigma_theta1_species  = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_species  = abs(rnorm(n, 0, 0.7)),
-  sigma_theta1_stand    = abs(rnorm(n, 0, 0.7)),
-  sigma_theta2_stand    = abs(rnorm(n, 0, 0.7)),
-  phi_low               = exp(rnorm(n, log(4), 0.6)),
-  phi_high              = exp(rnorm(n, log(4), 0.6))
-)
-
-prior_long <- priors %>%
-  pivot_longer(everything(), names_to = "param", values_to = "value") %>%
-  mutate(type = "Prior")
-
-# Loop over species and save one plot per species
-for (sp_idx in 1:length(species_names)) {
-  
-  posteriors <- data.frame(
-    mu_log_low            = samples$mu_log_low,
-    mu_log_delta          = samples$mu_log_delta,
-    grand_logit_theta1    = samples$grand_logit_theta1,
-    grand_logit_theta2    = samples$grand_logit_theta2,
-    sigma_low_species     = samples$sigma_low_species,
-    sigma_low_stand       = samples$sigma_low_stand,
-    sigma_log_delta_sp    = samples$sigma_log_delta_species,
-    sigma_log_delta_stand = samples$sigma_log_delta_stand,
-    sigma_theta1_species  = samples$sigma_theta1_species,
-    sigma_theta2_species  = samples$sigma_theta2_species,
-    sigma_theta1_stand    = samples$sigma_theta1_stand,
-    sigma_theta2_stand    = samples$sigma_theta2_stand,
-    phi_low               = exp(samples$log_phi[, sp_idx, 1]),  # species-specific
-    phi_high              = exp(samples$log_phi[, sp_idx, 2])   # species-specific
-  )
-  
-  post_long <- posteriors %>%
-    pivot_longer(everything(), names_to = "param", values_to = "value") %>%
-    mutate(type = "Posterior")
-  
-  df <- bind_rows(prior_long, post_long) %>%
-    mutate(
-      label = param_labels[param],
-      type  = factor(type, levels = c("Prior", "Posterior"))
-    )
-  
-  p <- ggplot(df, aes(x = value, fill = type, color = type)) +
-    geom_density(alpha = 0.4, linewidth = 0.7) +
-    facet_wrap(~ label, scales = "free", ncol = 3) +
-    scale_fill_manual(values  = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-    scale_color_manual(values = c("Prior" = "#7B9FBF", "Posterior" = "#E07B54")) +
-    labs(
-      title = paste("Prior vs posterior —", species_names[sp_idx]),
-      x = NULL, y = "Density", fill = NULL, color = NULL
-    ) +
-    theme_bw(base_size = 11) +
-    theme(
-      legend.position  = "top",
-      strip.text       = element_text(size = 9),
-      panel.grid.minor = element_blank()
-    )
+keep_names <- function(s) {
+  nm <- rownames(s)
+  nm[!Reduce(`|`, lapply(exclude, grepl, x = nm))]
 }
+
+shared <- intersect(keep_names(s_old), keep_names(s_new))
+
+# Building a tidy comparison table
+comp <- data.frame(
+  param   = shared,
+  old_med = s_old[shared, "50%"], old_q25 = s_old[shared, "25%"], old_q75 = s_old[shared, "75%"],
+  new_med = s_new[shared, "50%"], new_q25 = s_new[shared, "25%"], new_q75 = s_new[shared, "75%"]
+)
+
+# Order parameters top-to-bottom
+comp <- comp[order(comp$param, decreasing = TRUE), ]
+y_pos <- seq_len(nrow(comp))
+
+par(mar = c(4, 12, 3, 2))  # extra left margin for parameter names
+plot(NA, xlim = range(c(comp$old_q25, comp$old_q75, comp$new_q25, comp$new_q75)),
+     ylim = c(0.5, nrow(comp) + 0.5),
+     yaxt = "n", ylab = "", xlab = "Estimate (median + 50% interval)",
+     main = "Old vs new: per-parameter comparison")
+axis(2, at = y_pos, labels = comp$param, las = 1, cex.axis = 0.7)
+abline(h = y_pos, col = "grey90", lty = 3)
+
+offset <- 0.15
+#old 
+segments(comp$old_q25, y_pos - offset, comp$old_q75, y_pos - offset, col = "black", lwd = 2)
+points(comp$old_med, y_pos - offset, pch = 19, col = "black")
+#new 
+segments(comp$new_q25, y_pos + offset, comp$new_q75, y_pos + offset, col ="steelblue", lwd = 2)
+points(comp$new_med, y_pos + offset, pch = 19, col = "steelblue")
+
+legend("topright", legend = c("Old", "New"), col = c("black", "blue"), pch = 19, bty = "n")
+
+
+
+#Other thing : comparing the thetas
+s_stand <- rstan::extract(fit_all)   # <- model that pools theta by species + stand
+s_sponly <- rstan::extract(fit_75) # <- model that pools theta by species only
+
+
+theta1_stand  <- apply(s_stand$theta1,  2, median)
+theta2_stand  <- apply(s_stand$theta2,  2, median)
+theta1_sponly <- apply(s_sponly$theta1, 2, median)
+theta2_sponly <- apply(s_sponly$theta2, 2, median)
+
+
+df_scatter <- data.frame(
+  f = seq_along(theta1_stand),
+  theta1_stand, theta1_sponly,
+  theta2_stand, theta2_sponly
+)
+
+p1 <- ggplot(df_scatter, aes(theta1_sponly, theta1_stand)) +
+  geom_point(color = "steelblue", alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  labs(title = "theta1 (P stay low): per series", x = "Species-only pooling", y = "Species + stand pooling") +
+  theme_bw()
+
+p2 <- ggplot(df_scatter, aes(theta2_sponly, theta2_stand)) +
+  geom_point(color = "#E07B54", alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  labs(title = "theta2 (P stay high): per series", x = "Species-only pooling", y = "Species + stand pooling") +
+  theme_bw()
+
+par(mfrow=c(1,2))
+p1
+p2
+
+
+df_long <- bind_rows(
+  data.frame(value = theta1_stand,  param = "theta1", model = "Species + stand"),
+  data.frame(value = theta1_sponly, param = "theta1", model = "Species only"),
+  data.frame(value = theta2_stand,  param = "theta2", model = "Species + stand"),
+  data.frame(value = theta2_sponly, param = "theta2", model = "Species only")
+)
+
+ggplot(df_long, aes(x = value, fill = model, color = model)) +
+  geom_density(alpha = 0.4) +
+  facet_wrap(~ param, scales = "free", ncol = 2) +
+  scale_fill_manual(values = c("Species + stand" = "#7B9FBF", "Species only" = "#E07B54")) +
+  scale_color_manual(values = c("Species + stand" = "#7B9FBF", "Species only" = "#E07B54")) +
+  labs(title = "Distribution of per-series theta across all stands",
+       x = NULL, y = "Density", fill = NULL, color = NULL) +
+  theme_bw(base_size = 11) +
+  theme(legend.position = "top")
+
+
+
+
+quantile(s_stand$sigma_theta1_stand, c(0.025, 0.5, 0.975))
+quantile(s_stand$sigma_theta2_stand, c(0.025, 0.5, 0.975))
 
 
 
@@ -724,11 +923,10 @@ draws %>%
   summarise(mean_occ = mean(prop_state2))
 
 
-# Diagnostics code line -------------------------------------------------------------
 
-
+# ------------------------Diagnostics code line------------------------------ -------------------------------------------------------------
 # Checking model samples --------------------------------------------------
-diagnostics <- util$extract_hmc_diagnostics(fit_all)
+diagnostics <- util$extract_hmc_diagnostics(fit_all3)
 util$check_all_hmc_diagnostics(diagnostics)
 
 
@@ -750,18 +948,17 @@ base_samples2 <- util$filter_expectands(samples,
                                           'mu_log_low',
                                           paste0('alpha_low_species[', 1:7, ']'),
                                           'sigma_low_species',
-                                          paste0('alpha_low_stand[',   1:18, ']'),
-                                          'sigma_low_stand',
+                                          paste0('alpha_stand[',   1:18, ']'),
+                                          'sigma_stand',
                                           # Delta parameters
                                           'mu_log_delta',
                                           'sigma_log_delta_species',
-                                          'sigma_log_delta_stand',
+                                          'sigma_delta_stand',
                                           paste0('log_delta_species_nc[', 1:7, ']'),
-                                          paste0('log_delta_stand_nc[',   1:18, ']'),
-                                          # Overdispersion (per state, not per species)
-                                          'log_phi'
+                                          paste0('log_delta_stand[',   1:18, ']'),
                                         ),check_arrays = TRUE)
 util$check_all_expectand_diagnostics(base_samples2)
+
 
 
 # Checking chains ---------------------------------------------------------
@@ -804,6 +1001,8 @@ order(bimodality_score, decreasing = TRUE)[1:10]
 
 # Checking parameters  ----------------------------------------
 
+samples <- util$extract_expectand_vals(fit_all3)
+
 # Extract the relevant parameters
 par(mfrow = c(2, 2))
 
@@ -843,10 +1042,6 @@ util$plot_expectand_pushforward(
   display_name = "log_alpha_high[6] - log_alpha_low[6]",
   main = "implied log gap for f=6"
 )
-
-
-
-
 
 
 
@@ -899,6 +1094,9 @@ fit_summary[fit_summary[,"n_eff"] < 10, ]
 
 
 # Divergence --------------------------------------------------------------
+
+pairs(fit_all3, pars = c("sigma_stand", "sigma_delta_stand", "sigma_log_delta_species"))
+sum(sapply(get_sampler_params(fit_all3, inc_warmup = FALSE), function(x) sum(x[, "divergent__"])))
 
 pairs(fit_all, pars = c("sigma_theta1_stand", "sigma_theta2_stand",
                         "grand_logit_theta1", "grand_logit_theta2",
@@ -972,7 +1170,7 @@ table(stan_data_all$obs_missing)
 
 # State ID issue ----------------------------------------------------------
 # Extract state draws
-state_draws <- rstan::extract(fit_all, "state")[[1]]  # shape: [samples x N]
+state_draws <- rstan::extract(fit_all3, "state")[[1]]  # shape: [samples x N]
 
 # For the varying sites, what's the mean state?
 par(mfrow= c(1,1))
@@ -1080,3 +1278,49 @@ stand_year_all %>%
 
 
 
+
+
+
+
+# Newissue exploration 22.06.2026 ----------------------------------------------------------------
+pairs(fit_all2, pars = c("sigma_low_species","sigma_stand", "sigma_delta_stand", "sigma_log_delta_species"))
+pairs(fit_all2, pars = c("sigma_delta_stand",
+                         "log_delta_stand_nc[1,1]",
+                         "log_delta_stand_nc[2,1]",
+                         "log_delta_stand_nc[3,1]",
+                         "log_delta_stand_nc[4,1]",
+                         "log_delta_stand_nc[5,1]",
+                         "log_delta_stand_nc[6,1]",
+                         "log_delta_stand_nc[7,1]"))  
+pairs(fit_all2, pars = c("sigma_low_species",
+                         "alpha_low_species[1]",
+                         "alpha_low_species[2]",
+                         "alpha_low_species[3]",
+                         "alpha_low_species[4]",
+                         "alpha_low_species[5]",
+                         "alpha_low_species[6]",
+                         "alpha_low_species[7]"))
+pairs(fit_all2, pars = c("sigma_stand",
+                         "alpha_stand[1,1]",
+                         "alpha_stand[2,1]",
+                         "alpha_stand[3,1]",
+                         "alpha_stand[4,1]",
+                         "alpha_stand[5,1]",
+                         "alpha_stand[6,1]",
+                         "alpha_stand[7,1]"))
+pairs(fit_all2, pars = c("sigma_delta_stand",
+                         "log_delta_stand[1,2]",
+                         "log_delta_stand[2,2]",
+                         "log_delta_stand[3,2]",
+                         "log_delta_stand[4,2]",
+                         "log_delta_stand[5,2]",
+                         "log_delta_stand[6,2]",
+                         "log_delta_stand[7,2]")) 
+pairs(fit_all2, pars = c("sigma_delta_stand",
+                         "log_delta_stand[1,1]",
+                         "log_delta_stand[2,2]",
+                         "log_delta_stand[3,3]",
+                         "log_delta_stand[4,4]",
+                         "log_delta_stand[5,5]",
+                         "log_delta_stand[6,6]",
+                         "log_delta_stand[7,7]"))
