@@ -2740,11 +2740,9 @@ p
 fit_ABAM@model_pars
 
 
-# Extract all posterior draws as a matrix (draws x parameters)
-draws_A <- as.data.frame(rstan::extract(fit_ABAM, permuted = FALSE))
-draws_B <- as.data.frame(rstan::extract(fit_ABAM2, permuted = FALSE))
 
-# Simpler: use extract() with permuted = TRUE for a list of arrays
+
+#Other way
 draws_A <- rstan::extract(fit_ABAM)
 draws_B <- rstan::extract(fit_ABAM2)
 
