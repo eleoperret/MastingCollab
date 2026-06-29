@@ -1,0 +1,97 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{parskip}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{Masting Project -- UBC Visit} \\[0.3em]
+\large January--March 2026 --- Analysis Plan (Draft)}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\vspace{-2em}
+
+\noindent\textbf{People involved:} Victor, Janneke, Lizzie, and Él\'eonore \textit{(Am I forgetting someone? Is Mao involved?)}
+
+\noindent\textbf{Study system:} Mount Rainier National Park
+
+\noindent\textbf{Dataset:} Seed-fall data (multi-species, multi-site, multi-year)
+
+\section*{Research Questions and Hypotheses}
+
+\subsection*{1) Do species exhibit interspecific synchrony in seed production at Mount Rainier National Park?}
+
+\textbf{Hypothesis:} Preliminary results suggest interspecific synchrony among several species.
+
+\textbf{Approach:}
+\begin{itemize}[leftmargin=1.5em]
+    \item For each site, calculate yearly mean seed production per species.
+    \item Quantify synchrony using the variance ratio (Loreau \& de Mazancourt) applied to species-level time series.
+    \item Compare observed synchrony against null expectations?
+\end{itemize}
+
+\subsection*{2) Is seed production synchronized within species (intraspecific synchrony) across sites at Mount Rainier?}
+
+\textbf{Approach:}
+\begin{itemize}[leftmargin=1.5em]
+    \item For each species, compare annual seed production across sites.
+    \item Apply the variance ratio to multisite time series for that single species.
+    \item Compare synchrony levels between species to see which species show tighter intraspecific coupling.
+\end{itemize}
+
+\subsection*{3) Is total resource availability (g/m\textsuperscript{2}) temporally synchronized from the perspective of seed predators?}
+
+\textbf{Note:} Synchrony in total resource availability may drive predator responses and link to the seed predator satiation hypothesis.
+
+\textbf{Approach:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Define a metric for resource availability (e.g., annual total seed fall per m\textsuperscript{2} or a nutritional index if species differ strongly in energetic value).
+    \item Identify years of low vs.\ high total availability (resource pulses).
+    \item Explore how these pulses might relate conceptually to chapters 2 and 3 (predation and predator satiation), without going too far analytically yet.
+\end{itemize}
+
+\subsection*{4) (Potential) How does interspecific synchrony vary along the elevational gradient?}
+
+\textbf{Approach:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Estimate interspecific variance ratios separately for each elevation band (site).
+    \item Examine whether synchrony strengthens or weakens with elevation.
+\end{itemize}
+
+\subsection*{5) (Potential) How does intraspecific synchrony vary with elevation, and can these patterns be linked to seed-predator home-range sizes?}
+
+\textbf{Approach:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Quantify intraspecific synchrony for each species across elevations.
+    \item If differences emerge, explore whether predator movement ecology (e.g., home-range size of rodents, corvids, squirrels) could interact with the scale of resource pulses.
+\end{itemize}
+
+\section*{Key Points to Clarify}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Terminology:} We are not defining masting here; instead, we treat species as masting or quasi-masting based on known ecology. We can either:
+    \begin{itemize}
+        \item use ``synchrony in seed production'' throughout, \textbf{OR}
+        \item refer to ``masting synchrony'' without formally quantifying masting itself (unless CV is needed).
+    \end{itemize}
+    \item \textbf{Modeling:} Adapt Victor's model to handle multiple species jointly for interspecific analyses.
+    \item \textbf{Resource availability metric:} Must be defined early---simple biomass (g/m\textsuperscript{2}) may be sufficient, but consider adjusting for seed energy content if relevant.
+\end{itemize}
+
+\end{document}
