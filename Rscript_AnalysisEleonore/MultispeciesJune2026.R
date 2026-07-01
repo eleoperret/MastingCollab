@@ -22,20 +22,25 @@ library(posterior)
 
 options(mc.cores = parallel::detectCores())
 
-util <- new.env()
-source('mcmc_analysis_tools_rstan.R', local=util)
-source('mcmc_visualization_tools.R', local=util)
+
 
 
 #Setting working directory
 getwd()
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
+list.files()
+list.files("Data/")
+
+
+util <- new.env()
+source("Rscript_AnalysisEleonore/mcmc_analysis_tools_rstan.R", local=util)
+source("Rscript_AnalysisEleonore/mcmc_visualization_tools.R", local=util)
 
 # Data import -------------------------------------------------------------
 
 
-seed_data<-read.csv("SeedData_all.csv")
+seed_data<-read.csv("Data/SeedData_all.csv")
 
 # 1) Keep species I'm interested in :
 seed_data<-seed_data %>%
@@ -163,15 +168,16 @@ print (stan_data_all)
 
 # Fitting Model -----------------------------------------------------------
 
-fit_all <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue74NC.stan",
-  data    = stan_data_all,
-  iter    = 2000, #change based on how much iterations you need
-  warmup  = 500, #make the warmup longer 
-  chains  = 4,
-  seed    = 123,
-)
+# fit_all <- stan(
+#   file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue74NC.stan",
+#   data    = stan_data_all,
+#   iter    = 2000, #change based on how much iterations you need
+#   warmup  = 500, #make the warmup longer 
+#   chains  = 4,
+#   seed    = 123,
+# )
 
+#Current model used after discussion in git #74
 fit_75 <- stan(
   file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue75.stan",
   data    = stan_data_all,
