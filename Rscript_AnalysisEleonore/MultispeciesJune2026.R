@@ -18,6 +18,8 @@ library(tidyr)
 library(bayesplot)
 library(tidyverse)
 library(posterior)
+library(purrr)
+
 
 
 options(mc.cores = parallel::detectCores())
@@ -179,7 +181,7 @@ print (stan_data_all)
 
 #Current model used after discussion in git #74
 fit_75 <- stan(
-  file    = "Stan_code/Species_Stan_Model/MultispeciesGitIssue75.stan",
+  file    = "Stan_code_Eleonore/Species_Stan_Model/MultispeciesGitIssue75.stan",
   data    = stan_data_all,
   iter    = 2000, #change based on how much iterations you need
   warmup  = 1000, #make the warmup longer 
@@ -1330,3 +1332,205 @@ pairs(fit_all2, pars = c("sigma_delta_stand",
                          "log_delta_stand[5,5]",
                          "log_delta_stand[6,6]",
                          "log_delta_stand[7,7]"))
+
+# Synchrony ------------------------------------------------------------------
+#For a given year, I tool the species x stand pair and then checked if they are in the same state (1 or 2) 
+#both within and between stands
+
+#Loading elevation data (again to be sure)
+stand_elevation<-readRDS("Data/stand_elevation_table.rds")
+str(stands_per_species) 
+
+#Extracting my posterior samples for my states
+state_draws<-rstan::extract(fit_75, pars = "state")$state
+n_draws <- nrow(state_draws)
+
+#Creating a metadata to enter in my loop (this acts as a lookup table otherwise I can't compute later)
+meta <- stand_year_all %>%
+  select(species = spp, stand = stand, year = year) %>%
+  mutate(row_id = row_number())
+
+#Recovering the sates for one posterior draw and I then attach the latent state to every observation
+get_unit_year_state <- function(draw_idx) { #draws idx is the draw that I'm looking at
+  meta %>%
+    mutate(state = state_draws[draw_idx, row_id])
+}
+
+
+# Pairwise synchrony within one year: % of pairs in the same state
+pairwise_synchrony <- function(df_one_year) {
+  n <- nrow(df_one_year)
+  if (n < 2) return(tibble(within = NA_real_, between = NA_real_))
+  idx        <- combn(n, 2) #making the species pair that are matching and when I have missing species (because not all species are present everywhere) this takes it into account however, will create more noise or uncertainty
+  same_state <- df_one_year$state[idx[1, ]] == df_one_year$state[idx[2, ]] #checking if the specie pair is in the same state
+  same_stand <- df_one_year$stand[idx[1, ]] == df_one_year$stand[idx[2, ]] #proportion of different stand pairs within the same state
+  tibble(
+    within  = if (any(same_stand))  mean(same_state[same_stand])  else NA_real_,
+    between = if (any(!same_stand)) mean(same_state[!same_stand]) else NA_real_
+  )
+}
+
+#Loop over all posterior draws 
+draw_idx_use <- seq(1, n_draws)   # can make it by = 5, each 5 draws
+
+synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(year) %>%
+    group_modify(~ pairwise_synchrony(.x)) %>%
+    mutate(draw = d)
+})
+
+synchrony_summary <- synchrony_draws %>%
+  pivot_longer(c(within, between), names_to = "type", values_to = "synchrony") %>%
+  group_by(year, type) %>%
+  summarise(
+    median = median(synchrony, na.rm = TRUE),
+    lo50   = quantile(synchrony, 0.25, na.rm = TRUE),
+    hi50   = quantile(synchrony, 0.75, na.rm = TRUE),
+    lo90   = quantile(synchrony, 0.05, na.rm = TRUE),
+    hi90   = quantile(synchrony, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(type = recode(type, within = "Within stand", between = "Between stands"))
+
+# Plot : Synchrony over time
+ggplot(synchrony_summary, aes(x = year, y = median * 100, color = type, fill = type)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), alpha = 0.15, color = NA) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), alpha = 0.35, color = NA) +
+  geom_line(aes(group = type), linetype = "dashed", linewidth = 0.4) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Within stand" = "#7A3B69", "Between stands" = "#4C7C9B")) +
+  scale_fill_manual(values  = c("Within stand" = "#7A3B69", "Between stands" = "#4C7C9B")) +
+  labs(x = NULL, y = "Synchrony (% of species pairs)", color = NULL, fill = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top")
+
+
+# Synchrony along elevational gradient
+stand_synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%                        # need >=2 species to compare
+    group_modify(~ {
+      n   <- nrow(.x)
+      idx <- combn(n, 2)
+      tibble(synchrony = mean(.x$state[idx[1, ]] == .x$state[idx[2, ]]))
+    }) %>%
+    group_by(stand) %>%
+    summarise(synchrony = mean(synchrony), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+stand_synchrony_summary <- stand_synchrony_draws %>%
+  group_by(stand) %>%
+  summarise(
+    median = median(synchrony, na.rm = TRUE),
+    lo50   = quantile(synchrony, 0.25, na.rm = TRUE),
+    hi50   = quantile(synchrony, 0.75, na.rm = TRUE),
+    lo90   = quantile(synchrony, 0.05, na.rm = TRUE),
+    hi90   = quantile(synchrony, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(
+    stand_elevation %>% distinct(stand, elevation),   # <-- ADAPT column names
+    by = "stand"
+  ) %>%
+  arrange(elevation)
+
+ggplot(stand_synchrony_summary, aes(x = elevation, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(color = "#D9695F", size = 2) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey60") +
+  labs(x = "Elevation (m)", y = "Synchrony index (within stand, % of pairs)",
+       title = "Synchrony Along the Elevational Gradient",
+       subtitle = "Dark ribbon = 50% CI | Light ribbon = 90% CI | Line = posterior median") +
+  theme_minimal(base_size = 13)
+
+
+#other way to look at things
+
+#are species switchin states at the same time?
+
+get_transition_data <- function(draw_idx){
+  
+  get_unit_year_state(draw_idx) %>%
+    arrange(species, stand, year) %>%
+    group_by(species, stand) %>%
+    mutate(
+      transition = state != lag(state)
+    ) %>%
+    ungroup()
+}
+
+#proportion of species pairs that BOTH changed state in that year
+pairwise_transition_synchrony <- function(df_one_year){
+  
+  n <- nrow(df_one_year)
+  
+  if(n < 2){
+    return(tibble(sync = NA_real_))
+  }
+  
+  idx <- combn(n, 2)
+  
+  both_switch <- df_one_year$transition[idx[1,]] &
+    df_one_year$transition[idx[2,]]
+  
+  
+  tibble(
+    sync = mean(both_switch,
+      na.rm = TRUE
+    )
+  )
+}
+
+draw_idx_use <- 1:n_draws   
+
+transition_sync_draws <- purrr::map_dfr(draw_idx_use, function(d){
+  
+  get_transition_data(d) %>%
+    group_by(year) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+  
+})
+
+transition_sync_summary <- transition_sync_draws %>%
+  group_by(year) %>%
+  summarise(
+    median = median(sync, na.rm = TRUE),
+    lo50   = quantile(sync, 0.25, na.rm = TRUE),
+    hi50   = quantile(sync, 0.75, na.rm = TRUE),
+    lo90   = quantile(sync, 0.05, na.rm = TRUE),
+    hi90   = quantile(sync, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(transition_sync_summary,
+       aes(x = year, y = median * 100)) +
+  
+  # 90% credible interval
+  geom_ribbon(aes(ymin = lo90 * 100,
+                  ymax = hi90 * 100),
+              alpha = 0.15, fill = "#4C7C9B") +
+  
+  # 50% credible interval
+  geom_ribbon(aes(ymin = lo50 * 100,
+                  ymax = hi50 * 100),
+              alpha = 0.35, fill = "#4C7C9B") +
+  
+  # median line
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(color = "#1B4C6B", size = 2) +
+  
+  labs(
+    x = "Year",
+    y = "Transition synchrony (% of species pairs)",
+    title = "Synchrony of state transitions (mast switching events)"
+  ) +
+  
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
