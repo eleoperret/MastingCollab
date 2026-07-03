@@ -33,6 +33,7 @@ setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)
 
 list.files()
 list.files("Data/")
+list.files("Rscript_AnalysisEleonore/")
 
 
 util <- new.env()
@@ -183,8 +184,8 @@ print (stan_data_all)
 fit_75 <- stan(
   file    = "Stan_code_Eleonore/Species_Stan_Model/MultispeciesGitIssue75.stan",
   data    = stan_data_all,
-  iter    = 2000, #change based on how much iterations you need
-  warmup  = 1000, #make the warmup longer 
+  iter    = 4000, #change based on how much iterations you need
+  warmup  = 2000, #make the warmup longer 
   chains  = 4,
   seed    = 123,
 )
@@ -1333,7 +1334,7 @@ pairs(fit_all2, pars = c("sigma_delta_stand",
                          "log_delta_stand[6,6]",
                          "log_delta_stand[7,7]"))
 
-# Synchrony ------------------------------------------------------------------
+# Synchrony (to clean) ------------------------------------------------------------------
 #For a given year, I tool the species x stand pair and then checked if they are in the same state (1 or 2) 
 #both within and between stands
 
@@ -1534,3 +1535,517 @@ ggplot(transition_sync_summary,
   
   theme_minimal(base_size = 13) +
   theme(legend.position = "none")
+
+
+
+# Generic pairwise synchrony calculator, reusable for any grouping
+pairwise_synchrony_generic <- function(df_one_group) {
+  n <- nrow(df_one_group)
+  if (n < 2) return(tibble(synchrony = NA_real_))
+  idx <- combn(n, 2)
+  same_state <- df_one_group$state[idx[1, ]] == df_one_group$state[idx[2, ]]
+  tibble(synchrony = mean(same_state))
+}
+
+
+species_synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(species, year) %>%
+    filter(n() >= 2) %>%                     # need >=2 stands present that year
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+species_synchrony_summary <- species_synchrony_draws %>%
+  group_by(species, year) %>%
+  summarise(
+    median = median(synchrony, na.rm = TRUE),
+    lo50   = quantile(synchrony, 0.25, na.rm = TRUE),
+    hi50   = quantile(synchrony, 0.75, na.rm = TRUE),
+    lo90   = quantile(synchrony, 0.05, na.rm = TRUE),
+    hi90   = quantile(synchrony, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(species_synchrony_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.7) +
+  geom_point(color = "#1B4C6B", size = 1.3) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across stands (% of pairs)",
+       title = "Between-stand synchrony over time, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+stand_synchrony_time_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%                     # need >=2 species present that year
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+stand_synchrony_time_summary <- stand_synchrony_time_draws %>%
+  group_by(stand, year) %>%
+  summarise(
+    median = median(synchrony, na.rm = TRUE),
+    lo50   = quantile(synchrony, 0.25, na.rm = TRUE),
+    hi50   = quantile(synchrony, 0.75, na.rm = TRUE),
+    lo90   = quantile(synchrony, 0.05, na.rm = TRUE),
+    hi90   = quantile(synchrony, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(stand_synchrony_time_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linewidth = 0.7) +
+  geom_point(color = "#5A2B4D", size = 1.3) +
+  facet_wrap(~ stand, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across species (% of pairs)",
+       title = "Within-stand synchrony over time, by stand") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+
+
+species_synchrony_summary <- species_synchrony_draws %>%
+  group_by(species, year) %>%
+  summarise(
+    median = median(synchrony, na.rm = TRUE),
+    lo50   = quantile(synchrony, 0.25, na.rm = TRUE),
+    hi50   = quantile(synchrony, 0.75, na.rm = TRUE),
+    lo90   = quantile(synchrony, 0.05, na.rm = TRUE),
+    hi90   = quantile(synchrony, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+n_stands_per_species_year <- meta %>%
+  group_by(species, year) %>%
+  summarise(n_stands = n_distinct(stand), .groups = "drop")
+
+species_synchrony_summary <- species_synchrony_summary %>%
+  left_join(n_stands_per_species_year, by = c("species", "year"))
+
+ggplot(species_synchrony_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.7) +
+  geom_point(aes(size = n_stands), color = "#1B4C6B") +   # point size = # stands
+  scale_size_continuous(range = c(0.8, 3), name = "# stands") +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across stands (% of pairs)",
+       title = "Between-stand synchrony over time, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+#or
+
+species_synchrony_summary <- species_synchrony_summary %>%
+  mutate(
+    n_stands_bin = case_when(
+      n_stands <= 2 ~ "2 (low confidence)",
+      n_stands %in% 3:4 ~ "3-4",
+      n_stands %in% 5:10 ~ "5-9",
+      n_stands %in% 11:16 ~ "10-16",
+      n_stands >= 17 ~ "17"
+    ),
+    n_stands_bin = factor(n_stands_bin, levels = c("2 (low confidence)", "3-4", "5-9","10-16","17"))
+  )
+
+ggplot(species_synchrony_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.7) +
+  geom_point(aes(color = n_stands_bin), size = 2.5) +
+  scale_color_manual(
+    values = c("2 (low confidence)" = "#D9695F", "3-4" = "#E8A54B", "<10" = "#1B4C6B","10-16" = "lightgreen", "16+" = "purple"),
+    name = "# stands"
+  ) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across stands (% of pairs)",
+       title = "Between-stand synchrony over time, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+n_species_per_stand_year <- meta %>%
+  group_by(stand, year) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+stand_synchrony_time_summary <- stand_synchrony_time_summary %>%
+  left_join(n_species_per_stand_year, by = c("stand", "year")) %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+ggplot(stand_synchrony_time_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linewidth = 0.6) +
+  geom_point(aes(color = n_species_bin), size = 2) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  facet_wrap(~ stand, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across species (% of pairs)",
+       title = "Within-stand synchrony over time, by stand") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(face = "bold"))
+
+#resources availability
+
+resource_index_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    summarise(resource = mean(state), n_species = n(), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+landscape_resource_draws <- resource_index_draws %>%
+  group_by(year, draw) %>%
+  summarise(landscape_resource = mean(resource), .groups = "drop")
+
+landscape_resource_summary <- landscape_resource_draws %>%
+  group_by(year) %>%
+  summarise(
+    median = median(landscape_resource),
+    lo50 = quantile(landscape_resource, .25),
+    hi50 = quantile(landscape_resource, .75),
+    lo90 = quantile(landscape_resource, .05),
+    hi90 = quantile(landscape_resource, .95),
+    .groups = "drop"
+  )
+
+ggplot(landscape_resource_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#B5651D", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#B5651D", alpha = 0.35) +
+  geom_line(color = "#8B4513", linewidth = 0.8) +
+  geom_point(color = "#8B4513", size = 2) +
+  labs(x = NULL, y = "Species masting (% of species-stand units)",
+       title = "Resource pulse over time",
+       subtitle = "Total seed resource available, from a predator's perspective") +
+  theme_minimal(base_size = 13)
+
+pulse_strength_draws <- landscape_resource_draws %>%
+  group_by(draw) %>%
+  summarise(cv = sd(landscape_resource) / mean(landscape_resource), .groups = "drop")
+
+pulse_strength_draws %>%
+  summarise(
+    median_cv = median(cv, na.rm = TRUE),
+    lo90 = quantile(cv, .05, na.rm = TRUE),
+    hi90 = quantile(cv, .95, na.rm = TRUE)
+  )
+
+resource_sync_draws <- map_dfr(draw_idx_use, function(d) {
+  wide <- resource_index_draws %>%
+    filter(draw == d) %>%
+    select(stand, year, resource) %>%
+    pivot_wider(names_from = stand, values_from = resource)
+  
+  mat <- as.matrix(wide[, -1])
+  if (ncol(mat) < 2 || nrow(mat) < 3) return(tibble(mean_pairwise_cor = NA_real_, draw = d))
+  
+  cor_mat <- cor(mat, use = "pairwise.complete.obs")
+  tibble(mean_pairwise_cor = mean(cor_mat[upper.tri(cor_mat)], na.rm = TRUE), draw = d)
+})
+
+resource_sync_draws %>%
+  summarise(
+    median = median(mean_pairwise_cor, na.rm = TRUE),
+    lo90 = quantile(mean_pairwise_cor, .05, na.rm = TRUE),
+    hi90 = quantile(mean_pairwise_cor, .95, na.rm = TRUE)
+  )
+
+stand_resource_summary <- resource_index_draws %>%
+  group_by(stand, year) %>%
+  summarise(median = median(resource), .groups = "drop")
+
+ggplot(stand_resource_summary, aes(x = year, y = median * 100, group = stand)) +
+  geom_line(alpha = 0.5, color = "#8B4513") +
+  labs(x = NULL, y = "Species masting (%)",
+       title = "Resource trajectories by stand") +
+  theme_minimal(base_size = 13)
+
+
+
+# Synchrony based on RQ (to clean) ---------------------------------------------------
+
+# Generic pairwise synchrony calculator, reusable for any grouping
+pairwise_synchrony_generic <- function(df_one_group) {
+  n <- nrow(df_one_group)
+  if (n < 2) return(tibble(synchrony = NA_real_))
+  idx <- combn(n, 2)
+  same_state <- df_one_group$state[idx[1, ]] == df_one_group$state[idx[2, ]]
+  tibble(synchrony = mean(same_state))
+}
+
+species_synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(species, year) %>%
+    filter(n() >= 2) %>%                     # need >=2 stands present that year
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+###1: Do species exhibit interspecific synchrony in seed production at Mount Rainier?
+
+main_synchrony_summary <- synchrony_summary %>%
+  filter(type == "Within stand")
+
+ggplot(main_synchrony_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linetype = "dashed", linewidth = 0.6) +
+  geom_point(color = "#5A2B4D", size = 2.2) +
+  labs(x = NULL, y = "Interspecific synchrony (% of species pairs)",
+       title = "Park-wide interspecific synchrony in seed production",
+       subtitle = "Species pairs at the same stand, same year") +
+  theme_minimal(base_size = 13)
+
+
+#Transition
+transition_sync_draws <- purrr::map_dfr(draw_idx_use, function(d){
+  get_transition_data(d) %>%
+    group_by(stand, year) %>%              # restrict pairs to same stand = interspecific
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    group_by(year) %>%
+    summarise(sync = mean(sync, na.rm = TRUE), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+transition_sync_summary <- transition_sync_draws %>%
+  group_by(year) %>%
+  summarise(
+    median = median(sync, na.rm = TRUE),
+    lo50   = quantile(sync, 0.25, na.rm = TRUE),
+    hi50   = quantile(sync, 0.75, na.rm = TRUE),
+    lo90   = quantile(sync, 0.05, na.rm = TRUE),
+    hi90   = quantile(sync, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(transition_sync_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), alpha = 0.15, fill = "#4C7C9B") +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), alpha = 0.35, fill = "#4C7C9B") +
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(color = "#1B4C6B", size = 2) +
+  labs(x = "Year", y = "Transition synchrony (% of species pairs)",
+       title = "Synchrony of state transitions, park-wide",
+       subtitle = "Proportion of species pairs (same stand) switching state together") +
+  theme_minimal(base_size = 13)
+
+n_species_per_stand_year <- meta %>%
+  group_by(stand, year) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+year_range <- range(meta$year)
+
+stand_synchrony_time_summary <- stand_synchrony_time_summary %>%
+  left_join(n_species_per_stand_year, by = c("stand", "year")) %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+ggplot(stand_synchrony_time_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linewidth = 0.6) +
+  geom_point(aes(color = n_species_bin), size = 2) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  scale_x_continuous(limits = year_range, breaks = seq(year_range[1], year_range[2], 2)) +
+  facet_wrap(~ stand) +
+  labs(x = NULL, y = "Synchrony across species (% of pairs)",
+       title = "Within-stand synchrony over time, by stand") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(face = "bold"), axis.text.x = element_text(angle = 45, hjust = 1, size = 7))
+
+#Transtion per stands (species combined)
+stand_transition_draws <- purrr::map_dfr(draw_idx_use, function(d){
+  get_transition_data(d) %>%
+    group_by(stand, year) %>%             
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+
+n_species_per_stand <- meta %>%
+  group_by(stand) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+stand_transition_summary <- stand_transition_draws %>%
+  group_by(stand, year) %>%
+  summarise(
+    median = median(sync, na.rm = TRUE),
+    lo50   = quantile(sync, 0.25, na.rm = TRUE),
+    hi50   = quantile(sync, 0.75, na.rm = TRUE),
+    lo90   = quantile(sync, 0.05, na.rm = TRUE),
+    hi90   = quantile(sync, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(n_species_per_stand, by = "stand") %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+ggplot(stand_transition_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linewidth = 0.7) +
+  geom_point(aes(color = n_species_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  facet_wrap(~ stand, scales = "free_x") +
+  labs(x = NULL, y = "Transition synchrony across species (% of pairs)",
+       title = "Interspecific synchrony of switching events, by stand") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+###2: Intra-specific synchrony
+n_stands_per_species_year <- meta %>%
+  group_by(species, year) %>%
+  summarise(n_stands = n_distinct(stand), .groups = "drop")
+
+species_synchrony_summary <- species_synchrony_summary %>%
+  mutate(
+    n_stands_bin = case_when(
+      n_stands %in% 1:4 ~ "1-4",
+      n_stands %in% 5:10 ~ "5-9",
+      n_stands %in% 11:16 ~ "10-16",
+      n_stands >= 17 ~ "17"
+    ),
+    n_stands_bin = factor(n_stands_bin, levels = c("2 (low confidence)", "1-4", "5-9","10-16","17"))
+  )
+
+
+ggplot(species_synchrony_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.7) +
+  geom_point(aes(color = n_stands_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-4" = "#D9695F", "5-9" = "#E8A54B", "10-16" = "#8FBF7F", "17" = "#1B4C6B"),
+    name = "# stands"
+  ) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across stands (% of pairs)",
+       title = "Intraspecific synchrony across sites, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+#Transtion per species (stands combined)
+species_transition_draws <- purrr::map_dfr(draw_idx_use, function(d){
+  get_transition_data(d) %>%
+    group_by(species, year) %>%             # same species, across stands = intraspecific
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+species_transition_summary <- species_transition_draws %>%
+  group_by(species, year) %>%
+  summarise(
+    median = median(sync, na.rm = TRUE),
+    lo50   = quantile(sync, 0.25, na.rm = TRUE),
+    hi50   = quantile(sync, 0.75, na.rm = TRUE),
+    lo90   = quantile(sync, 0.05, na.rm = TRUE),
+    hi90   = quantile(sync, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(n_stands_per_species_year, by = c("species", "year")) %>%
+  mutate(
+    n_stands_bin = case_when(
+      n_stands %in% 1:4 ~ "1-4",
+      n_stands %in% 5:10 ~ "5-9",
+      n_stands %in% 11:16 ~ "10-16",
+      n_stands >= 17 ~ "17"
+    ),
+    n_stands_bin = factor(n_stands_bin, levels = c("1-4", "5-9", "10-16", "17"))
+  )
+
+ggplot(species_transition_summary, aes(x = year, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#7A3B69", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#7A3B69", alpha = 0.35) +
+  geom_line(color = "#5A2B4D", linewidth = 0.7) +
+  geom_point(aes(color = n_stands_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-4" = "#D9695F", "5-9" = "#E8A54B", "10-16" = "#8FBF7F", "17" = "#1B4C6B"),
+    name = "# stands"
+  ) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Transition synchrony across stands (% of pairs)",
+       title = "Intraspecific synchrony of switching events, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+### 4.How does interspecific synchrony vary along the elevational gradient?
+n_species_per_stand <- meta %>%
+  group_by(stand) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+stand_synchrony_summary <- stand_synchrony_summary %>%
+  left_join(n_species_per_stand, by = "stand") %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+ggplot(stand_synchrony_summary, aes(x = elevation, y = median * 100)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = "#4C7C9B", alpha = 0.15) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = "#4C7C9B", alpha = 0.35) +
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(aes(color = n_species_bin), size = 2.5) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey60") +
+  labs(x = "Elevation (m)", y = "Synchrony index (within stand, % of pairs)",
+       title = "Interspecific Synchrony Along the Elevational Gradient",
+       subtitle = "Dark ribbon = 50% CI | Light ribbon = 90% CI | Line = posterior median") +
+  theme_minimal(base_size = 13)
+
+
