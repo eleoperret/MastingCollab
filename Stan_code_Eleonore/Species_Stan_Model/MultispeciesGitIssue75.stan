@@ -1,11 +1,11 @@
 //HMM 2 state - Multi species
-//Transition matrix partially pooled by species and stand (non-centered)
-//Distribution: two NB for each state partially pooled by species and stand (non-centered)
+//Transition matrix partially pooled by species ONLY (non-centered)
+//Distribution: two NB for each state partially pooled by species and stand (non-centered for the high state or here we call it the delta)
 //Overdispersion per state and per species
-//Rho: per species (simplex array over S)
+//Rho: overall 
 //Forced state 2 above state 1 with log1p_exp(delta) — aligned with single-species model
 //Based on the model: MultispeciesGitissue74NC.stan
-//Theta only partially pooled by species
+
 
 data {
   int<lower=1> N;
