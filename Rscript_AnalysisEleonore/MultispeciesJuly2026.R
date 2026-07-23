@@ -918,7 +918,7 @@ abam_consolidation_summary <- summarise_draws(abam_consolidation_draws, "consoli
 
 comparison_df <- bind_rows(
   abam_sync_summary %>% mutate(metric = "Pairwise synchrony"),
-  abam_consolidation_summary %>% mutate(metric = "Consolidation (majority share)")
+  abam_consolidation_summary %>% mutate(metric = "majority share")
 )
 
 ggplot(comparison_df, aes(x = year, y = median * 100, colour = metric, fill = metric)) +
@@ -927,7 +927,7 @@ ggplot(comparison_df, aes(x = year, y = median * 100, colour = metric, fill = me
   geom_point(size = 1.8) +
   geom_hline(yintercept = 50, linetype = "dashed", colour = "grey40") +
   labs(x = NULL, y = "%", colour = NULL, fill = NULL,
-       title = "ABAM: pairwise synchrony vs. consolidation",
+       title = "ABAM: pairwise synchrony vs. majority state",
        subtitle = "Both computed per posterior draw, then summarised across draws") +
   theme_minimal()
 
@@ -1053,9 +1053,9 @@ ggplot(sensitivity_df_consol, aes(x = year, y = median * 100, colour = version, 
   geom_point(size = 1.6) +
   geom_hline(yintercept = 50, linetype = "dashed", colour = "grey40") +
   labs(
-    x = NULL, y = "ABAM consolidation (% majority share)",
+    x = NULL, y = "ABAM (% majority share)",
     colour = NULL, fill = NULL,
-    title = "Sensitivity check: consolidation with and without low-signal stands",
+    title = "Sensitivity check: majority with and without low-signal stands",
     subtitle = paste0("Low-signal = Spearman r < ", low_r_threshold,
                       " between predicted P(mast) and raw seed density")
   ) +
