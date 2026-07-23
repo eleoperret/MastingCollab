@@ -2049,3 +2049,468 @@ ggplot(stand_synchrony_summary, aes(x = elevation, y = median * 100)) +
   theme_minimal(base_size = 13)
 
 
+
+# Cleaned synchrony -------------------------------------------------------
+
+
+# MASTING SYNCHRONY ANALYSIS
+# Species x Stand x Year latent state (1/2) synchrony analysis
+
+# NOTE ON INTERPRETATION (answers the "why is synchrony < 50%" question):
+#   `state` is binary. Synchrony = proportion of pairs sharing the same state.
+#   Under INDEPENDENT random assignment, expected synchrony = p^2 + (1-p)^2,
+#   which is minimized at p = 0.5, giving a floor of exactly 50%.
+#   => Synchrony can never go below 50% just from independent/chance pairing
+#      (when state frequencies are ~balanced).
+#   => Values BELOW 50% therefore indicate real ANTI-synchrony: species (or
+#      stands) tend to be in OPPOSITE states more often than chance predicts.
+#   This is most visible in the "within-stand synchrony over time, by stand"
+#   plot (Section 4 below) - see the comment flagged [KEY: <50% EXPLANATION]
+#   right above that plot, and consider adding a permutation-based null
+#   (shuffle state labels within stand-year) if you want a formal chance line
+#   instead of the flat 50% dashed reference.
+
+
+library(tidyverse)
+library(rstan)
+
+
+# 0. DATA LOADING & SETUP
+
+
+stand_elevation <- readRDS("Data/stand_elevation_table.rds")
+
+# Posterior draws of latent state (species x stand x year units)
+state_draws <- rstan::extract(fit_75, pars = "state")$state
+n_draws     <- nrow(state_draws)
+draw_idx_use <- seq_len(n_draws)   # use `seq(1, n_draws, by = 5)` to subsample
+
+# Lookup table: row_id links state_draws columns back to species/stand/year
+meta <- stand_year_all %>%
+  select(species = spp, stand = stand, year = year) %>%
+  mutate(row_id = row_number())
+
+# Attach latent states from one posterior draw to every species-stand-year unit
+get_unit_year_state <- function(draw_idx) {
+  meta %>%
+    mutate(state = state_draws[draw_idx, row_id])
+}
+
+# Attach state + transition flag (did state switch since previous year?)
+get_transition_data <- function(draw_idx) {
+  get_unit_year_state(draw_idx) %>%
+    arrange(species, stand, year) %>%
+    group_by(species, stand) %>%
+    mutate(transition = state != lag(state)) %>%
+    ungroup()
+}
+
+
+# 1. CORE HELPER FUNCTIONS (defined ONCE, reused everywhere below)
+
+
+# Generic pairwise synchrony: % of pairs within a group sharing the same state
+# NOTE: this is the function where the 50% floor originates (see header note).
+pairwise_synchrony_generic <- function(df_one_group) {
+  n <- nrow(df_one_group)
+  if (n < 2) return(tibble(synchrony = NA_real_))
+  idx <- combn(n, 2)
+  same_state <- df_one_group$state[idx[1, ]] == df_one_group$state[idx[2, ]]
+  tibble(synchrony = mean(same_state))
+}
+
+# Within vs. between stand synchrony, computed together for one year
+pairwise_synchrony_within_between <- function(df_one_year) {
+  n <- nrow(df_one_year)
+  if (n < 2) return(tibble(within = NA_real_, between = NA_real_))
+  idx        <- combn(n, 2)
+  same_state <- df_one_year$state[idx[1, ]] == df_one_year$state[idx[2, ]]
+  same_stand <- df_one_year$stand[idx[1, ]] == df_one_year$stand[idx[2, ]]
+  tibble(
+    within  = if (any(same_stand))  mean(same_state[same_stand])  else NA_real_,
+    between = if (any(!same_stand)) mean(same_state[!same_stand]) else NA_real_
+  )
+}
+
+# Proportion of pairs that BOTH switched state ("mast switching") together
+pairwise_transition_synchrony <- function(df_one_year) {
+  n <- nrow(df_one_year)
+  if (n < 2) return(tibble(sync = NA_real_))
+  idx         <- combn(n, 2)
+  both_switch <- df_one_year$transition[idx[1, ]] & df_one_year$transition[idx[2, ]]
+  tibble(sync = mean(both_switch, na.rm = TRUE))
+}
+
+# Summarise draws -> median + 50%/90% credible intervals
+summarise_draws <- function(df, value_col, group_vars) {
+  df %>%
+    group_by(across(all_of(group_vars))) %>%
+    summarise(
+      median = median(.data[[value_col]], na.rm = TRUE),
+      lo50   = quantile(.data[[value_col]], 0.25, na.rm = TRUE),
+      hi50   = quantile(.data[[value_col]], 0.75, na.rm = TRUE),
+      lo90   = quantile(.data[[value_col]], 0.05, na.rm = TRUE),
+      hi90   = quantile(.data[[value_col]], 0.95, na.rm = TRUE),
+      .groups = "drop"
+    )
+}
+
+# Shared plot theme elements
+ribbon_layers <- function(fill = "#4C7C9B") {
+  list(
+    geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), fill = fill, alpha = 0.15),
+    geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), fill = fill, alpha = 0.35)
+  )
+}
+
+
+# 2. OVERALL SYNCHRONY OVER TIME (within vs. between stand)
+
+
+synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(year) %>%
+    group_modify(~ pairwise_synchrony_within_between(.x)) %>%
+    mutate(draw = d)
+})
+
+synchrony_summary <- synchrony_draws %>%
+  pivot_longer(c(within, between), names_to = "type", values_to = "synchrony") %>%
+  summarise_draws("synchrony", c("year", "type")) %>%
+  mutate(type = recode(type, within = "Within stand", between = "Between stands"))
+
+ggplot(synchrony_summary, aes(x = year, y = median * 100, color = type, fill = type)) +
+  geom_ribbon(aes(ymin = lo90 * 100, ymax = hi90 * 100), alpha = 0.15, color = NA) +
+  geom_ribbon(aes(ymin = lo50 * 100, ymax = hi50 * 100), alpha = 0.35, color = NA) +
+  geom_line(aes(group = type), linetype = "dashed", linewidth = 0.4) +
+  geom_point(size = 2) +
+  scale_color_manual(values = c("Within stand" = "#7A3B69", "Between stands" = "#4C7C9B")) +
+  scale_fill_manual(values  = c("Within stand" = "#7A3B69", "Between stands" = "#4C7C9B")) +
+  labs(x = NULL, y = "Synchrony (% of species pairs)", color = NULL, fill = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top")
+
+
+# 3. SYNCHRONY ALONG THE ELEVATIONAL GRADIENT (within-stand, averaged over years)
+
+
+stand_synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    group_by(stand) %>%
+    summarise(synchrony = mean(synchrony), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+n_species_per_stand <- meta %>%
+  group_by(stand) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+stand_synchrony_summary <- stand_synchrony_draws %>%
+  summarise_draws("synchrony", "stand") %>%
+  left_join(stand_elevation %>% distinct(stand, elevation), by = "stand") %>%
+  left_join(n_species_per_stand, by = "stand") %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  ) %>%
+  arrange(elevation)
+
+ggplot(stand_synchrony_summary, aes(x = elevation, y = median * 100)) +
+  ribbon_layers() +
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(aes(color = n_species_bin), size = 2.5) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey60") +
+  labs(x = "Elevation (m)", y = "Synchrony index (within stand, % of pairs)",
+       title = "Interspecific Synchrony Along the Elevational Gradient",
+       subtitle = "Dark ribbon = 50% CI | Light ribbon = 90% CI | Line = posterior median\nDashed grey line = 50% chance floor under independent, balanced states") +
+  theme_minimal(base_size = 13)
+
+
+# 4. WITHIN-STAND SYNCHRONY OVER TIME, BY STAND  <-- Figure 1a
+
+# [KEY: <50% EXPLANATION]
+# Each point = % of species pairs *in that stand and year* sharing a state.
+# Because state is binary, chance/independent pairing gives an EXPECTED
+# synchrony of exactly 50% when state frequencies are balanced (p ~ 0.5),
+# and this is a FLOOR, not a midpoint -- imbalance only pushes the chance
+# expectation UP, never down. So points sitting below the dashed 50% line
+# are not just "low synchrony" - they reflect species actively alternating
+# states (anti-synchrony), likely resource partitioning / complementary
+# masting schedules among co-occurring species in that stand.
+
+
+stand_synchrony_time_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+n_species_per_stand_year <- meta %>%
+  group_by(stand, year) %>%
+  summarise(n_species = n_distinct(species), .groups = "drop")
+
+stand_synchrony_time_summary <- stand_synchrony_time_draws %>%
+  summarise_draws("synchrony", c("stand", "year")) %>%
+  left_join(n_species_per_stand_year, by = c("stand", "year")) %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+year_range <- range(meta$year)
+
+ggplot(stand_synchrony_time_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers(fill = "#7A3B69") +
+  geom_line(color = "#5A2B4D", linewidth = 0.6) +
+  geom_point(aes(color = n_species_bin), size = 2) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey60") +  # chance floor
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  scale_x_continuous(limits = year_range, breaks = seq(year_range[1], year_range[2], 2)) +
+  facet_wrap(~ stand) +
+  labs(x = NULL, y = "Synchrony across species (% of pairs)",
+       title = "Within-stand synchrony over time, by stand",
+       subtitle = "Dashed line = 50% chance floor; values below it indicate anti-synchrony") +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7))
+
+
+# 5. TRANSITION SYNCHRONY OVER TIME (interspecific, restricted to same stand)
+
+
+transition_sync_draws <- map_dfr(draw_idx_use, function(d) {
+  get_transition_data(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    group_by(year) %>%
+    summarise(sync = mean(sync, na.rm = TRUE), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+transition_sync_summary <- transition_sync_draws %>%
+  summarise_draws("sync", "year")
+
+ggplot(transition_sync_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers() +
+  geom_line(color = "#1B4C6B", linewidth = 0.8) +
+  geom_point(color = "#1B4C6B", size = 2) +
+  labs(x = "Year", y = "Transition synchrony (% of species pairs)",
+       title = "Synchrony of state transitions, park-wide",
+       subtitle = "Proportion of species pairs (same stand) switching state together") +
+  theme_minimal(base_size = 13)
+
+
+# 6. INTRASPECIFIC SYNCHRONY (same species, across stands) OVER TIME
+
+
+species_synchrony_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(species, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_synchrony_generic(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+n_stands_per_species_year <- meta %>%
+  group_by(species, year) %>%
+  summarise(n_stands = n_distinct(stand), .groups = "drop")
+
+species_synchrony_summary <- species_synchrony_draws %>%
+  summarise_draws("synchrony", c("species", "year")) %>%
+  left_join(n_stands_per_species_year, by = c("species", "year")) %>%
+  mutate(
+    n_stands_bin = case_when(
+      n_stands %in% 1:4   ~ "1-4",
+      n_stands %in% 5:10  ~ "5-9",
+      n_stands %in% 11:16 ~ "10-16",
+      n_stands >= 17      ~ "17"
+    ),
+    n_stands_bin = factor(n_stands_bin, levels = c("1-4", "5-9", "10-16", "17"))
+  )
+
+ggplot(species_synchrony_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers() +
+  geom_line(color = "#1B4C6B", linewidth = 0.7) +
+  geom_point(aes(color = n_stands_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-4" = "#D9695F", "5-9" = "#E8A54B", "10-16" = "#8FBF7F", "17" = "#1B4C6B"),
+    name = "# stands"
+  ) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Synchrony across stands (% of pairs)",
+       title = "Intraspecific synchrony across sites, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+# Intraspecific transition synchrony, by species
+species_transition_draws <- map_dfr(draw_idx_use, function(d) {
+  get_transition_data(d) %>%
+    group_by(species, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+species_transition_summary <- species_transition_draws %>%
+  summarise_draws("sync", c("species", "year")) %>%
+  left_join(n_stands_per_species_year, by = c("species", "year")) %>%
+  mutate(
+    n_stands_bin = case_when(
+      n_stands %in% 1:4   ~ "1-4",
+      n_stands %in% 5:10  ~ "5-9",
+      n_stands %in% 11:16 ~ "10-16",
+      n_stands >= 17      ~ "17"
+    ),
+    n_stands_bin = factor(n_stands_bin, levels = c("1-4", "5-9", "10-16", "17"))
+  )
+
+ggplot(species_transition_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers(fill = "#7A3B69") +
+  geom_line(color = "#5A2B4D", linewidth = 0.7) +
+  geom_point(aes(color = n_stands_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-4" = "#D9695F", "5-9" = "#E8A54B", "10-16" = "#8FBF7F", "17" = "#1B4C6B"),
+    name = "# stands"
+  ) +
+  facet_wrap(~ species, scales = "free_x") +
+  labs(x = NULL, y = "Transition synchrony across stands (% of pairs)",
+       title = "Intraspecific synchrony of switching events, by species") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+# 7. INTERSPECIFIC TRANSITION SYNCHRONY, BY STAND
+
+
+stand_transition_draws <- map_dfr(draw_idx_use, function(d) {
+  get_transition_data(d) %>%
+    group_by(stand, year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~ pairwise_transition_synchrony(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
+})
+
+stand_transition_summary <- stand_transition_draws %>%
+  summarise_draws("sync", c("stand", "year")) %>%
+  left_join(n_species_per_stand, by = "stand") %>%
+  mutate(
+    n_species_bin = case_when(
+      n_species <= 2 ~ "1-2",
+      n_species <= 4 ~ "3-4",
+      n_species <= 6 ~ "5-6",
+      TRUE           ~ "7+"
+    ),
+    n_species_bin = factor(n_species_bin, levels = c("1-2", "3-4", "5-6", "7+"))
+  )
+
+ggplot(stand_transition_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers(fill = "#7A3B69") +
+  geom_line(color = "#5A2B4D", linewidth = 0.7) +
+  geom_point(aes(color = n_species_bin), size = 2.3) +
+  scale_color_manual(
+    values = c("1-2" = "#D9695F", "3-4" = "#E8A54B", "5-6" = "#8FBF7F", "7+" = "#2E6B4F"),
+    name = "# species"
+  ) +
+  facet_wrap(~ stand, scales = "free_x") +
+  labs(x = NULL, y = "Transition synchrony across species (% of pairs)",
+       title = "Interspecific synchrony of switching events, by stand") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "bold"))
+
+
+# 8. RESOURCE PULSE / AVAILABILITY INDEX
+
+
+resource_index_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%
+    summarise(resource = mean(state), n_species = n(), .groups = "drop") %>%
+    mutate(draw = d)
+})
+
+landscape_resource_draws <- resource_index_draws %>%
+  group_by(year, draw) %>%
+  summarise(landscape_resource = mean(resource), .groups = "drop")
+
+landscape_resource_summary <- landscape_resource_draws %>%
+  summarise_draws("landscape_resource", "year")
+
+ggplot(landscape_resource_summary, aes(x = year, y = median * 100)) +
+  ribbon_layers(fill = "#B5651D") +
+  geom_line(color = "#8B4513", linewidth = 0.8) +
+  geom_point(color = "#8B4513", size = 2) +
+  labs(x = NULL, y = "Species masting (% of species-stand units)",
+       title = "Resource pulse over time",
+       subtitle = "Total seed resource available, from a predator's perspective") +
+  theme_minimal(base_size = 13)
+
+# Coefficient of variation of the landscape-wide resource pulse (pulse "strength")
+pulse_strength_draws <- landscape_resource_draws %>%
+  group_by(draw) %>%
+  summarise(cv = sd(landscape_resource) / mean(landscape_resource), .groups = "drop")
+
+pulse_strength_draws %>%
+  summarise(
+    median_cv = median(cv, na.rm = TRUE),
+    lo90 = quantile(cv, .05, na.rm = TRUE),
+    hi90 = quantile(cv, .95, na.rm = TRUE)
+  )
+
+# Spatial synchrony of the resource pulse across stands (mean pairwise correlation)
+resource_sync_draws <- map_dfr(draw_idx_use, function(d) {
+  wide <- resource_index_draws %>%
+    filter(draw == d) %>%
+    select(stand, year, resource) %>%
+    pivot_wider(names_from = stand, values_from = resource)
+  
+  mat <- as.matrix(wide[, -1])
+  if (ncol(mat) < 2 || nrow(mat) < 3) return(tibble(mean_pairwise_cor = NA_real_, draw = d))
+  
+  cor_mat <- cor(mat, use = "pairwise.complete.obs")
+  tibble(mean_pairwise_cor = mean(cor_mat[upper.tri(cor_mat)], na.rm = TRUE), draw = d)
+})
+
+resource_sync_draws %>%
+  summarise(
+    median = median(mean_pairwise_cor, na.rm = TRUE),
+    lo90 = quantile(mean_pairwise_cor, .05, na.rm = TRUE),
+    hi90 = quantile(mean_pairwise_cor, .95, na.rm = TRUE)
+  )
+
+stand_resource_summary <- resource_index_draws %>%
+  group_by(stand, year) %>%
+  summarise(median = median(resource), .groups = "drop")
+
+ggplot(stand_resource_summary, aes(x = year, y = median * 100, group = stand)) +
+  geom_line(alpha = 0.5, color = "#8B4513") +
+  labs(x = NULL, y = "Species masting (%)",
+       title = "Resource trajectories by stand") +
+  theme_minimal(base_size = 13)
