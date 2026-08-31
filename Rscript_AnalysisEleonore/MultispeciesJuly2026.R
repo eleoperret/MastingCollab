@@ -379,7 +379,7 @@ get_transition_data <- function(draw_idx) {
 }
 
 #Helper functions that I use across all analyses below
-# Generic pairwise synchrony: for any group of rows (each with a "state"),returns the proportion of all pairwise combinations that share the same state. Used for interspecific (within stand), intraspecific (within species), and any other grouping.
+# Generic pairwise synchrony: for any group of rows (each with a "state"),returns the proportion of all pairwise combinations that share the same state. Used for interspecific (within stand), intraspecific (within species)
 # NOTE ON INTERPRETATION (why synchrony often sits near/below 50%): state is binary, so under INDEPENDENT random assignment the expected synchrony is p^2 + (1-p)^2, which is minimized at p = 0.5, giving a floor of exactly 50%. Synchrony can't drop below 50% from chance pairing alone when state frequencies are roughly balanced, so values BELOW 50% indicate real ANTI-synchrony (pairs tend to be in opposite states more than chance would predict), not just "weak" synchrony. I could consider a permutation-based null (shuffle state labels within stand-year) if you want a formal chance line instead of a flat 50% reference.
 pairwise_synchrony_generic <- function(df_one_group) {
   n <- nrow(df_one_group)
@@ -402,7 +402,7 @@ pairwise_synchrony_within_between <- function(df_one_year) {
   )
 }
 
-# Proportion of pairs that BOTH switched state in the same year ("mast switching" happening together), rather than just being in the same state
+# Proportion of pairs that BOTH switched state in the same year ( I could here maybe select the state?)
 pairwise_transition_synchrony <- function(df_one_year) {
   n <- nrow(df_one_year)
   if (n < 2) return(tibble(sync = NA_real_))
@@ -459,7 +459,7 @@ ggplot(synchrony_summary, aes(x = year, y = median * 100, color = type, fill = t
   theme_minimal(base_size = 13) +
   theme(legend.position = "top")
 
-# This is the same "within stand" synchrony, isolated on its own, answering:do species show interspecific synchrony in seed production overall?
+# same but just within stand
 main_synchrony_summary <- synchrony_summary %>%
   filter(type == "Within stand")
 
@@ -950,9 +950,19 @@ p_prob <- ggplot(posterior_vs_raw, aes(x = year, y = prob_mast * 100, group = st
 
 p_raw <- ggplot(posterior_vs_raw, aes(x = year, y = seed_density, group = stand)) +
   geom_col(fill = "grey40") +
+  #scale_y_log10() +
   facet_wrap(~stand, nrow = 1) +
   labs(x = NULL, y = "Observed seed density\n(viable seeds / area)") +
   theme_minimal(base_size = 11)
+
+ggplot(posterior_vs_raw, aes(x = year, y = seed_density, colour = stand)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_y_log10() +
+  labs(x = "Year", y = "Observed seed density\n(viable seeds / area, log scale)",
+       colour = "Stand") +
+  theme_minimal(base_size = 11)
+
 
 (p_prob / p_raw) +
   plot_annotation(
@@ -1082,3 +1092,266 @@ low_signal_still_sampled_2021plus <- abam_meta %>%
 message("Low-signal stands still sampled from 2021 onward: ",
         paste(low_signal_still_sampled_2021plus, collapse = ", "))
 #SUNR and TA01
+
+# Intraspecific synchrony -------------------------------------------------
+
+
+#pulling ths state for each draws
+state_draws <- rstan::extract(fit_75, pars = "state")$state
+
+meta_all <- stand_year_all %>%
+  mutate(row_id = row_number()) %>%
+  rename(species = spp)
+
+get_unit_year_state <- function(draw_idx) {
+  tibble(
+    species = meta_all$species,
+    stand   = meta_all$stand,
+    year    = meta_all$year,
+    state   = state_draws[draw_idx, ]
+  )
+}
+
+# Victor's synchrony. Within one year, for one draw: the fraction of stands in whichever state is more common that year 
+majority_state <- function(df) {
+  state_counts <- table(df$state)
+  tibble(majority = max(state_counts) / sum(state_counts))
+}
+
+summarise_draws <- function(df, value_col, group_col) {
+  df %>%
+    group_by(.data[[group_col]]) %>%
+    summarise(
+      median = median(.data[[value_col]], na.rm = TRUE),
+      lo90   = quantile(.data[[value_col]], 0.05, na.rm = TRUE),
+      hi90   = quantile(.data[[value_col]], 0.95, na.rm = TRUE),
+      .groups = "drop"
+    )
+}
+
+#ABAM
+target_species <- "ABAM"
+abam_meta <- meta_all %>%
+  filter(species == target_species)
+
+abam_state_draws <- state_draws[, abam_meta$row_id]
+
+n_draws_total <-nrow(state_draws) #or abam state draws but I keep it like this so I can reuse it for the next species
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+abam_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+abam_summary <- summarise_draws(abam_draws, "majority", "year")
+
+ggplot(abam_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
+  labs(
+    x = NULL, y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "ABAM"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#ABLA
+target_species <- "ABLA"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+abla_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(abla_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "ABLA"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#CANO
+target_species <- "CANO"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+cano_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(cano_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "CANO"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#PSME
+target_species <- "PSME"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+psme_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(psme_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "PSME"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#TSHE
+target_species <- "TSHE"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+tshe_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(tshe_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "TSHE"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#TSME
+target_species <- "TSME"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+tsme_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(tsme_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "TSME"
+  ) +
+  theme_minimal(base_size = 13)
+
+
+#THPL
+target_species <- "THPL"
+target_meta <- meta_all %>%
+  filter(species == target_species)
+
+target_state_draws <- state_draws[, target_meta$row_id]
+
+n_draws_total <-nrow(target_state_draws) 
+draws_idx_use<- seq(1,n_draws_total, by=4)
+
+thpl_draws <- map_dfr(draw_idx_use, function(d) {
+  get_unit_year_state(d) %>%
+    filter(species == target_species) %>%
+    group_by(year) %>%
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    mutate(draw = d)
+})
+
+target_summary <- summarise_draws(thpl_draws, "majority", "year")
+
+ggplot(target_summary, aes(x = year, y = median)) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
+  labs(
+    x = "year", y = "Posterior probability of being in the majority state (%)",
+    title = "Percentage of stands within the majority state per year",
+    subtitle = "THPL"
+  ) +
+  theme_minimal(base_size = 13)
