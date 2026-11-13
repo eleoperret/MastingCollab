@@ -1,71 +1,69 @@
 ##Code for multispecies HMM model 
 #HMM with two states each defined by a NB distribution
-#Start date: 12.03.2026
+##Last updated : 12.11.2026
+##Structure of the code 
+##1. Libraries needed + setting working directory +Loading Mike's code
+##2. Data import + modifications : Data needed to be added from the trees as not all the trees are present at each site and also data from the stand not surveyed by the PSP (SUNR, PARA and SPRY).Also adding the elevation. 
+##3. Data preparation for Stan
+##4. Model fitting
+##5. Model diagnostic (model convergence, parameters, model summary and ppc)
+##6. State assignements
+##7. Prior vs posterior check
+##8. Model results 
+##9. Synchrony functions
+##10. Intraspecific synchrony
+##11. Interspecific synchrony
 
-##Next things to do : 
 
-#1 : Prepare plots for manuscript
-  #Figure of the time series of seed production overall
-  #Figure of the trace plots of chain convergence
-  #Fifure of state probability for every stands and species
-  #Figure with posteriror distribution of parameters (1:1?)
-#2: Think about how to calculate the interspecies synchrony
-#3: 
-
-
+# 1. Library + Working directory + Mike's code-----------------------------------------------------------------
 #Libraries
 library(dplyr)
 library(ggplot2)
+library(cmdstanr)
 library(rstan)
 library(tidyr)
 library(bayesplot)
 library(tidyverse)
 library(posterior)
-
-
 library(purrr)
 
 
-options(mc.cores = parallel::detectCores())
+options(mc.cores = parallel::detectCores()) ##Important to run my code faster
 
 
-
-
-#Setting working directory
+#Setting working directory 
 getwd()
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
-list.files()
-list.files("Data/")
-list.files("Rscript_AnalysisEleonore/")
-
-#Adding Mike's code
+#Loading Mike's code
 setwd("Rscript_AnalysisEleonore/")
-util <- new.env()
+#install.packages("colormap") #if not already installed
+util <- new.env() #to import the R code from Mike that I have on the Rscript Analysis Eleonore folder
 source("mcmc_visualization_tools.R", local=util)
 source("mcmc_analysis_tools_rstan.R", local=util)
 ls(util)
 
+
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
-# Data import + modification -------------------------------------------------------------
-seed_data<-read.csv("Data/SeedData_all.csv")
+# 2. Data import + modification -------------------------------------------------------------
+seed_data<-read.csv("Data/SeedData_all.csv") #the merged seed data created by Janneke
 
 # 1) Keeping species I'm interested in :
 seed_data<-seed_data %>%
   filter(spp %in% c("ABAM","ABLA","CANO","PSME","TSHE","TSME","THPL"))
+
 unique(seed_data$stand)
 
-
 # 2) I want only possible combination of stands (ie. for CANO I don't want it at low elevation stands)
-# a) Extra stand ( to add manually as there is no map/records of the species present at SPRY, PARA and CANO as it was not installed by the PSP crew but Janneke)
+# a) Extra stand (to add manually as there is no map/records of the species present at SPRY, PARA and CANO as it was not installed by the PSP crew but Janneke)
 # Add SPRY, SUNR, PARA for CANO, ABAM, ABLA
 extra_stands <- seed_data %>%
   filter(spp %in% c("CANO", "ABAM", "ABLA"),
          stand %in% c("SPRY", "SUNR", "PARA")) %>%
   filter(year != 2009) %>%
   group_by(spp, stand, year) %>%
-  summarise(y    = sum(total_viable_sds, na.rm = TRUE),area = sum(size, na.rm = TRUE),.groups = "drop") %>%
+  summarise(y = sum(total_viable_sds, na.rm = TRUE),area = sum(size, na.rm = TRUE),.groups = "drop") %>%
   arrange(spp, stand, year)
 # Checking
 extra_stands %>%
@@ -87,8 +85,7 @@ saveRDS(stands_per_species, file = "data/stands_per_species.rds")
 stands_per_species <- readRDS("data/stands_per_species.rds")#from General.Data.R (orignal script but put there here for better readability)
 stands_long <- stands_per_species %>%
   unnest(stands) %>%
-  rename(spp = species,
-         stand = stands)
+  rename(spp = species,stand = stands)
 
 seed_filtered <- seed_data %>%
   semi_join(stands_long, by = c("spp", "stand"))
@@ -98,17 +95,12 @@ str(seed_filtered)
 
 #d)Stand elevation
 stand_elev <- data.frame(
-  stand = c("TO11","TO04","TA01","AV02","AE10","TB13",
-            "AO03","AG05","AV06","AX15","AB08","PP17",
-            "AV14","AM16","AR07","PARA","SPRY","SUNR"),
-  elevation = c(600,668,700,850,1450,850,
-                900,950,1060,1090,1100,1150,
-                1150,1200,1450,1600,1700,1800)
-)
+  stand = c("TO11","TO04","TA01","AV02","AE10","TB13","AO03","AG05","AV06","AX15","AB08","PP17","AV14","AM16","AR07","PARA"  ,"SPRY","SUNR"),
+  elevation = c(600,668,700,850,1450,850,900,950,1060,1090,1100,1150,1150,1200,1450,1600,1700,1800))
 saveRDS(stand_elev, file= "data/stand_elevation_table.rds")
 
 
-# Data prep for Stan ---------------------------------------------------------------
+# 3. Data prep for Stan ---------------------------------------------------------------
 
 #Removing year 2009, and merging all seed counts
 stand_year_all <- seed_filtered %>%
@@ -156,8 +148,7 @@ years_per_series <- stand_year_all %>%
   group_by(spp, stand) %>%
   summarise(T_i = n(), .groups = "drop")%>%
   mutate(stand_id = as.numeric(as.factor(stand)),
-         species_id = as.numeric(as.factor(spp)) #NEW
-         ) 
+         species_id = as.numeric(as.factor(spp))) 
 
 N_stands <- length(unique(years_per_series$stand_id))  
 
@@ -191,7 +182,7 @@ stan_data_all <- list(
 
 print (stan_data_all)
 
-# Fitting Model -----------------------------------------------------------
+# 4. Fitting Model -----------------------------------------------------------
 #Current model used after discussion in git
 fit_75 <- stan(
   file    = "Stan_code_Eleonore/Species_Stan_Model/MultispeciesStanCodeLast.stan",
@@ -203,97 +194,85 @@ fit_75 <- stan(
 )
 
 
-# Model diagnostic --------------------------------------------------------
+# 5. Model diagnostic --------------------------------------------------------
 
+## a. Overall summary of the model fit. Here we can check for ESS (not bigger than the parameters themselves?) and Rhat (~1) values. 
 summary(fit_75)
 print(fit_75)
 
-diagnostics <- util$extract_hmc_diagnostics(fit_75)
+## b. Is the model good?
+#Using Mike's function to check the fit of the model (if warning message, like divergence it would appear here)
+diagnostics <- util$extract_hmc_diagnostics(fit_75) 
 util$check_all_hmc_diagnostics(diagnostics)
+#All is good. 
 
+## c. We can check now the model parameters
 samples <- util$extract_expectand_vals(fit_75)
-
 names(samples)
 base_samples1 <- util$filter_expectands(samples,c("rho[1]", "rho[2]","grand_logit_theta1","grand_logit_theta2"))
 base_samples2 <- util$filter_expectands(samples,c(paste0("alpha_theta1_species_nc[",1:S, "]"),paste0("alpha_theta2_species_nc[",   1:S, "]"), "sigma_theta1_species","sigma_theta2_species"))
-base_samples3 <- util$filter_expectands(samples,c("mu_log_low",paste0('alpha_low_species[',1:S, ']'),paste0('alpha_stand[',   1:S*N_stands, ']'), "sigma_low_species","sigma_stand"))
+base_samples3 <- util$filter_expectands(samples,c("mu_log_low",paste0('alpha_low_species[',1:S, ']'),paste0('alpha_stand[',rep(1:S, times= N_stands), ",", rep(1:N_stands, each = S), "]"), "sigma_low_species","sigma_stand"))
 base_samples4<-util$filter_expectands(samples,c("mu_log_delta",paste0('log_delta_species_nc[',1:S, ']')),"sigma_log_delta_species","sigma_delta_stand")
 base_samples5 <- util$filter_expectands(samples,c(paste0('log_phi_species[',1:S, ']'),"log_phi_state[1]","log_phi_state[2]"))
-util$check_all_expectand_diagnostics(base_samples1);util$check_all_expectand_diagnostics(base_samples2)
-
-base_samples <- util$filter_expectands(c(paste0('alpha_theta1_species_nc[',1:S, ']'),paste0('alpha_theta2_species_nc[',   1:S, ']'),"rho[1]", "rho[2]","grand_logit_theta1","grand_logit_theta2",'sigma_theta1_species','sigma_theta2_species','grand_logit_theta1','grand_logit_theta2',"mu_log_low"))
-
-base_samples <- util$filter_expectands(c(paste0('alpha_theta1_species_nc[',1:S, ']'),paste0('alpha_theta2_species_nc[',   1:S, ']'),"rho[1]", "rho[2]","grand_logit_theta1","grand_logit_theta2",'sigma_theta1_species','sigma_theta2_species','grand_logit_theta1','grand_logit_theta2','mu_log_low'))
+util$check_all_expectand_diagnostics(base_samples1);util$check_all_expectand_diagnostics(base_samples2); util$check_all_expectand_diagnostics(base_samples3) ; util$check_all_expectand_diagnostics(base_samples4) 
+#It looks good. 
 
 
+#Defining the parameters I'm interested in
 model_parameters<- c("rho","grand_logit_theta1", "grand_logit_theta2","sigma_theta1_species", "sigma_theta2_species","mu_log_low","alpha_low_species", "sigma_low_species", "sigma_stand", "mu_log_delta","log_delta_species","sigma_log_delta_species","sigma_delta_stand","log_phi_species","log_phi_state")
 
-summary_model<-rstan::summary(fit_75, pars= model_parameters, probs = c(0.025,0.25,0.5,0.75,0.975))$summary
-
-model_table_summary<-as.data.frame(summary_model)%>%
+#If the model diagnostics are well we can save the model summary: 
+## d. Model summary: 
+summary_model<-summary(fit_75, pars= model_parameters, probs = c(0.025,0.25,0.5,0.75,0.975))$summary
+model_table_summary<-as.data.frame(summary_model)%>% #model summary into a table
   tibble::rownames_to_column("parameter")%>%
-  mutate(across(c(mean, se_mean, sd, '2.5%','25%','50%','75%', '97.5%'), ~round (.x, 3)), 
-         n_eff= round(n_eff),
-        Rhat= round (Rhat,3))
+  mutate(across(c(mean, se_mean, sd, '2.5%','25%','50%','75%', '97.5%'), ~round (.x, 3)),n_eff= round(n_eff),Rhat= round (Rhat,3))
+model_table_summary #checking
+write.table(model_table_summary, file = 'data/Tables/model_table_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")#saving
 
-model_table_summary
+#But is the model fitting our data? 
 
-write.table(model_table_summary, file = 'data/Tables/model_table_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+## e. Checking the PPC. 
+#This allows us to know if the generated quantiles from the model match our actual data. 
 
-
-
-# PPC ---------------------------------------------------------------------
-
-#Overall
-# ppc for all 
-names_yrep <- paste0("y_rep[", 1:stan_data_all$N, "]")
-samples<-util$extract_expectand_vals(fit_75)
-
-# Plot PPC
+# samples<-util$extract_expectand_vals(fit_75) #Not necessary if done in the previous step
+#Overall fit: PPC
 par(mfrow = c(1,1))
-util$plot_hist_quantiles(samples, "y_rep",
-                         bin_min = 0, bin_max = 600, bin_delta = 20,
-                         baseline_values = stan_data_all$y)
+util$plot_hist_quantiles(samples, "y_rep",bin_min = 0, bin_max = 600, bin_delta = 20,baseline_values = stan_data_all$y)
 
-#Per series 
+#Per series PPC
+#We can also check per series : 
 par(mfrow = c(4, 4))
 for (f in 1:G) {
   idx    <- start_idxs[f]:end_idxs[f]
-  years_f <- stand_year_all$year[idx]  # actual calendar years
-  
+  years_f <- stand_year_all$year[idx] 
   pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  
-  util$plot_conn_pushforward_quantiles(
-    samples,
-    pred_names_f,
-    years_f,           # use actual years on x-axis
-    xlab = paste("Series", f),
-    ylab = "y"
-  )
+  util$plot_conn_pushforward_quantiles(samples,pred_names_f,years_f,xlab = paste("Series", f),ylab = "y")
   points(years_f, stan_data_all$y[idx], pch = 16, cex = 0.8)
 }
 
-#Single observation example
+#or for a single combination of F
 f <- 26
 idx     <- start_idxs[f]:end_idxs[f]
 years_f <- stand_year_all$year[idx]
 y_obs_f <- stan_data_all$y[idx]
 pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+util$plot_conn_pushforward_quantiles(samples, pred_names_f, years_f,xlab = paste("Series", f), ylab = "y")
+points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)# Adding point
 
-util$plot_conn_pushforward_quantiles(
-  samples, pred_names_f, years_f,
-  xlab = paste("Series", f), ylab = "y"
-)
-# Add points using original coordinates, clip manually
-points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)
+#Everything looks good :) 
 
+#Now we can go into the next step of checking the state identification. Does the model assign correctly the states (low and high?) and does it matches our data? 
 
 
-# State identification ----------------------------------------------------
+# 6. State assignement -------------------------------------------------------
+
+
+
+## f. State identification
 par(mfrow = c(4,6))
-names_yrep <- paste0("y_rep[", 1:stan_data_all$N, "]")
-samples<-util$extract_expectand_vals(fit_75)
+# names_yrep <- paste0("y_rep[", 1:stan_data_all$N, "]") #not sure it is necessary?
+# samples<-util$extract_expectand_vals(fit_75) #same as above no need to re-run if already done above. 
 
 unique(stand_year_all$spp); unique(stand_year_all$stand)
 species_name<-unique(stand_year_all$spp)
@@ -307,8 +286,7 @@ for (f in 1:length(stan_data_all$start_idxs)) {
   species_id<-as.character(stand_year_all$spp[start_idxs[f]])
   stand_id<-as.character(stand_year_all$stand[start_idxs[f]])
   
-  util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
-                                       display_ylim = c(1, 2))
+  util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),display_ylim = c(1, 2))
   
   title (main = paste(species_id, stand_id))
   
@@ -318,17 +296,173 @@ for (f in 1:length(stan_data_all$start_idxs)) {
   readline(prompt = paste0("Stand ", f, "/", length(stan_data_all$start_idxs), " -- Press [Enter] for next..."))
 }
 
+par(mfrow=c(4,4))
+for (f in 1:length(stan_data_all$start_idxs)) {
+  
+  start_id <- stan_data_all$start_idxs[f]
+  end_id   <- stan_data_all$end_idxs[f]
+  
+  species_id<-as.character(stand_year_all$spp[start_idxs[f]])
+  stand_id<-as.character(stand_year_all$stand[start_idxs[f]])
+}
 
 
-# Prior vs posterior ------------------------------------------------
+#now seperated
+for (f in 1:length(stan_data_all$start_idxs)) {
+  start_id <- stan_data_all$start_idxs[f]
+  end_id   <- stan_data_all$end_idxs[f]
+  idx<- start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("state[", idx, "]"),display_ylim = c(1, 2), xticklabs = stand_year_all$year[idx],xlab= "Year", ylab= "State (1 = low, 2= high)",main = paste(stand_year_all$spp[start_id], stand_year_all$stand[start_id]))
+}
 
-samples <- rstan::extract(fit_75)
-n <- nrow(samples$mu_log_low)
 
-rtnorm_function<-function(n,mean, sd){
+spp_f<-as.character(stand_year_all$spp[stan_data_all$start_idxs])
+st_f<-as.character(stand_year_all$stand[stan_data_all$start_idxs])
+
+#So here are the plots showing the model predictions for seed production (with greater uncertainty for the species and stands with lower values)
+#I have a plot that can either show each species*stand combination with their own scale or if you want the same scale for all, we need to add this display_lim to the util$plot_disc_pushforward_quantiles(display_ylim = c(0,max(stan_data_all$y[stand_year_all$spp=="CANO"])))
+#However this is sometimes not ideal because it crushes a lot the plots with lower seed production- but both can be displayed.
+
+#ABAM
+for(f in which(spp_f=="ABAM")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#ABLA
+par(mfrow=c(2,3))
+for(f in which(spp_f=="ABLA")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#CANO
+par(mfrow=c(2,2))
+for(f in which(spp_f=="CANO")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]), display_ylim = c(0,max(stan_data_all$y[stand_year_all$spp=="CANO"])))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#PSME
+par(mfrow=c(4,3))
+for(f in which(spp_f=="PSME")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]), #display_ylim = c(0,max(stan_data_all$y[stand_year_all$spp=="CANO"])))
+  )
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#TSHE
+par(mfrow=c(4,4))
+for(f in which(spp_f=="TSHE")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#TSME
+par(mfrow=c(2,3))
+for(f in which(spp_f=="TSME")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+#THPL
+par(mfrow=c(4,3))
+for(f in which(spp_f=="THPL")){
+  start_id<-stan_data_all$start_idxs[f]
+  end_id<-stan_data_all$end_idxs[f]
+  idx<-start_id:end_id
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
+  points(seq_along(idx),stan_data_all$y[idx], pch=18)
+}
+
+
+#Now a mean of all the stands per year per species. 
+par(mfrow=c(1,1))
+plot_species_mean <- function(sp, samples, normalise_area = FALSE) {
+  # Rows for this species, excluding missing observations
+  sel <- which(stand_year_all$spp == sp & stan_data_all$obs_missing == 0)
+  yrs <- sort(unique(stand_year_all$year[sel]))
+  # counts per baseline area so stands with different traps are comparable
+  scale_f <- if (normalise_area) stan_data_all$area / min(stan_data_all$area) else rep(1, length(stan_data_all$y))
+  #mean y_rep across stands for each year
+  pooled <- list()
+  for (yr in yrs) {
+    rows <- sel[stand_year_all$year[sel] == yr]
+    arrs <- lapply(rows, function(r) samples[[paste0("y_rep[", r, "]")]] / scale_f[r])
+    pooled[[paste0("mean_yrep[", yr, "]")]] <- Reduce(`+`, arrs) / length(arrs)
+  }
+  util$plot_disc_pushforward_quantiles(
+    pooled, names(pooled),
+    xticklabs = yrs, xlab = "Year", ylab = "Mean seed count across stands",
+    main = sp)
+  # Observed mean per year
+  obs_mean <- tapply(stan_data_all$y[sel] / scale_f[sel], stand_year_all$year[sel], mean)
+  points(seq_along(yrs), obs_mean, pch = 18)
+}
+
+plot_species_mean("ABAM", samples)
+plot_species_mean("ABLA", samples)
+plot_species_mean("CANO", samples)
+plot_species_mean("PSME", samples)
+plot_species_mean("TSHE", samples)
+plot_species_mean("TSME", samples)
+plot_species_mean("THPL", samples)
+
+
+
+
+
+#Also here maybe do based on research question so I could have one for all species (park-wide) or all the stands. Of for within a particular stand (interspecific) or for a specie across stand (intra-specific)
+
+#Like Victor!!!
+#distribution for each parameter (first do the parameters for seed count , log_mu_low, log_delta, dispersion per state and per species, maybe others?)(then for the state transition, rho, logit 1 et 2, high to low, low to low etc...) (also for low to high)
+util$plot_expectand_pushforward(samples[["mu_log_low"]], 25, display_name = "Low seed production")
+
+#I can even add some additional data with 
+mean_low<- mean(samples$mu_log_low) #for example but to try 
+util$plot_expectand_pushforward(samples[["mu_log_low"]], 25, display_name = "Low seed production", baseline = mean_low, baseline_col = util$c_mid_teal)
+
+util$plot_disc_pushforward_quantiles()
+
+util$plot_disc_pushforward_quantiles(samples, paste0("state[", start_id:end_id, "]"),
+                                       display_ylim = c(1, 2))
+  
+  title (main = paste(species_id, stand_id))
+  
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[", start_id:end_id, "]"))
+  points(x = 1:length(start_id:end_id), y = stan_data_all$y[start_id:end_id], pch = 20)
+  
+  readline(prompt = paste0("Stand ", f, "/", length(stan_data_all$start_idxs), " -- Press [Enter] for next..."))
+util$plot_disc_pushforward_quantiles(samples, names = paste0(""))
+
+
+
+# 7. Prior vs posterior ------------------------------------------------
+
+#Checking how much the data updated each priors. If a parameter barely moves, then the prior was weakly informed by the data. That is what we want. 
+
+samples <- rstan::extract(fit_75) #extracting the posterior draws if not done already
+n <- nrow(samples$mu_log_low) #number of posterior draws
+
+#This function allows draws of random numbers with a minimum of 0. So only positive values.  first, it gives a probability of getting a value below 0 in that normal distribution (pnorm) and then it draws n random numbers unifromly beween that probability and 1 (runif). then qnorm converts those probabilities into values on the normal scale. This allows me to not have values lower then 0 for the sigma as using rnorn creates negative values. 
+rtnorm_function<-function(n,mean, sd){ 
   qnorm(runif(n,pnorm(0,mean,sd),1), mean, sd)
 }
 
+#simulating draws from the priors (based on the .stan script)
+set.seed(123)
 priors <- data.frame(
   mu_log_low                = rnorm(n, 2, 1.5),
   mu_log_delta              = rnorm(n, 1.5, 1.5),
@@ -342,6 +476,7 @@ priors <- data.frame(
   sigma_theta2_species      = abs(rnorm(n, 0, 0.7))
 )
 
+#what are the actual draws. This is now taken from the model. and I back-transformed with plogis so everything (prior and posterior) are on the same scale. 
 posteriors <- data.frame(
   mu_log_low                = samples$mu_log_low,
   mu_log_delta              = samples$mu_log_delta,
@@ -369,15 +504,16 @@ param_labels <- c(
   sigma_theta2_species    = "Species transition variation (k=2)"
 )
 
-#Reshape to long 
+#Reshape to long for ggplot and add a label if prior or posterior
 prior_long <- priors %>%
-  pivot_longer(everything(), names_to = "param", values_to = "value") %>%
+  pivot_longer(everything(), names_to = "param", values_to = "value") %>% #everything means all columnss. 
   mutate(type = "Prior")
 
 post_long <- posteriors %>%
   pivot_longer(everything(), names_to = "param", values_to = "value") %>%
   mutate(type = "Posterior")
 
+#merging the two together. 
 df <- bind_rows(prior_long, post_long) %>%
   mutate(
     label= param_labels [param],
@@ -402,19 +538,24 @@ prior_posterior_plot<-ggplot(df, aes(x = value, fill = type, color = type)) +
     panel.grid.minor = element_blank()
   )
 prior_posterior_plot
+#saving the plot
 ggsave(filename= "prior_posterior_plot.png", plot= prior_posterior_plot,path = "Plots/Manuscript")
 
 
+#Overdispersion parameter phi by species and state (because too difficult to implement above)
 species<- c("ABAM" ,"ABLA" ,"CANO" ,"PSME", "THPL" ,"TSHE" ,"TSME")
 state_name<-c("non-masting", "masting")
 
+#the prior on the log scale is the sum of a species effect and a state effect so it is simulated as two draws and added together.Then exponential. 
+set.seed(123)
 prior_phi_sp<-data.frame(
-  species= rep(rep(species, each=n),times=2),
+  species= rep(rep(species, each=n),times=2), #each species repeated n times (and one per draw) and then the whole blovk repeated twice
   state= rep(state_name, each= n*length(species)),
   value= exp(rnorm(n*length(species) * 2, log(4), 0.6) + rnorm(n*length(species)*2, 0, 0.3)),
   type= "Prior"
 )
 
+#same here, giving a log phi for every draws  and species.
 posterior_phi_sp<-data.frame(
   species= rep(rep(species, each=n),times=2),
   state= rep(state_name, each= n*length(species)),
@@ -422,9 +563,11 @@ posterior_phi_sp<-data.frame(
   type= "Posterior"
 )
 
+#combining them together
 df_phi<-bind_rows(prior_phi_sp, posterior_phi_sp)%>%
-  mutate(type= factor(type, levels = c("Prior", "Posterior")), state= factor(state, levels= state_names))
+  mutate(type= factor(type, levels = c("Prior", "Posterior")), state= factor(state, levels= state_name))
 
+#plot
 species_overdipersion_priorvspost<-ggplot(df_phi, aes(x = value, fill = type, color = type)) +
   geom_density(alpha = 0.4, linewidth = 0.7) +
   facet_wrap(state~ species, scales = "free", ncol = 4) +
@@ -446,14 +589,14 @@ ggsave(filename= "species_overdipersion_priorvspost.png", plot= species_overdipe
 
 # Model results -----------------------------------------------------------
 
+#Observed data summary and plot.
+#I wanted to plot the mean seed count by species, by species and year 
 sum_observed_data<- stand_year_all%>%
   group_by(year, spp)%>%
   summarise(mean_seed= mean(y), .groups = "drop")
-
 sum_observed_data2<- stand_year_all%>%
   group_by(spp)%>%
   summarise(mean_seed= mean(y), .groups = "drop")
-
 sum_seed_production<-ggplot(sum_observed_data, aes(x=year, y= log(mean_seed), colour =spp)) +
   geom_line(linewidth=1)+
   geom_point(size=2)+
@@ -464,6 +607,8 @@ sum_seed_production<-ggplot(sum_observed_data, aes(x=year, y= log(mean_seed), co
 sum_seed_production
 ggsave(filename= "sum_seed_production.png", plot= sum_seed_production,path = "Plots/Manuscript")
 
+#Stand table
+#I wanted a stand*species table to see which species are at which stand (similar than what I had in #2. but here I have the overall data (with the not PSP stand))
 species_stand<-stand_year_all%>%
   distinct(spp, stand)%>%
   group_by(spp)%>%
@@ -471,11 +616,14 @@ species_stand<-stand_year_all%>%
 write.table(species_stand, file = 'data/Tables/species_stand.txt', col.names = TRUE,
             row.names = FALSE, sep = "\t")
 
-samples<-rstan::extract(fit_75)
+#Species-level model results
+#Here I'm taking the posterior draws from the model (fit 75) and for each species, summarize the seed production per state, the transition probabilities and the dispersion.  
+#samples<-rstan::extract(fit_75) #not necessary if already done
 species<- c("ABAM" ,"ABLA" ,"CANO" ,"PSME", "THPL" ,"TSHE" ,"TSME")
 species_id<-stan_data_all$species_id
 baseline_area<-min(stan_data_all$area)
 
+#This is what I want in my table as measures- median, 90% credible interval, but I could also add the mean for example. 
 summary_masting<-function(x,name){
   tibble(parameter= name, 
          median = median(x),
@@ -484,45 +632,39 @@ summary_masting<-function(x,name){
 }
 
 results<-list()
-
 for(s in seq_along(species)) {
   f<-which (species_id == s) #the species and stand series 
-  
   #seeds per state
   low <-rowMeans (exp(samples$log_alpha_low[,f, drop= FALSE]))/baseline_area
   high <-rowMeans (exp(samples$log_alpha_high[,f, drop= FALSE]))/baseline_area
-  
   #transition probabilites
   theta1<-plogis(samples$grand_logit_theta1 + samples$alpha_theta1_species[,s])
   theta2<-plogis(samples$grand_logit_theta2 + samples$alpha_theta2_species[,s])
-  
   #overdispersion
   phi_low<-exp(samples$log_phi_species[,s]+ samples$log_phi_state[,1])
   phi_high<-exp(samples$log_phi_species[,s]+ samples$log_phi_state[,2])
-  
+  #results
   results[[s]]<-bind_rows(
     summary_masting(low, "Non-masting"),
     summary_masting(high, "Masting"),
-    summary_masting(high/low, "Fold change"),
+    summary_masting(high/low, "Fold change"),#maybe can remove? 
     summary_masting(theta1, "P stay low"), 
     summary_masting(theta2, "P stay high"),
-    summary_masting((1-theta1)/((1-theta1)+(1-theta2)), "P time high"),
+    summary_masting((1-theta1)/((1-theta1)+(1-theta2)), "P time high"), #the longest strech of staying in mast, but could remove. 
     summary_masting(phi_low, "Dispersion low"),
     summary_masting(phi_high, "Dispersion high")
   ) %>%
     mutate(species= species[s])
 }
-
+#Putting this into a table
 species_table<-bind_rows(results)%>% mutate (across(c(median, lo90, hi90), ~round (.x,2)))
 species_table
-
 write.table(species_table, file = 'data/Tables/species_table_model_results.txt', col.names = TRUE,
             row.names = FALSE, sep = "\t")
 
 
 
 #checking the model seed production results vs real observed data
-
 sp_check<-"ABAM"
 str(stan_data_all)
 str(samples)
@@ -531,9 +673,9 @@ length(selection)
 y_obs<-stan_data_all$y[selection]
 y_model<-samples$y_rep[,selection]
 dim(y_model)
-unique(samples$y_rep)
 
-set.seed(1)
+
+set.seed(123)
 d<-(sample(nrow(y_model),200))
 abam_observed_model<-ppc_dens_overlay(log1p(y_obs),log1p(y_model[d,]))+ labs(title= sp_check, x= "Seed count (log scale)", y= "Density")  
 abam_observed_model
@@ -604,7 +746,7 @@ tsme_observed_model
 ggsave(filename= "tsme_observed_model.png", plot= tsme_observed_model,path = "Plots/Manuscript")
 
 
-mcmc_trace(as.array(fit_75))
+
 
 # Synchrony functions-------------------------------------------------
 
@@ -616,7 +758,7 @@ meta_all <- stand_year_all %>% #I named it meta as it is overall data but can be
   mutate(row_id = row_number()) %>%
   rename(species = spp)
 
-get_unit_year_state <- function(draw_idx) {
+get_unit_year_state <- function(draw_idx) { #function to get the species, stand, year and state per draw
   tibble(
     species = meta_all$species,
     stand   = meta_all$stand,
@@ -625,27 +767,26 @@ get_unit_year_state <- function(draw_idx) {
   )
 }
 
-# Victor's synchrony. Within one year, for one draw: the fraction of stands in whichever state is more common that year 
-
+# Synchrony function (based on Victor synchrony). Within one year, for one draw: the fraction of stands in whichever state is more common that year 
 majority_state <- function(df) { 
-  state_counts <- table(df$state) #how many rows fall in each state
-  max_count<-max(state_counts) #the amount of counts in the majority state
+  state_counts <- table(df$state) #how many rows are in each state
+  max_count<-max(state_counts) #the max count in the majority state
   major_state_ID<-names(state_counts)[state_counts==max_count] # the most frequent state ID for that year and that draw
-  #majority_proportion = max(state_counts) / sum(state_counts) # the proportion of rows in that majority state
+  #majority_proportion = max(state_counts) / sum(state_counts) # the proportion of rows in that majority state, removed for the moment
   tibble (major_state = paste(major_state_ID, collapse= "/"), proportion= max_count / sum(state_counts))
 }
 
 
 summarise_draws <- function(df, value_col, group_col) { #for example later with ABAM I will have df= abam draws, value_col= proportion and group_col= year
   df %>%
-    group_by(.data[[group_col]]) %>% #will split the group by the variable I like with ABAM year for example.
+    group_by(.data[[group_col]]) %>% #will split the group by the variable I like with ABAM, year for example.
     summarise(
       median = median(.data[[value_col]], na.rm = TRUE), #the median of proportions across all draws that year
-      mean = mean(.data[[value_col]], na.rm= TRUE),
+      mean = mean(.data[[value_col]], na.rm= TRUE), #the mean
       lo90   = quantile(.data[[value_col]], 0.05, na.rm = TRUE), #the 5th percentile of proportion across draws
       hi90   = quantile(.data[[value_col]], 0.95, na.rm = TRUE), #the 95th percentile
       majority_value = names(table(.data[["major_state"]]))[which.max(table(.data[["major_state"]]))], #summarizes the major state across draws
-      conf = max(table(.data[["major_state"]]))/n(), #the share of draws in which the winning state was the majority
+      conf = max(table(.data[["major_state"]]))/n(), #the share of draws in which the winning state was the majority (share of draws that agree with the winning state)
       .groups = "drop"
     )
 }
