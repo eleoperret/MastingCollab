@@ -129,7 +129,7 @@ transformed parameters {
   vector<lower=0, upper=1>[F] theta2;
   array[F] matrix[2, 2] Gamma;
 
-  for (f in 1:F) { #loop for the transition matrix
+  for (f in 1:F) { //loop for the transition matrix
     int s  = species_id[f];
 
     theta1[f] = inv_logit(grand_logit_theta1
