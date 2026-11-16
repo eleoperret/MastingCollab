@@ -1,22 +1,51 @@
-##Code for multispecies HMM model 
-#HMM with two states each defined by a NB distribution
+##Code for Manuscript : Community-wide masting in coniferous forests (for example)
+
 ##Last updated : 12.11.2026
+##Eléonore Perret 
+##ETH Zürich
+
+
+#HMM model with two states each defined by a NB distribution (stan code : MultispeciesStanCodeLast.stan)
+
 ##Structure of the code 
+
+###IMPORTANT. Before running the code, please make sure that you have installed Stan on your computer (https://mc-stan.org/install/)
+### Section 5-8 are model verifications no not necessary to run if interested at only the results. 
+### I usually save my plots and tables, now it is all in # so you can remove it and add it to the folder of your choice if you want to save it. But please do not save in the environement I'm using now so I know that all the plots that are there I made them for the moment :)
+
 ##1. Libraries needed + setting working directory +Loading Mike's code
+
 ##2. Data import + modifications : Data needed to be added from the trees as not all the trees are present at each site and also data from the stand not surveyed by the PSP (SUNR, PARA and SPRY).Also adding the elevation. 
+
 ##3. Data preparation for Stan
-##4. Model fitting
-##5. Model diagnostic (model convergence, parameters, model summary and ppc)
-##6. State assignments
-##7. Posterior distribution of the parameters
-##8. Prior vs posterior check
-##9. Model results 
-##10. Synchrony functions
-##11. Intraspecific synchrony
-##12. Interspecific synchrony
+
+##4. Model fitting (fitting the model with stan) : this can take up to 20 min., double check line #43 is run for faster computational time)
+
+##5. Model diagnostic : model convergence (~is there divergence?) , parameters (~Rhat, ESS = did the chains converge? I can also add trace plots which are also a standard way for showing chain convergence), model summary,  ppc (is my model following the observed seed production).  
+
+##6. State assignments : This is also a form of model diagnostic. Deserve its section as need to check for species and stands. Also available in this section is the state assignement combined with the observed seed production
+
+##7. Posterior distribution of the parameters: Checking that the estimated seed production from the model and transition parameters are well identified (so are my posteriors narrow and unimodal?). Are they also biologically correct (high state produced more seeds than low, transition probabilities etc..)
+
+##8. Prior vs posterior check: This part allows to check for prior informative power. How much do my prior constrain or inform my posterior? 
+
+##9. Model results : actual numbers from the model. So mean seed production, transition probabilies etc... for each species, stands 
+
+##10. Synchrony functions : Those are functions I use to calculate my synchrony metrics. I first have one to pull out what I want from the draws (posterior predictions from the model), then I have one to calculate synchrony (% of stands or species within the majority state) and then I have one to pull out some metrics (mean, median, 95% CI etc..)
+
+##11. Synchrony: Here I have the actual results. So I have first, overall synchrony (all species x stands together), then I have intraspecific synchrony, interspecific synchrony and finally interspecific within stand synchrony. Here I have my results, plots and tables. 
+
+
 
 
 # 1. Library + Working directory + Mike's code-----------------------------------------------------------------
+
+#for myself as I have issues with computer access (no admin rights)
+# Sys.setenv(RTOOLS44_HOME = "C:/Users/eperret/rtools44")
+# Sys.setenv(PATH = paste("C:/Users/eperret/rtools44/usr/bin",Sys.getenv("PATH"), sep = ";"))
+# Sys.unsetenv("PKG_CPPFLAGS")   # clears leftover Stan flags from an earlier rstan load
+
+
 #Libraries
 library(dplyr)
 library(ggplot2)
@@ -27,6 +56,7 @@ library(bayesplot)
 library(tidyverse)
 library(posterior)
 library(purrr)
+library(ggrepel)
 
 
 options(mc.cores = parallel::detectCores()) ##Important to run my code faster
@@ -34,17 +64,17 @@ options(mc.cores = parallel::detectCores()) ##Important to run my code faster
 
 #Setting working directory 
 getwd()
-setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
+setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting") #please use your own working directory
 
-#Loading Mike's code
-setwd("Rscript_AnalysisEleonore/")
+#Loading Mike's code ( this is how I have it, but afterwards it will be stored in the github or Dryad into its own section)
+setwd("Rscript_AnalysisEleonore/") 
 #install.packages("colormap") #if not already installed
-util <- new.env() #to import the R code from Mike that I have on the Rscript Analysis Eleonore folder
+util <- new.env() #to import the R code from Mike that I have on the Rscript Analysis Eleonore folder, this is in the github repo : Masting\Rscript_AnalysisEleonore\"
 source("mcmc_visualization_tools.R", local=util)
 source("mcmc_analysis_tools_rstan.R", local=util)
 ls(util)
 
-
+#I have to redo this so that afterwards I'm in the overall masting repo.
 setwd("C:/Users/eperret/polybox - Eleonore Perret (eleonore.perret@usys.ethz.ch)@polybox.ethz.ch/phD/PhD/R/Masting_UBC/Masting")
 
 # 2. Data import + modification -------------------------------------------------------------
@@ -71,19 +101,19 @@ extra_stands %>%
   group_by(spp, stand) %>%
   summarise(n_years = n(), mean_density = mean(y/area), .groups = "drop")
 
-# b) Getting the information from the PSP data
-mapRainier<-read.csv("data/rawdata/Cleaned_mapping_2017 Rainier.csv", sep=";")
-
-#Species per stand if present 
-stands_per_species <- mapRainier %>%
-  group_by(species) %>%  
-  summarise(stands = list(unique(stand_id)),.groups = "drop") 
+# b) Getting the information from the PSP data #remove commented lines if needed to run/save again.
+# mapRainier<-read.csv("data/rawdata/Cleaned_mapping_2017 Rainier.csv", sep=";")
+# 
+# #Species per stand if present 
+# stands_per_species <- mapRainier %>%
+#   group_by(species) %>%  
+#   summarise(stands = list(unique(stand_id)),.groups = "drop") 
 
 # Saving the object (I prefer this way but can be done also directly)
-saveRDS(stands_per_species, file = "data/stands_per_species.rds")
+#saveRDS(stands_per_species, file = "data/stands_per_species.rds") 
 
 #c) Adding only the possible combination of species x stands
-stands_per_species <- readRDS("data/stands_per_species.rds")#from General.Data.R (orignal script but put there here for better readability)
+stands_per_species <- readRDS("data/stands_per_species.rds")
 stands_long <- stands_per_species %>%
   unnest(stands) %>%
   rename(spp = species,stand = stands)
@@ -94,11 +124,12 @@ seed_filtered <- seed_data %>%
 str(seed_filtered)
 #Seeds_filtered contains now all the species x stand combination 
 
-#d)Stand elevation
-stand_elev <- data.frame(
-  stand = c("TO11","TO04","TA01","AV02","AE10","TB13","AO03","AG05","AV06","AX15","AB08","PP17","AV14","AM16","AR07","PARA"  ,"SPRY","SUNR"),
-  elevation = c(600,668,700,850,1450,850,900,950,1060,1090,1100,1150,1150,1200,1450,1600,1700,1800))
-saveRDS(stand_elev, file= "data/stand_elevation_table.rds")
+#d)Stand elevation #saved stand elevation
+stands_per_species <- readRDS("data/stands_per_species.rds")
+# stand_elev <- data.frame(
+#   stand = c("TO11","TO04","TA01","AV02","AE10","TB13","AO03","AG05","AV06","AX15","AB08","PP17","AV14","AM16","AR07","PARA"  ,"SPRY","SUNR"),
+#   elevation = c(600,668,700,850,1450,850,900,950,1060,1090,1100,1150,1150,1200,1450,1600,1700,1800))
+# saveRDS(stand_elev, file= "data/stand_elevation_table.rds")
 
 
 # 3. Data prep for Stan ---------------------------------------------------------------
@@ -184,7 +215,7 @@ stan_data_all <- list(
 print (stan_data_all)
 
 # 4. Fitting Model -----------------------------------------------------------
-#Current model used after discussion in git
+#Current model #takes around 20 min to run. 
 fit_75 <- stan(
   file    = "Stan_code_Eleonore/Species_Stan_Model/MultispeciesStanCodeLast.stan",
   data    = stan_data_all,
@@ -229,7 +260,7 @@ model_table_summary<-as.data.frame(summary_model)%>% #model summary into a table
   tibble::rownames_to_column("parameter")%>%
   mutate(across(c(mean, se_mean, sd, '2.5%','25%','50%','75%', '97.5%'), ~round (.x, 3)),n_eff= round(n_eff),Rhat= round (Rhat,3))
 model_table_summary #checking
-write.table(model_table_summary, file = 'data/Tables/model_table_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")#saving
+#write.table(model_table_summary, file = 'data/Tables/model_table_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
 #But is the model fitting our data? 
 
@@ -241,25 +272,25 @@ write.table(model_table_summary, file = 'data/Tables/model_table_summary.txt', c
 par(mfrow = c(1,1))
 util$plot_hist_quantiles(samples, "y_rep",bin_min = 0, bin_max = 600, bin_delta = 20,baseline_values = stan_data_all$y)
 
-#Per series PPC
-#We can also check per series : 
-par(mfrow = c(4, 4))
-for (f in 1:G) {
-  idx    <- start_idxs[f]:end_idxs[f]
-  years_f <- stand_year_all$year[idx] 
-  pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-  util$plot_conn_pushforward_quantiles(samples,pred_names_f,years_f,xlab = paste("Series", f),ylab = "y")
-  points(years_f, stan_data_all$y[idx], pch = 16, cex = 0.8)
-}
+# # Per series PPC
+# # We can also check per series :
+# par(mfrow = c(4, 4))
+# for (f in 1:G) {
+#   idx    <- start_idxs[f]:end_idxs[f]
+#   years_f <- stand_year_all$year[idx]
+#   pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+#   util$plot_conn_pushforward_quantiles(samples,pred_names_f,years_f,xlab = paste("Series", f),ylab = "y")
+#   points(years_f, stan_data_all$y[idx], pch = 16, cex = 0.8)
+# }
 
-#or for a single combination of F
-f <- 26
-idx     <- start_idxs[f]:end_idxs[f]
-years_f <- stand_year_all$year[idx]
-y_obs_f <- stan_data_all$y[idx]
-pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
-util$plot_conn_pushforward_quantiles(samples, pred_names_f, years_f,xlab = paste("Series", f), ylab = "y")
-points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)# Adding point
+# #or for a single combination of F
+# f <- 26
+# idx     <- start_idxs[f]:end_idxs[f]
+# years_f <- stand_year_all$year[idx]
+# y_obs_f <- stan_data_all$y[idx]
+# pred_names_f <- sapply(idx, function(n) paste0("y_rep[", n, "]"))
+# util$plot_conn_pushforward_quantiles(samples, pred_names_f, years_f,xlab = paste("Series", f), ylab = "y")
+# points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)# Adding point
 
 #Everything looks good :) 
 
@@ -267,6 +298,11 @@ points(years_f, pmin(y_obs_f, 400), pch = 16, cex = 0.8)# Adding point
 
 
 # 6. State assignement -------------------------------------------------------
+
+stand_year_all%>%
+  group_by(stand)%>%
+  summarise(max_year=max(year))
+
 
 #Here we can see the model state assignements. I have made it into 3 different styles. a. you can see all the state assigment with the seed production for that same year and F combination (species x stand), you can ACrtl + Shift + C to uncomment this part if you want to look, b) seperated by species and stand ONLY state assignement c) seperated by species and stand ONLY seed production and d) specie seed production averaged. 
 #I also have for the stands if we are interested in it :) in e) and finally, inf ) the seed production parameters and state transition parameters. 
@@ -305,7 +341,10 @@ for (f in 1:length(stan_data_all$start_idxs)) {
 spp_f<-as.character(stand_year_all$spp[stan_data_all$start_idxs])
 st_f<-as.character(stand_year_all$stand[stan_data_all$start_idxs])
 
+#THose plots are the species observed seed production vs the model predicted seed production. 
+#You can decide to view them either all with the same scale (as I mention above using the display_ylim or at a differnet scale)
 #ABAM
+par(mfrow=c(4,4))
 for(f in which(spp_f=="ABAM")){
   start_id<-stan_data_all$start_idxs[f]
   end_id<-stan_data_all$end_idxs[f]
@@ -322,13 +361,13 @@ for(f in which(spp_f=="ABLA")){
   util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]))
   points(seq_along(idx),stan_data_all$y[idx], pch=18)
 }
-#CANO
-par(mfrow=c(2,2))
+#CANO #for this one, it could be better not setting the same scale. 
+par(mfrow=c(3,4))
 for(f in which(spp_f=="CANO")){
   start_id<-stan_data_all$start_idxs[f]
   end_id<-stan_data_all$end_idxs[f]
   idx<-start_id:end_id
-  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f]), display_ylim = c(0,max(stan_data_all$y[stand_year_all$spp=="CANO"])))
+  util$plot_disc_pushforward_quantiles(samples, paste0("y_rep[",idx,"]"),xticklabs = stand_year_all$year[idx], xlab= "Year",ylab= "Seed count", main = paste(spp_f[f], st_f[f])) #display_ylim = c(0,max(stan_data_all$y[stand_year_all$spp=="CANO"])))
   points(seq_along(idx),stan_data_all$y[idx], pch=18)
 }
 #PSME
@@ -370,7 +409,7 @@ for(f in which(spp_f=="THPL")){
 }
 
 
-#d) Now a mean of all the stands per year per species. SO I have only one plot per species, all the stands seed production are together averaged.
+#d) Now a mean of  all the stands seed production per year per species. SO I have only one plot per species, all the stands seed production are together averaged.
 par(mfrow=c(1,1))
 plot_species_mean <- function(sp, samples, normalise_area = TRUE) {
   # Rows for this species, excluding missing observations
@@ -383,15 +422,14 @@ plot_species_mean <- function(sp, samples, normalise_area = TRUE) {
   for (yr in yrs) {
     rows <- sel[stand_year_all$year[sel] == yr] #observations (stands) for this species and year
     arrs <- lapply(rows, function(r) samples[[paste0("y_rep[", r, "]")]] / scale_f[r]) #getting the posterior yrep for those stands
-    pooled[[paste0("mean_yrep[", yr, "]")]] <- Reduce(`+`, arrs) / length(arrs) # each poaterior draw gets itw own stand average so it keeps the full uncertainity 
+    pooled[[paste0("mean_yrep[", yr, "]")]] <- Reduce(`+`, arrs) / length(arrs) # each posterior draw gets its own stand average so it keeps the full uncertainity 
   }
-  # Observed mean per year
-  obs_mean <- tapply(stan_data_all$y[sel] / scale_f[sel], stand_year_all$year[sel], mean)
+  obs_mean <- tapply(stan_data_all$y[sel] / scale_f[sel], stand_year_all$year[sel], mean)# Observed mean per year
   #getting the plot
   util$plot_disc_pushforward_quantiles(
     pooled, names(pooled),
     xticklabs = yrs, xlab = "Year", ylab = "Mean seed count across stands",
-    main = sp, display_ylim = c(0, max(obs_mean) * 1.15)) # * 1.15 to get a bit of margin above but not really necessary ifw we prefer not :) 
+    main = sp, display_ylim = c(0, max(obs_mean) * 1.15)) # * 1.15 to get a bit of margin above but not really necessary ifw we prefer not :)
   points(seq_along(yrs), obs_mean, pch = 18)
 }
 
@@ -404,7 +442,7 @@ plot_species_mean("TSME", samples)
 plot_species_mean("THPL", samples)
 
 
-#State identification for the stand interspecific
+#State identification for the stand 
 #e) stands
 par(mfrow=c(1,1))
 plot_stand_mean <- function(st, samples, normalise_area = TRUE) {
@@ -418,7 +456,7 @@ plot_stand_mean <- function(st, samples, normalise_area = TRUE) {
   for (yr in yrs) {
     rows <- sel[stand_year_all$year[sel] == yr] #observations (stands) for this species and year
     arrs <- lapply(rows, function(r) samples[[paste0("y_rep[", r, "]")]] / scale_f[r]) #getting the posterior yrep for those stands
-    pooled[[paste0("mean_yrep[", yr, "]")]] <- Reduce(`+`, arrs) / length(arrs) # each poaterior draw gets itw own stand average so it keeps the full uncertainity 
+    pooled[[paste0("mean_yrep[", yr, "]")]] <- Reduce(`+`, arrs) / length(arrs) # each posterior draw gets ita own stand average so it keeps the full uncertainity 
   }
   # Observed mean per year
   obs_mean <- tapply(stan_data_all$y[sel] / scale_f[sel], stand_year_all$year[sel], mean)
@@ -444,7 +482,9 @@ plot_stand_mean("AV06", samples)
 #distribution for each parameter. First the parameters for seed count , log_mu_low, log_delta, dispersion per state and per species, then for the state transition, rho, logit 1 et 2, high to low, low to low etc...
 
 species <- c("ABAM","ABLA","CANO","PSME","THPL","TSHE","TSME")
-B <- 25              # number of  bins
+B <- 25 # number of  bins
+
+#samples<-util$extract_expectand_vals(fit_75) 
 
 #Seed production parameters 
 par(mfrow = c(2, 3))
@@ -502,15 +542,14 @@ util$plot_expectand_pushforward(samples[["sigma_theta1_species"]], B, display_na
 util$plot_expectand_pushforward(samples[["sigma_theta2_species"]], B, display_name = "SD among species (theta2)")
 
 # Transition probabilities per species
+par(mfrow = c(4, 4))
 for (s in 1:S) {
   theta1 <- plogis(samples[["grand_logit_theta1"]] + samples[[paste0("alpha_theta1_species[", s, "]")]])
   theta2 <- plogis(samples[["grand_logit_theta2"]] + samples[[paste0("alpha_theta2_species[", s, "]")]])
-  
-  par(mfrow = c(2, 2))
-  util$plot_expectand_pushforward(theta1,     B, display_name = paste(species[s], ": low -> low"))
+  util$plot_expectand_pushforward(theta1,B, display_name = paste(species[s], ": low -> low"))
   util$plot_expectand_pushforward(1 - theta1, B, display_name = paste(species[s], ": low -> high"))
   util$plot_expectand_pushforward(1 - theta2, B, display_name = paste(species[s], ": high -> low"))
-  util$plot_expectand_pushforward(theta2,     B, display_name = paste(species[s], ": high -> high"))
+  util$plot_expectand_pushforward(theta2,B, display_name = paste(species[s], ": high -> high"))
 }
 
 # 8. Prior vs posterior ------------------------------------------------
@@ -603,7 +642,7 @@ prior_posterior_plot<-ggplot(df, aes(x = value, fill = type, color = type)) +
   )
 prior_posterior_plot
 #saving the plot
-ggsave(filename= "prior_posterior_plot.png", plot= prior_posterior_plot,path = "Plots/Manuscript")
+#ggsave(filename= "prior_posterior_plot.png", plot= prior_posterior_plot,path = "Plots/Manuscript")
 
 
 #Overdispersion parameter phi by species and state (because too difficult to implement above)
@@ -649,9 +688,9 @@ species_overdipersion_priorvspost<-ggplot(df_phi, aes(x = value, fill = type, co
     panel.grid.minor = element_blank()
   )
 species_overdipersion_priorvspost
-ggsave(filename= "species_overdipersion_priorvspost.png", plot= species_overdipersion_priorvspost,path = "Plots/Manuscript")
+#ggsave(filename= "species_overdipersion_priorvspost.png", plot= species_overdipersion_priorvspost,path = "Plots/Manuscript")
 
-# Model results -----------------------------------------------------------
+# 9. Model results -----------------------------------------------------------
 samples <- rstan::extract(fit_75) #extracting the posterior draws if not done already
 #Observed data summary and plot.
 #I wanted to plot the mean seed count by species, by species and year 
@@ -661,15 +700,22 @@ sum_observed_data<- stand_year_all%>%
 sum_observed_data2<- stand_year_all%>%
   group_by(spp)%>%
   summarise(mean_seed= mean(y), .groups = "drop")
-sum_seed_production<-ggplot(sum_observed_data, aes(x=year, y= log(mean_seed), colour =spp)) +
-  geom_line(linewidth=1)+
+
+#Not sure what or how to plot this data. I have tried colors, now I have the species name next to the line with no colours, maybe some lines? 
+label_data <- sum_observed_data %>%
+  group_by(spp) %>%
+  filter(year == max(year)) %>%
+  ungroup()
+sum_seed_production<-ggplot(sum_observed_data, aes(x=year, y= log(mean_seed), group=spp)) +
+  geom_line(linewidth=1,color="black")+
   geom_point(size=2)+
   scale_x_continuous( breaks = seq(min(stand_year_all$year), max(stand_year_all$year)))+
-  scale_color_viridis_d(option= "viridis")+
+  geom_text_repel(data = label_data,aes(label = spp),nudge_x = 0.6,direction = "y",hjust = 0,size = 3.5,fontface = "bold",segment.color = "grey70",min.segment.length = 0,show.legend = FALSE) +
+  #scale_colour_paletteer_d("nationalparkcolors::Acadia")+
   labs(x= "Year", y= "Mean Seed production across stands", color = "Species")+
   theme_classic()
 sum_seed_production
-ggsave(filename= "sum_seed_production.png", plot= sum_seed_production,path = "Plots/Manuscript")
+#ggsave(filename= "sum_seed_production.png", plot= sum_seed_production,path = "Plots/Manuscript")
 
 #Stand table
 #I wanted a stand*species table to see which species are at which stand (similar than what I had in #2. but here I have the overall data (with the not PSP stand))
@@ -677,8 +723,7 @@ species_stand<-stand_year_all%>%
   distinct(spp, stand)%>%
   group_by(spp)%>%
   summarise(stands= paste(stand, collapse = ","), .groups = "drop")
-write.table(species_stand, file = 'data/Tables/species_stand.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+#write.table(species_stand, file = 'data/Tables/species_stand.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
 #Species-level model results
 #Here I'm taking the posterior draws from the model (fit 75) and for each species, summarize the seed production per state, the transition probabilities and the dispersion.  
@@ -723,8 +768,7 @@ for(s in seq_along(species)) {
 #Putting this into a table
 species_table<-bind_rows(results)%>% mutate (across(c(median, lo90, hi90), ~round (.x,2)))
 species_table
-write.table(species_table, file = 'data/Tables/species_table_model_results.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+#write.table(species_table, file = 'data/Tables/species_table_model_results.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
 
 
@@ -807,7 +851,7 @@ write.table(species_table, file = 'data/Tables/species_table_model_results.txt',
 
 
 
-# Synchrony functions-------------------------------------------------
+# 10. Synchrony functions-------------------------------------------------
 
 
 #pulling ths state for each draws (one row per posterior draw and one colum per stand/year/specie row)
@@ -817,7 +861,8 @@ meta_all <- stand_year_all %>% #I named it meta as it is overall data but can be
   mutate(row_id = row_number()) %>%
   rename(species = spp)
 
-get_unit_year_state <- function(draw_idx) { #function to get the species, stand, year and state per draw
+#function to get the species, stand, year and state per draw
+get_unit_year_state <- function(draw_idx) { 
   tibble(
     species = meta_all$species,
     stand   = meta_all$stand,
@@ -845,360 +890,42 @@ summarise_draws2 <- function(df, value_col, group_col) {
       lo90   = quantile(.data[[value_col]], 0.05, na.rm = TRUE), #the 5th percentile of proportion across draws
       hi90   = quantile(.data[[value_col]], 0.95, na.rm = TRUE), #the 95th percentile
       majority_value = names(table(.data[["major_state"]]))[which.max(table(.data[["major_state"]]))], #summarizes the major state across draws
-      conf = max(table(.data[["major_state"]]))/n(), #the share of draws in which the winning state was the majority,
+      conf = max(table(.data[["major_state"]]))/n(), #the share of draws in which the winning state was the majority
       p_tie= mean(grepl("/", .data[["major_state"]])),
       .groups = "drop"
     )
 }
 
 
-# Intraspecfic ------------------------------------------------------------
-##Here I first explain how I calculate the intraspecific synchrony (for one specie across stands in which it is present). I show first for ABAM and then do the same for the other 6 species. I could do a loop (I did that for the stands ) but the draws take time to be sampled ("abamm draws") and it results in some computing time, which, if there is a mistake made me loose a lot of time :P so for the moment I have them like this also, so I can check them better individually. But of course I can also make a loop later on. 
-##In general, I pull out the state assignements for each draws for a specie (so year x stand) and make a summary (see synchrony functions)that I then plot.Then I also check which stands I have for a specific year so I an overview. and then I have which stands are within the majority state. 
-
-####ABAM
-target_species <- "ABAM" #selecting the species
-target_meta <- meta_all %>% #selecting from my loop
-  filter(species == target_species)
-n_draws_total <-nrow(state_draws) #total number of draws
-draw_idx_use<- seq(1,n_draws_total, by=4)#so it is faster
-
-#mapdfr from the purr package: It takes list and vector and applies a function to each element combining afterwards everything into a single dataframe. 
-abam_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>% #latent state of every stand/species per year
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    ungroup()%>%
-    mutate(draw = d)
-})
-abam_summary <- summarise_draws(abam_draws, "proportion", "year")
-write.table(abam_summary, file = 'data/Tables/abam_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-abam_stand_state<-abam_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop= FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-#This is better because it takes into account if a year there was no majority state. 
-year_prop <- abam_stand_state %>%
-  group_by(year) %>%
-  summarise(n_stands = n(),
-            n_high   = sum(state == 2),
-            prop_high = n_high / n_stands,
-            split_year = prop_high == 0.5,            
-            .groups = "drop")
-#Stands within the majority state
-abam_majority_standsID<-abam_stand_state%>%
-  left_join(abam_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(abam_majority_standsID, file = 'data/Tables/abam_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-
-####ABLA
-target_species <- "ABLA"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-abla_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-abla_summary <- summarise_draws(abla_draws, "proportion", "year")
-write.table(abla_summary, file = 'data/Tables/abla_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-abla_majority_standsID<-target_stand_state%>% #stands within the majority state
-  left_join(abla_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(abla_majority_standsID, file = 'data/Tables/abla_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-
-
-####CANO
-target_species <- "CANO"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-cano_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-cano_summary <- summarise_draws(cano_draws, "proportion", "year")
-write.table(cano_summary, file = 'data/Tables/cano_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-cano_majority_standsID<-target_stand_state%>%#stands within the majority state
-  left_join(cano_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(cano_majority_standsID, file = 'data/Tables/cano_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-####PSME
-target_species <- "PSME"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-psme_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-psme_summary <- summarise_draws(psme_draws, "proportion", "year")
-write.table(psme_summary, file = 'data/Tables/psme_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-psme_majority_standsID<-target_stand_state%>%#stands within the majority state
-  left_join(psme_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(psme_majority_standsID, file = 'data/Tables/psme_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-####TSHE
-target_species <- "TSHE"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-tshe_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-tshe_summary <- summarise_draws(tshe_draws, "proportion", "year")
-write.table(tshe_summary, file = 'data/Tables/tshe_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-tshe_majority_standsID<-target_stand_state%>%
-  left_join(tshe_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(tshe_majority_standsID, file = 'data/Tables/tshe_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-####TSME
-target_species <- "TSME"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-tsme_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-tsme_summary <- summarise_draws(tsme_draws, "proportion", "year")
-write.table(tsme_summary, file = 'data/Tables/tsme_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-tsme_majority_standsID<-target_stand_state%>%
-  left_join(tsme_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(tsme_majority_standsID, file = 'data/Tables/tsme_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-####THPL
-target_species <- "THPL"
-target_meta <- meta_all %>%
-  filter(species == target_species)
-target_state_draws <- state_draws[, target_meta$row_id]
-n_draws_total <-nrow(target_state_draws) 
-thpl_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    filter(species == target_species) %>%
-    group_by(year) %>%
-    filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
-    mutate(draw = d)
-})
-thpl_summary <- summarise_draws(thpl_draws, "proportion", "year")
-write.table(thpl_summary, file = 'data/Tables/thpl_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-#the average of the latent state
-target_stand_state<-target_meta%>%
-  mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-  select(year, stand, mean_state, state)
-thpl_majority_standsID<-target_stand_state%>%
-  left_join(thpl_summary%>%select(year,majority_value), by= "year")%>%
-  filter(as.character(state)==majority_value)%>%
-  group_by(year,majority_value)%>%
-  summarise(n_in_majority=n(),
-            stands= paste(sort(stand),collapse = ","),.groups = "drop")
-write.table(thpl_majority_standsID, file = 'data/Tables/thpl_majority_standsID.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-
-#merging tables
-abam_table<-abam_summary%>%
-  left_join(abam_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean, lo90, hi90, majority_value, n_in_majority, stands)
-abla_table<-abla_summary%>%
-  left_join(abla_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-cano_table<-cano_summary%>%
-  left_join(cano_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-psme_table<-psme_summary%>%
-  left_join(psme_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-tshe_table<-tshe_summary%>%
-  left_join(tshe_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-tsme_table<-tsme_summary%>%
-  left_join(tsme_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-thpl_table<-thpl_summary%>%
-  left_join(thpl_majority_standsID, by= c("year", "majority_value"))%>%
-  select(year, median, mean,lo90, hi90, majority_value, n_in_majority, stands)
-
-all_species_intraspecific_synchrony_table<-bind_rows(ABAM=abam_table,ABLA= abla_table, CANO= cano_table, PSME= psme_table, THPL= thpl_table, TSHE= tshe_table,TSME= tsme_table, .id= "species")%>%
-  select (species, year, median, mean,lo90, hi90, majority_value, n_in_majority, stands )
-
-all_species_intraspecific_synchrony_table<- all_species_intraspecific_synchrony_table%>%
-  mutate(across(where (is.numeric), ~round(.x, 4)))
-
-write.table(all_species_intraspecific_synchrony_table, file = 'data/Tables/all_species_intraspecific_synchrony_table.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-
-#Merging all the plots for the intraspecific synchrony together
-species_order <- c("THPL", "TSHE", "PSME", "ABAM", "CANO", "TSME", "ABLA")
-#binding all the summaries together
-all_majority <- bind_rows(
-  THPL = thpl_summary, TSHE = tshe_summary, PSME = psme_summary,
-  ABAM = abam_summary, CANO = cano_summary, TSME = tsme_summary,
-  ABLA = abla_summary,
-  .id = "species"                               
-) %>%
-  mutate(species = factor(species, levels = species_order))
-#final plot
-all_majority_plot <- ggplot(all_majority, aes(x = year, y = median)) +
-  geom_line(alpha = 0.7) +
-  geom_point(size = 1.8) +
-  geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.4, fill = "lightblue") +
-  coord_cartesian(ylim = c(0.5, 1)) +
-  facet_wrap(~ species, ncol = 2,
-             labeller = labeller(species = latin_names)) +   
-  labs(x = "Year", y = "Proportion of stands in the majority state",
-       title = "Intraspecific synchrony") +
-  theme_minimal(base_size = 13) +
-  theme(strip.text = element_text(face = "italic", hjust = 0))
-all_majority_plot
-
-ggsave("all_majority_plot.png", all_majority_plot, path = "Plots/Manuscript",
-       width = 8, height = 10)
-
-
-
-
-
-
-#Overall mean (checking when there is a difference if per stand per year and not)
-overall_intra_mean_species<-function(draws, sp){
-  w<-meta_all%>%
-    filter(species==sp)%>%
-    count(year, name= "n_units")
-  
-  draws %>% 
-    left_join(w, by= "year") %>%
-    group_by(draw) %>%
-    summarise (mean_prop = mean(proportion), mean_prop_weighted= weighted.mean(proportion, n_units),.groups= "drop") %>%
-    summarise(species= sp, mean= mean(mean_prop), median= median(mean_prop), lo90= quantile(mean_prop, 0.05), hi90= quantile(mean_prop, 0.95),   mean_wght= mean(mean_prop_weighted), median_wght= median(mean_prop_weighted), lo90_wght= quantile(mean_prop_weighted, 0.05), hi90_wght= quantile(mean_prop_weighted, 0.95))
-}
-
-all_species_overall_intra_std<-bind_rows(
-  overall_intra_mean_species(abam_draws, "ABAM"),
-  overall_intra_mean_species(abla_draws, "ABLA"),
-  overall_intra_mean_species(cano_draws, "CANO"),
-  overall_intra_mean_species(psme_draws, "PSME"),
-  overall_intra_mean_species(thpl_draws, "THPL"),
-  overall_intra_mean_species(tshe_draws, "TSHE"),
-  overall_intra_mean_species(tsme_draws, "TSME"),
-)
-
-all_species_overall_intra_std<-all_species_overall_intra_std%>%
-  mutate(across(where (is.numeric), ~round(.x, 4)))
-
-write.table(all_species_overall_intra_std, file = 'data/Tables/all_species_overall_intra_std.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
-
-
-# Interspecific synchrony -------------------------------------------------
-draw_idx_use<- seq(1,n_draws_total, by=4)#so it is faster
+# 11. Synchrony -------------------------------------------------
+##I have here three metrics for synchrony. A. Overall Synchrony, B. Intraspecific synchrony, C. Interspecif synchrony among stands and D. Interspecies synchrony. 
+#For each metric, I first, as there are lots of draws, decided to take only each 4th draws. 
 n_draws_total <-nrow(state_draws)
+draw_idx_use<- seq(1,n_draws_total, by=4)#so it is faster
+
+#Then I always first get the corresponding draws out. So I take out from the draws with my function ("get_unit_year_state") based on the level (year, intra, inter...)I'm interested in, I filter rows >= 2 (specific to the unit, for example stand- species) that exists so that I have a minimum of two to assess majority (which is always the case, but in case someone else is using this code, this can be usefull. ). Then I use my function "majority state" to return, the majority state for my selected unit( year, intra...). I use group_modify for that basically the same as summarize expect it can handle entire group to a function , whereas summarise I would have to write for each output column its own expression. And finally, I added a d for draws to see from which draw this came from. 
+#Then I use my last function "summarise_draws_2" which basically, summarize the values into mean, median, lo90, hi90, majority value, conf and p-tie. 
+
+#For some I plot directly the output and save it, same with a table (for example overall synchrony)
+#For others, 
 
 
-
+##THEN I WANT TO CHECK OUT THE OVERALL SYNCHRONY at MT. RAINIER
 #A) Overall synchrony (all species and stands together)
 overall_draws <- map_dfr(draw_idx_use, function(d) {
-  get_unit_year_state(d) %>%
-    group_by(year) %>%
+  get_unit_year_state(d) %>% #function to get the species, stand,year and state per draw
+    group_by(year) %>% #because I want the overall per year
     filter(n() >= 2) %>%
-    group_modify(~majority_state(.x)) %>%
+    group_modify(~majority_state(.x)) %>% #function to get the major state and the proportion of X ("group_by") that is in the most common state for that year. 
     ungroup()%>%
     mutate(draw = d)
 })
-overall_summary <- summarise_draws2(overall_draws, "proportion", "year")
+overall_summary <- summarise_draws2(overall_draws, "proportion", "year") #function to summarize some values I think are interesting.
 overall_summary<-overall_summary%>%
-  mutate(across(where (is.numeric), ~round(.x, 4)))
-write.table(overall_summary, file = 'data/Tables/overall_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-overall_synchrony<-ggplot(overall_summary, aes(x = year, y = median)) +
+  mutate(across(where (is.numeric), ~round(.x, 4))) #round so I get values that are readable
+#write.table(overall_summary, file = 'data/Tables/overall_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+#Now plotting this overall synchrony. 
+overall_synchrony<-ggplot(overall_summary, aes(x = year, y = mean)) + #can be mean or median 
   geom_line(alpha = 0.7) +
   geom_point(size = 1.8) +
   geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
@@ -1209,11 +936,17 @@ overall_synchrony<-ggplot(overall_summary, aes(x = year, y = median)) +
   ) +
   theme_minimal(base_size = 13)
 overall_synchrony
-ggsave(filename= "overall_synchrony.png", plot= overall_synchrony,path = "Plots/Manuscript")
+#ggsave(filename= "overall_synchrony.png", plot= overall_synchrony,path = "Plots/Manuscript")
 
+##THEN I WANT TO CHECK OUT THE INTRASPECIFIC SYNCHRONY
 #B) Intraspecific 
-#1. defining for each species and year the majority state across all stands
+#This is the synchrony for a specie across all the stands where the specie is present. 
+#1. I define for each species and year the majority state across all stands
 #this is the intraspecific synchrony, so for each species and year the majority state across its stands
+##Here I calculate the intraspecific synchrony (per specie across stands in which it is present).
+##In general, I pull out the state assignements for each draws for a specie (so year x stand) and make a summary (see synchrony functions)that I then plot.Then I also check which stands I have for a specific year so I have an overview. and then I have which stands are within the majority state. 
+
+#Getting the state assigned per draws from the model using the function get_unit_year_State which allows to take out the species, year, stand and state for each draws. This takes some time to run 
 species_year_draws<- map_dfr(draw_idx_use, function(d) {
   get_unit_year_state(d) %>%
     group_by(species, year) %>%
@@ -1222,240 +955,263 @@ species_year_draws<- map_dfr(draw_idx_use, function(d) {
     ungroup()%>%
     mutate(draw = d)
 })
+#Summarizing the results 
 species_year_summary<- summarise_draws2(species_year_draws, "proportion", c("species", "year"))
 species_year_summary<-species_year_summary%>%
   mutate(across(where (is.numeric), ~round(.x, 4)))
-write.table(species_year_summary, file = 'data/Tables/species_year_summary.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+#write.table(species_year_summary, file = 'data/Tables/species_year_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
+#Plot of the intraspecific synchrony
 species_order <- c("THPL", "TSHE", "PSME", "ABAM", "CANO", "TSME", "ABLA")
 latin_names <- c(THPL = "Thuja plicata",TSHE = "Tsuga heterophylla",PSME = "Pseudotsuga menziesii",ABAM = "Abies amabilis",CANO = "Callitropsis nootkatensis",TSME = "Tsuga mertensiana",ABLA = "Abies lasiocarpa")
 species_year_summary_plot <- species_year_summary %>%
-  mutate(species = factor(species, levels = species_order)) %>%   # panel order
+  mutate(species = factor(species, levels = species_order)) %>%   
   ggplot(aes(x = year, y = median)) +
   geom_line(alpha = 0.7) +
-  geom_point(size = 1.8) +
+  geom_point(aes(colour= majority_value),size = 1.8) +
   geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.4, fill = "lightblue") +
-  facet_wrap(~ species, labeller = labeller(species = latin_names)) +  # Latin panel titles
-  labs(
-    x = "Year", y = "Proportion in the majority state",
-    title = "Intraspecific synchrony"
-  ) +
+  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  facet_wrap(~ species, labeller = labeller(species = latin_names)) +  
+  labs(x = "Year", y = "Proportion in the majority state",title = "Intraspecific synchrony") +
   theme_minimal(base_size = 13) +
   theme(strip.text = element_text(face = "italic", hjust = 0))
 species_year_summary_plot
-ggsave(filename= "species_year_summary_plot.png", plot= species_year_summary_plot,path = "Plots/Manuscript")
+#ggsave(filename= "species_year_summary_plot.png", plot= species_year_summary_plot,path = "Plots/Manuscript")
 
-#per species year and stands. 
 #Information about the stand and year (how many and which ones) 
 year_stands_species<-meta_all%>%
   group_by(year, species)%>%
-  summarise(n_stands=n_distinct(stand),
-            stands = paste(sort(unique(stand)), collapse = ","))
-write.table(year_stands_species, file = 'data/Tables/year_stands_species.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+  summarise(n_stands=n_distinct(stand),stands = paste(sort(unique(stand)), collapse = ","))
+#write.table(year_stands_species, file = 'data/Tables/year_stands_species.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
-#stand level states and majority stand ID. 
+#average latent state per stand and year and species. 
+species_stand_state<- meta_all%>%
+  mutate(mean_state= colMeans(state_draws[draw_idx_use, row_id, drop= FALSE]), state = round(mean_state))%>% select(species, year, stand, mean_state, state)
+
+#proportion of stands in the high sate per species and year and also here I flag years with same state proportions. 
+intra_species_year_prop<-species_stand_state %>%
+  group_by(species, year) %>%
+  summarise(n_stands = n(), n_high= sum(state==2), prop_high = n_high/n_stands, split_year= prop_high== 0.5, .groups= "drop")
+#write.table(intra_species_year_prop, file = 'data/Tables/intra_species_year_prop.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
+#which stands are in the majority state, per species and year
+species_majority_standsID<-species_stand_state%>%
+  left_join(species_year_summary%>%select(species, year,majority_value), by= c( "species", "year"))%>%
+  filter(as.character(state)==majority_value)%>%
+  group_by(species,year,majority_value)%>%
+  summarise(n_in_majority=n(),stands= paste(sort(stand),collapse = ","),.groups = "drop")
+#write.table(species_majority_standsID, file = 'data/Tables/species_majority_standsID.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
 #all species intraspecific synchrony table 
+all_species_intraspecific_synchrony_table<-species_year_summary%>%
+  left_join(species_majority_standsID, by= c("species","year", "majority_value"))%>%
+  select(species, year, median, mean, lo90, hi90, majority_value, n_in_majority, stands)%>%
+mutate(across(where (is.numeric), ~round(.x, 4)))
+#write.table(all_species_intraspecific_synchrony_table, file = 'data/Tables/all_species_intraspecific_synchrony_table.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
 #boxplot
+species_means<-species_year_summary%>%
+  mutate(species= factor(species, levels= species_order))%>%
+  group_by(species)%>%
+  summarise(mean_across_years= mean(mean), .groups= "drop")
+
+species_boxplot <- species_year_summary %>%
+  mutate(stand = factor(species, levels = species_order)) %>%
+  ggplot(aes(x = species, y = mean)) +
+  geom_boxplot(fill = "lightblue", alpha = 0.6, outlier.shape = NA) +
+  geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
+  stat_summary(fun = mean, geom = "point", shape = 21,fill = "blue", colour = "black", size = 3.5) +
+  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_x_discrete(labels= latin_names)+
+  labs(x = "Stand", y = "Proportion of species in the majority state",title = "Interspecific synchrony within stands") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(face="italic", angle= 45, hjust= 1, size= 12))
+species_boxplot
+#ggsave("species_boxplot.png", species_boxplot, path= "Plots/Manuscript", width= 8, height= 6)
+
+  
 #overall mean table. 
+species_stand_overall_table_prep<-meta_all%>%count(species, year, name = "n_units")
+all_species_INTRASYNC<-species_year_draws%>%
+  left_join(species_stand_overall_table_prep, by= c("species", "year"))%>%
+  group_by(species, draw)%>%
+  summarise(mean_prop = mean(proportion),mean_prop_weighted= weighted.mean(proportion, n_units), .groups= "drop")%>%
+  group_by(species)%>%
+  summarise(mean = mean(mean_prop), 
+            median= median (mean_prop), 
+            lo90= quantile (mean_prop, 0.05),
+            hi90 = quantile(mean_prop, 0.95),
+            mean_wgt= mean(mean_prop_weighted),
+            median_wgt= median (mean_prop_weighted),
+            lo90_wgt= quantile (mean_prop_weighted, 0.05),
+            hi90_wgt = quantile(mean_prop_weighted, 0.95),
+            .groups = "drop")%>%
+  mutate(across(where(is.numeric), ~round (.x,4)))
+#write.table(all_species_INTRASYNC, file = 'data/Tables/all_species_INTRASYNC.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
 
 
 #Interspecific synchrony
-#first, I take each species majority state per year
-#Here, per year, the majortiy state across species (species all together)
-species_overall_draws<- species_year_draws%>%
-  filter(!grepl("/",major_state))%>%
-  mutate(state=as.numeric(major_state))%>%
-  group_by(draw,year)%>%
-  filter(n()>=2)%>%
-  group_modify(~majority_state(.x))%>%
-  ungroup()
+#first, I take each species majority state per year (intraspecific) and then the majortiy state across species (species all together)
+#Now I'm taking from the species year draws which took the draws per species and year (intra-specific)
+unique(species_year_draws$major_state)
+#we have some years were the stands are ties for some species.  
+# how often does ties occur, and how many species remain?
+species_year_draws %>%
+  group_by(draw, year) %>%
+  summarise(n_sp = n(), n_tied = sum(grepl("/", major_state)), .groups = "drop") %>%
+  group_by(year) %>%
+  summarise(nb_species = mean(n_sp - n_tied),prop_draws_lost = mean(n_sp - n_tied < 2))
 
-interspecifc_summary<-summarise_draws2(species_overall_draws, "proportion", "year")
+#this is why I have to use another way for comparing the overall state (across all species; interspecific) to each species (intradspecific). This way I keep also the ties into account. I summarise this time, by either the overall state (across species) is above the value 0.5- high, the value below 0.5 -low or then the rest is 0.5. This way I keep the ties. 
+species_overall_draws_half <- species_year_draws %>%
+  mutate(state_high = case_when(major_state == "2" ~ 1,major_state == "1" ~ 0,TRUE~ 0.5)) %>% 
+  group_by(draw, year) %>%
+  filter(n() >= 2) %>%
+  summarise(prop_high   = mean(state_high),
+            proportion  = pmax(prop_high, 1 - prop_high),
+            major_state = case_when(prop_high > 0.5 ~ "2",prop_high < 0.5 ~ "1",TRUE~ "1/2"),.groups = "drop")
 
-interspecifc_plot<-ggplot(interspecifc_summary, aes(x = year, y = median)) +
+interspecific_summary <- summarise_draws2(species_overall_draws_half, "proportion", "year")
+
+interspecifc_plot<-ggplot(interspecific_summary, aes(x = year, y = median)) +
   geom_line(alpha = 0.7) +
-  geom_point(size = 1.8) +
+  geom_point(aes(colour= majority_value),size = 1.8) +
   geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
-  labs(
-  x = "year", y = "Proportion of species in the majority state",
-  title = "Interspecific synchrony",
-) +
+  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  labs(x = "year", y = "Proportion of species in the majority state",title = "Interspecific synchrony") +
   theme_minimal(base_size = 13)
 interspecifc_plot
-ggsave(filename= "interspecifc_plot.png", plot= interspecifc_plot,path = "Plots/Manuscript")
+#ggsave(filename= "interspecifc_plot.png", plot= interspecifc_plot,path = "Plots/Manuscript")
 
 #Now which species were in the majority each year
 #I can now compare the major state per year and check which species matched that. 
 species_in_majority_interspecific<-species_year_summary%>%
   select(species, year, sp_state= majority_value)%>%
-  left_join(interspecifc_summary%>%select(year, majority_value, conf, median), by= "year")%>%
-  filter(sp_state== majority_value)%>%
-  group_by(year,majority_value,conf,median)%>%
-  summarise(n_in_majority= n(), species= paste(sort(species), collapse= ","), .groups = "drop")
+  left_join(interspecifc_summary%>%select(year, majority_value), by= "year")%>%
+  mutate(in_majority = sp_state == majority_value & !grepl("/", majority_value), is_tied= sp_state== "1/2")%>%
+  group_by(year)%>%
+  summarise(n_species      = n(),
+            n_in_majority  = sum(in_majority),
+            n_tied         = sum(is_tied),
+            sp_in_majority = paste(sort(species[in_majority]), collapse = ","),
+            sp_tied        = paste(sort(species[is_tied]),     collapse = ","),
+            .groups = "drop") %>%
+  mutate(across(starts_with("sp_"), ~ na_if(.x, "")))
 
 interspecifc_table<-interspecifc_summary%>% 
-  left_join(species_in_majority_interspecific%>%select(year,majority_value,n_in_majority, species), by=c("year","majority_value"))%>%
-  select(year, median,mean, lo90, hi90, majority_value, p_tie, n_in_majority, species)
-
-interspecifc_table<-interspecifc_table%>%
+  left_join(species_in_majority_interspecific, by="year")%>%
+  select(year, median,mean, lo90, hi90, majority_value, conf, p_tie, n_species, n_in_majority, n_tied,sp_in_majority , sp_tied)%>%
   mutate(across(where (is.numeric), ~round(.x, 4)))
 
-write.table(interspecifc_table, file = 'data/Tables/interspecifc_table.txt', col.names = TRUE,
-            row.names = FALSE, sep = "\t")
+#write.table(interspecifc_table, file = 'data/Tables/interspecifc_table.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
+#plotting now the intra vs the interspecific synchrony. 
+all_sync <- bind_rows(species_year_summary %>% select(species, year, median, lo90, hi90),interspecific_summary %>% mutate(species = "ALL") %>% select(species, year, median, lo90, hi90)) %>%
+  mutate(species = factor(species, levels = c(species_order, "ALL")))
+
+panel_names <- c(latin_names, ALL = "All species (interspecific)")
+intra_vs_inter_plot <- ggplot(all_sync, aes(x = year, y = median)) +
+  geom_ribbon(aes(ymin = lo90, ymax = hi90, fill = species == "ALL"), alpha = 0.4) +
+  geom_line(alpha = 0.7) +
+  geom_point(size = 1.8) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "lightcoral"), guide = "none") +
+  facet_wrap(~ species, ncol = 2, labeller = labeller(species = panel_names)) +
+  labs(x = "Year", y = "Proportion in the majority state",title = "Intraspecific and interspecific synchrony") +
+  theme_minimal(base_size = 12) +
+  theme(strip.text = element_text(face = "italic", hjust = 0))
+intra_vs_inter_plot
+#ggsave(filename= "intra_vs_inter_plot.png", plot= intra_vs_inter_plot,path = "Plots/Manuscript")
+
+# Checking the overall vs interspecific synchrony
+sync_compare <- bind_rows(overall_summary %>% mutate(measure = "Overall (all stand-species pooled)"),interspecific_summary  %>% mutate(measure = "Interspecific (one per species)")) %>%
+  select(measure, year, median, lo90, hi90)
+
+compare_plot <- ggplot(sync_compare, aes(x = year, y = median, colour = measure, fill = measure)) +
+  geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.2, colour = NA) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.8) +
+  scale_colour_manual(name = NULL, values = c("Overall (all stand-species units )" = "steelblue","Interspecific (one per species)" = "firebrick")) +
+  scale_fill_manual(name = NULL, values = c("Overall (all stand-species units )" = "steelblue","Interspecific (one per species)" = "firebrick")) +
+  labs(x = "Year", y = "Proportion in the majority state",title = "Overall vs interspecific synchrony") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+compare_plot
+#ggsave(filename= "compare_plot.png", plot= compare_plot,path = "Plots/Manuscript")
+
 
 
 #Interspecific synchrony within a stand
-
-
-#Stand loop
-
-stand_loop<-function(st){
-  
-  target_meta <- meta_all %>%
-    filter(stand == st)
-  
-  #majority state across species per year
-  stand_draws <- map_dfr(draw_idx_use, function(d) {
-    get_unit_year_state(d) %>%
-      filter(stand == st) %>%
-      group_by(year) %>%
-      filter(n() >= 2) %>%
-      group_modify(~majority_state(.x)) %>%
-      ungroup() %>%
-      mutate(draw = d)
-    })
-  
-  if (nrow(stand_draws)==0){
-    message("skipped",st, ":because only one specie so no comparison possible")
-    return(NULL)
-  }
-  
-  stand_summary <- summarise_draws2(stand_draws, "proportion", "year")
-  write.table(stand_summary, file = paste0("data/Tables/",st,"_summary.txt"), col.names = TRUE,
-              row.names = FALSE, sep = "\t")
-  
-  stand_majority_plot<-ggplot(stand_summary, aes(x = year, y = median)) +
-    geom_line(alpha = 0.7) +
-    geom_point(size = 1.8) +
-    geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+
-    labs(
-      x = "year", y = "Proportion of species in the majority state",
-      title = "Interspecific synchrony across stands"
-    ) +
-    theme_minimal(base_size = 13)
-
-  ggsave(filename= paste0(st,"_majority.png"), plot= stand_majority_plot,path = "Plots/Manuscript")
-  
-  
-  target_species_state<-target_meta%>%
-    mutate(mean_state= colMeans(state_draws[draw_idx_use,row_id, drop = FALSE]), state= round(mean_state))%>%
-    select(year, species, mean_state, state)
-  
-  stand_majority_speciesID<-target_species_state%>%
-    left_join(stand_summary%>%select(year,majority_value, conf), by= "year")%>%
-    filter(as.character(state)==majority_value)%>%
-    group_by(year,majority_value, conf)%>%
-    summarise(n_in_majority=n(),
-              species= paste(sort(species),collapse = ","),.groups = "drop")
-  
-  write.table(stand_majority_speciesID, file = paste0( "data/Tables/",st,"_majority_speciesID.txt"), col.names = TRUE,
-              row.names = FALSE, sep = "\t")
-  
-  list(summary=stand_summary, plot= stand_majority_plot, species= stand_majority_speciesID)
-  
-
-}
-
-
-all_stands<-unique(stand_year_all$stand)
-
-stand_results<-map(all_stands, stand_loop)%>% #this takes some time. 
-  set_names(all_stands)
-
-
-stand_table_all<-imap_dfr(stand_results, function(results, st){
-  results$summary%>%
-    left_join(results$species %>% select (year, n_in_majority, species), by= "year")%>%
-    mutate(stand= st) %>%
-    select(stand, year, median, mean, lo90, hi90, majority_value, n_in_majority, species, conf)
+##Here I check the within interspecific synchrony in a stand. 
+stand_draws <- map_dfr(draw_idx_use, function(d) { #this takes a lot of time as there are 18 stands....
+  get_unit_year_state(d) %>%
+    group_by(stand, year) %>%  
+    filter(n() >= 2) %>%
+    group_modify(~majority_state(.x)) %>%
+    ungroup() %>%
+    mutate(draw = d)
 })
 
-stand_table_all<-stand_table_all%>%
+#Summarizing the results 
+stand_year_summary<- summarise_draws2(stand_draws, "proportion", c("stand", "year"))
+stand_year_summary<-stand_year_summary%>%
   mutate(across(where (is.numeric), ~round(.x, 4)))
+write.table(stand_year_summary, file = 'data/Tables/stand_year_summary.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
-write.table(stand_table_all, "data/Tables/stand_table_all.txt", col.names = TRUE,
-             row.names = FALSE, sep = "\t")
-
+#Plot of the interspecific synchrony within stands
 stand_order<-c("TO11" , "TA01", "TO04", "TB13","AV02" ,"AO03" ,"AG05" ,"AV06", "AB08" ,"AX15", "AV14" ,"PP17" ,"AM16", "AE10" ,"AR07", "PARA", "SPRY", "SUNR" )
-stand_table_all<-stand_table_all%>%
-  mutate(stand= factor(stand, levels= stand_order))
 
-#plots
-stand_interspecific_synchrony<-ggplot(stand_table_all, aes(x = year, y = median)) +
+stand_interspecif_synchrony_plot <- stand_year_summary %>%
+  mutate(stand = factor(stand, levels = stand_order)) %>%   
+  ggplot(aes(x = year, y = median)) +
   geom_line(alpha = 0.7) +
-  geom_point(size = 1.8) +
-  geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
-  facet_wrap(~stand)+
-  labs(
-    x = "year", y = "Proportion of species in the majority state",
-    title = "Interspecific synchrony",
-    subtitle = "Within Stands"
-  ) +
-  theme_minimal(base_size = 13)
-stand_interspecific_synchrony
-ggsave(filename= "stand_interspecific_synchrony.png", plot= stand_interspecific_synchrony,path = "Plots/Manuscript")
+  geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
+  geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.4, fill = "lightblue") +
+  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  facet_wrap(~ stand) +  
+  labs(x = "Year", y = "Proportion in the majority state",title = "Interspecific synchrony") +
+  theme_minimal(base_size = 13) 
+stand_interspecif_synchrony_plot
+#ggsave(filename= "stand_interspecif_synchrony_plot.png", plot= stand_interspecif_synchrony_plot,path = "Plots/Manuscript")
 
-stand_interspecific_synchrony_mean<-ggplot(stand_table_all, aes(x = stand, y = mean)) +
-  geom_boxplot(fill= "lightblue",alpha = 0.7) +
-  geom_jitter()+
-  stat_summary(fun= mean, geom= "point", shape= 21, fill= "blue", size=3.5) +
-  labs(
-    x = "Stands", y = "Proportion of stands in the majority state",
-    title = "Intraspecific synchrony"
-  ) +
-  theme_minimal(base_size = 13)
-stand_interspecific_synchrony_mean
-ggsave(filename= "stand_interspecific_synchrony_mean.png", plot= stand_interspecific_synchrony_mean,path = "Plots/Manuscript")
+stand_boxplot <- stand_year_summary %>%
+  mutate(stand = factor(stand, levels = stand_order)) %>%
+  ggplot(aes(x = stand, y = mean)) +
+  geom_boxplot(fill = "lightblue", alpha = 0.6, outlier.shape = NA) +
+  geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
+  stat_summary(fun = mean, geom = "point", shape = 21,fill = "blue", colour = "black", size = 3.5) +
+  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  labs(x = "Stand", y = "Proportion of species in the majority state",title = "Interspecific synchrony within stands") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+stand_boxplot
+#ggsave(filename= "stand_boxplot.png", plot= stand_boxplot,path = "Plots/Manuscript")
 
 
 
-stand_lines <- ggplot(stand_table_all,
-                      aes(x = year, y = median, colour = stand, group = stand)) +
-  geom_line(linewidth = 0.9, alpha = 0.85) +
-  geom_point(size = 1.8) +
-  scale_x_continuous(breaks = seq(min(stand_table_all$year),
-                                  max(stand_table_all$year))) +
-  scale_colour_viridis_d(option = "turbo", name = "Stand") +   # 18 distinguishable colours
-  coord_cartesian(ylim = c(0.5, 1)) +                          # a majority proportion is always >= 0.5
-  labs(
-    x = "Year", y = "Proportion of species in the majority state",
-    title = "Interspecific synchrony within stands"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))     # years do not overlap
-stand_lines
-ggsave(filename = "stand_interspecific_synchrony_lines.png", plot = stand_lines,
-       path = "Plots/Manuscript", width = 10, height = 6)
+#Species year state
+stand_species_state <- meta_all %>%
+  mutate(mean_state = colMeans(state_draws[draw_idx_use, row_id, drop = FALSE]),state= round(mean_state)) %>%
+  select(stand, year, species, mean_state, state)
+
+#Species matching the majority state
+stand_majority_speciesID_all <- stand_species_state %>%
+  left_join(stand_year_summary %>% select(stand, year, majority_value, conf),by = c("stand", "year")) %>%
+  filter(as.character(state) == majority_value) %>%
+  group_by(stand, year, majority_value, conf) %>%
+  summarise(n_in_majority = n(),species = paste(sort(species), collapse = ","),.groups = "drop")
+#write.table(stand_majority_speciesID_all, file = 'data/Tables/stand_majority_speciesID_all.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
 
+#Final table 
+stand_table_all <- stand_year_summary %>%
+  left_join(stand_majority_speciesID_all %>% select(stand, year, n_in_majority, species),
+            by = c("stand", "year")) %>%
+  select(stand, year, median, mean, lo90, hi90, majority_value,
+         n_in_majority, species, conf) %>%
+  mutate(across(where(is.numeric), ~round(.x, 4)))
 
-stand_overview<-stand_year_all%>%
-  group_by(stand)%>%
-  summarise(
-    species_present= paste(sort(unique(spp)), collapse = ","),
-    n_species= n_distinct(spp),
-    years_surveyed= paste(sort(unique(year)), collapse= ","),
-    total_years= n_distinct(year),
-    .groups= "drop"
-  )
-
-
-
-write.table(stand_overview, "data/Tables/stand_overview.txt", col.names = TRUE,
-            row.names = FALSE, sep = "\t")
-
+#write.table(stand_table_all, file = 'data/Tables/stand_table_all.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
 
 
