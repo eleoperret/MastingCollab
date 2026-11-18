@@ -968,13 +968,14 @@ species_year_summary_plot <- species_year_summary %>%
   mutate(species = factor(species, levels = species_order)) %>%   
   ggplot(aes(x = year, y = median)) +
   geom_line(alpha = 0.7) +
-  geom_point(aes(colour= majority_value),size = 1.8) +
   geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.4, fill = "lightblue") +
-  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
-  facet_wrap(~ species, labeller = labeller(species = latin_names)) +  
+  geom_point(aes(colour= majority_value),size = 1.8) +
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_x_continuous(breaks= seq(2010,2024, 2))+
+  facet_wrap(~ species,ncol=2, labeller = labeller(species = latin_names), axes= "all") + 
   labs(x = "Year", y = "Proportion in the majority state",title = "Intraspecific synchrony") +
   theme_minimal(base_size = 13) +
-  theme(strip.text = element_text(face = "italic", hjust = 0))
+  theme(strip.text = element_text(face = "italic", hjust = 0), legend.position = "top", axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5) )
 species_year_summary_plot
 #ggsave(filename= "species_year_summary_plot.png", plot= species_year_summary_plot,path = "Plots/Manuscript")
 
@@ -1016,16 +1017,17 @@ species_means<-species_year_summary%>%
   summarise(mean_across_years= mean(mean), .groups= "drop")
 
 species_boxplot <- species_year_summary %>%
-  mutate(stand = factor(species, levels = species_order)) %>%
+  mutate(species = factor(species, levels = species_order)) %>%
   ggplot(aes(x = species, y = mean)) +
   geom_boxplot(fill = "lightblue", alpha = 0.6, outlier.shape = NA) +
   geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
   stat_summary(fun = mean, geom = "point", shape = 21,fill = "blue", colour = "black", size = 3.5) +
-  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
   scale_x_discrete(labels= latin_names)+
-  labs(x = "Stand", y = "Proportion of species in the majority state",title = "Interspecific synchrony within stands") +
+  coord_cartesian(ylim= c(0.5,1))+
+  labs(x = "Species", y = "Proportion of species in the majority state",title = "Interspecific synchrony within stands") +
   theme_minimal(base_size = 12) +
-  theme(axis.text.x = element_text(face="italic", angle= 45, hjust= 1, size= 12))
+  theme(axis.text.x = element_text(face="italic", angle= 45, hjust= 1, size= 12),axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 species_boxplot
 #ggsave("species_boxplot.png", species_boxplot, path= "Plots/Manuscript", width= 8, height= 6)
 
@@ -1078,9 +1080,12 @@ interspecifc_plot<-ggplot(interspecific_summary, aes(x = year, y = median)) +
   geom_line(alpha = 0.7) +
   geom_point(aes(colour= majority_value),size = 1.8) +
   geom_ribbon(aes(ymin=lo90,ymax=hi90),alpha=0.4, fill="lightblue")+ 
-  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  coord_cartesian(ylim= c(0.5,1))+
+  scale_x_continuous(breaks= seq(2010,2024, 1))+
   labs(x = "year", y = "Proportion of species in the majority state",title = "Interspecific synchrony") +
-  theme_minimal(base_size = 13)
+  theme_minimal(base_size = 13)+
+  theme(axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 interspecifc_plot
 #ggsave(filename= "interspecifc_plot.png", plot= interspecifc_plot,path = "Plots/Manuscript")
 
@@ -1088,7 +1093,7 @@ interspecifc_plot
 #I can now compare the major state per year and check which species matched that. 
 species_in_majority_interspecific<-species_year_summary%>%
   select(species, year, sp_state= majority_value)%>%
-  left_join(interspecifc_summary%>%select(year, majority_value), by= "year")%>%
+  left_join(interspecific_summary%>%select(year, majority_value), by= "year")%>%
   mutate(in_majority = sp_state == majority_value & !grepl("/", majority_value), is_tied= sp_state== "1/2")%>%
   group_by(year)%>%
   summarise(n_species      = n(),
@@ -1099,27 +1104,42 @@ species_in_majority_interspecific<-species_year_summary%>%
             .groups = "drop") %>%
   mutate(across(starts_with("sp_"), ~ na_if(.x, "")))
 
-interspecifc_table<-interspecifc_summary%>% 
+interspecifc_table<-interspecific_summary%>% 
   left_join(species_in_majority_interspecific, by="year")%>%
   select(year, median,mean, lo90, hi90, majority_value, conf, p_tie, n_species, n_in_majority, n_tied,sp_in_majority , sp_tied)%>%
   mutate(across(where (is.numeric), ~round(.x, 4)))
-
 #write.table(interspecifc_table, file = 'data/Tables/interspecifc_table.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
 
+overall_table_prep<-meta_all%>%count(year, name = "n_units")
+
+INTERSYNC<-species_overall_draws_half%>%
+  left_join(overall_table_prep, by= c("year"))%>%
+  group_by(year)%>%
+  summarise(mean = mean(proportion), 
+            median= median (proportion), 
+            lo90= quantile (proportion, 0.05),
+            hi90 = quantile(proportion, 0.95),
+            p_tie= mean(major_state== "1/2"),
+            .groups = "drop")%>%
+  mutate(across(where(is.numeric), ~round (.x,4)))
+
 #plotting now the intra vs the interspecific synchrony. 
-all_sync <- bind_rows(species_year_summary %>% select(species, year, median, lo90, hi90),interspecific_summary %>% mutate(species = "ALL") %>% select(species, year, median, lo90, hi90)) %>%
+all_sync <- bind_rows(species_year_summary %>% select(species, year, median, lo90, hi90, majority_value),interspecific_summary %>% mutate(species = "ALL") %>% select(species, year, median, lo90, hi90,, majority_value)) %>%
   mutate(species = factor(species, levels = c(species_order, "ALL")))
 
 panel_names <- c(latin_names, ALL = "All species (interspecific)")
 intra_vs_inter_plot <- ggplot(all_sync, aes(x = year, y = median)) +
   geom_ribbon(aes(ymin = lo90, ymax = hi90, fill = species == "ALL"), alpha = 0.4) +
   geom_line(alpha = 0.7) +
-  geom_point(size = 1.8) +
-  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "lightcoral"), guide = "none") +
-  facet_wrap(~ species, ncol = 2, labeller = labeller(species = panel_names)) +
+  geom_point(aes(colour= majority_value),size = 1.8) +
+  scale_x_continuous(breaks= seq(2010,2024, 2))+
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_fill_manual(values = c("FALSE" = "lightblue", "TRUE" = "grey"), guide = "none") +
+  facet_wrap(~ species, ncol = 2, labeller = labeller(species = panel_names),axes= "all") +
+  coord_cartesian(ylim= c(0.5,1))+
   labs(x = "Year", y = "Proportion in the majority state",title = "Intraspecific and interspecific synchrony") +
   theme_minimal(base_size = 12) +
-  theme(strip.text = element_text(face = "italic", hjust = 0))
+  theme(strip.text = element_text(face = "italic", hjust = 0),axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 intra_vs_inter_plot
 #ggsave(filename= "intra_vs_inter_plot.png", plot= intra_vs_inter_plot,path = "Plots/Manuscript")
 
@@ -1131,11 +1151,13 @@ compare_plot <- ggplot(sync_compare, aes(x = year, y = median, colour = measure,
   geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.2, colour = NA) +
   geom_line(linewidth = 0.8) +
   geom_point(size = 1.8) +
+  scale_x_continuous(breaks= seq(2010,2024, 1))+
+  coord_cartesian(ylim= c(0.5,1))+
   scale_colour_manual(name = NULL, values = c("Overall (all stand-species units )" = "steelblue","Interspecific (one per species)" = "firebrick")) +
   scale_fill_manual(name = NULL, values = c("Overall (all stand-species units )" = "steelblue","Interspecific (one per species)" = "firebrick")) +
   labs(x = "Year", y = "Proportion in the majority state",title = "Overall vs interspecific synchrony") +
   theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom")
+  theme(axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 compare_plot
 #ggsave(filename= "compare_plot.png", plot= compare_plot,path = "Plots/Manuscript")
 
@@ -1167,12 +1189,16 @@ stand_interspecif_synchrony_plot <- stand_year_summary %>%
   geom_line(alpha = 0.7) +
   geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
   geom_ribbon(aes(ymin = lo90, ymax = hi90), alpha = 0.4, fill = "lightblue") +
-  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
-  facet_wrap(~ stand) +  
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  facet_wrap(~ stand,axes= "all") +  
+  coord_cartesian(ylim= c(0.5,1))+
+  scale_x_continuous(breaks= seq(2010,2024, 4))+
   labs(x = "Year", y = "Proportion in the majority state",title = "Interspecific synchrony") +
-  theme_minimal(base_size = 13) 
+  theme_minimal(base_size = 13)+
+  theme(axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 stand_interspecif_synchrony_plot
 #ggsave(filename= "stand_interspecif_synchrony_plot.png", plot= stand_interspecif_synchrony_plot,path = "Plots/Manuscript")
+
 
 stand_boxplot <- stand_year_summary %>%
   mutate(stand = factor(stand, levels = stand_order)) %>%
@@ -1180,10 +1206,11 @@ stand_boxplot <- stand_year_summary %>%
   geom_boxplot(fill = "lightblue", alpha = 0.6, outlier.shape = NA) +
   geom_point(aes(colour= majority_value), position = position_jitter(width = 0.15, height = 0, seed = 123),size = 1.5) +
   stat_summary(fun = mean, geom = "point", shape = 21,fill = "blue", colour = "black", size = 3.5) +
-  scale_colour_manual(name = "Majority state\nthat year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  scale_colour_manual(name = "Majority state that year",values = c("1" = "goldenrod", "2" = "firebrick", "1/2" = "grey50"),labels = c("1" = "State 1 (low)", "2" = "State 2 (high)", "1/2" = "Tie")) +
+  coord_cartesian(ylim = c(0.5,1))+
   labs(x = "Stand", y = "Proportion of species in the majority state",title = "Interspecific synchrony within stands") +
   theme_minimal(base_size = 12) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),axis.line = element_line(colour= "black", linewidth = 0.5),axis.ticks = element_line(colour= "black", linewidth = 0.5), legend.position = "top")
 stand_boxplot
 #ggsave(filename= "stand_boxplot.png", plot= stand_boxplot,path = "Plots/Manuscript")
 
@@ -1212,6 +1239,228 @@ stand_table_all <- stand_year_summary %>%
   mutate(across(where(is.numeric), ~round(.x, 4)))
 
 #write.table(stand_table_all, file = 'data/Tables/stand_table_all.txt', col.names = TRUE,row.names = FALSE, sep = "\t")
+
+stand_overall_table_prep<-meta_all%>%count(stand, year, name = "n_units")
+all_stands_INTERSYNC<-stand_draws%>%
+  left_join(stand_overall_table_prep, by= c("stand", "year"))%>%
+  group_by(stand, draw)%>%
+  summarise(mean_prop = mean(proportion),mean_prop_weighted= weighted.mean(proportion, n_units), .groups= "drop")%>%
+  group_by(stand)%>%
+  summarise(mean = mean(mean_prop), 
+            median= median (mean_prop), 
+            lo90= quantile (mean_prop, 0.05),
+            hi90 = quantile(mean_prop, 0.95),
+            mean_wgt= mean(mean_prop_weighted),
+            median_wgt= median (mean_prop_weighted),
+            lo90_wgt= quantile (mean_prop_weighted, 0.05),
+            hi90_wgt = quantile(mean_prop_weighted, 0.95),
+            .groups = "drop")%>%
+  mutate(across(where(is.numeric), ~round (.x,4)))
+
+
+
+
+
+# Plots and tables for the manuscript ------------------------------------------------
+
+install.packages("knableExtra")
+install.packages("patchwork")
+library(patchwork)
+library(knitr)
+library (purrr)
+library(dplyr)
+library(tidyverse)
+library(kableExtra)
+
+
+#Making a table for the method section on stand and length
+stands <- tribble(
+  ~stand, ~elev, ~species,~start, ~end, ~status,
+  "TO11",  564, "PSME THPL TSHE",2010, 2020, "Ended",
+  "TA01",  630, "ABAM PSME THPL TSHE",2010, 2024, "Ongoing",
+  "TO04",  643, "ABAM PSME THPL TSHE TSME",2010, 2024, "Ongoing",
+  "TB13",  792, "ABAM PSME THPL TSHE",2010, 2020, "Ended",
+  "AV02",  835, "ABAM PSME THPL TSHE",2010, 2020, "Ended",
+  "AO03",  854, "ABAM PSME THPL TSHE",2010, 2024, "Ongoing",
+  "AG05",  913, "ABAM PSME THPL TSHE",2010, 2024, "Ongoing",
+  "AV06", 1035, "ABAM CANO PSME THPL TSHE",2010, 2024, "Ongoing",
+  "AB08", 1042, "ABAM CANO PSME THPL TSHE",2010, 2024, "Ongoing",
+  "AX15", 1062, "ABAM CANO PSME THPL TSHE",2010, 2020, "Ended",
+  "AV14", 1081, "ABAM CANO TSHE",2010, 2020, "Ended",
+  "PP17", 1128, "ABAM ABLA CANO PSME TSHE TSME",2010, 2020, "Ended",
+  "AM16", 1170, "ABAM CANO TSHE TSME",2010, 2024, "Ongoing",
+  "AE10", 1431, "ABAM ABLA CANO TSME",2010, 2024, "Ongoing",
+  "AR07", 1435, "ABAM CANO TSME",2010, 2020, "Ended",
+  "PARA", 1595, "ABAM ABLA CANO",2010, 2024, "Ongoing",
+  "SPRY", 1762, "ABAM ABLA CANO",2011, 2020, "Ended",
+  "SUNR", 1797, "ABAM ABLA CANO",2011, 2024, "Ongoing"
+) %>%
+  arrange(elev) %>%
+  mutate(label = factor(paste0(stand, " (", elev, " m)"),
+                        levels = paste0(stand, " (", elev, " m)")))
+
+sp_order <- c("THPL", "TSHE", "PSME", "ABAM", "CANO", "TSME", "ABLA")
+
+# Species presence/absence grid
+presence <- stands %>%
+  select(label, species) %>%
+  separate_rows(species, sep = " ") %>%
+  mutate(present = TRUE) %>%
+  complete(label, species = sp_order, fill = list(present = FALSE)) %>%
+  mutate(species = factor(species, levels = sp_order))
+
+# 1. stand x years
+p_time <- ggplot(stands) +
+  geom_rect(aes(xmin = start - 0.5, xmax = end + 0.5,
+                ymin = as.numeric(label) - 0.3, ymax = as.numeric(label) + 0.3,
+                fill = status)) +
+  scale_y_continuous(breaks = seq_along(levels(stands$label)),
+                     labels = levels(stands$label), expand = c(0.02, 0.02)) +
+  scale_x_continuous(breaks = seq(2010, 2024, 2), expand = c(0, 0)) +
+  scale_fill_manual(values = c(Ongoing = "#2b7bba", Ended = "#9ecae1"), name = NULL) +
+  #labs(x = "Year", y = NULL, title = "Monitoring period") +
+  labs(x = "Year", y = "Stands") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom")
+
+sp_labels <- expression(
+  italic("T. plicata"),
+  italic("T. heterophylla"),
+  italic("P. menziesii"),
+  italic("A. amabilis"),
+  italic("C. nootkatensis"),
+  italic("T. mertensiana"),
+  italic("A. lasiocarpa")
+)
+
+# 2. Are species present?
+p_sp <- ggplot(presence, aes(species, label, fill = present)) +
+  geom_tile(color = "white", linewidth = 0.8) +
+  scale_fill_manual(values = c(`TRUE` = "darkgrey", `FALSE` = "grey90")) +
+  scale_x_discrete(position = "bottom", labels = sp_labels) +
+ # labs(x = NULL, y = NULL, title = "Species present") +
+  labs(x = "Species", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(),
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "bottom")
+
+methods<-p_time + p_sp + plot_layout(widths = c(2.2, 1))
+methods
+#ggsave(filename= "methods.png", plot= methods,path = "Plots/Manuscript")
+
+
+#MODEL VALIDATION: Table of Rhat and ESS for all parameters. 
+tab <- model_table_summary %>%
+  select(parameter, mean, sd, `2.5%`, `50%`, `97.5%`, n_eff, Rhat) %>%
+  mutate(
+    parameter = gsub("_", "\\\\_", parameter),#for latex
+    across(c(mean, sd, `2.5%`, `50%`, `97.5%`), ~ sprintf("%.3f", .x)),
+    n_eff = sprintf("%d", as.integer(n_eff)),
+    Rhat  = sprintf("%.3f", Rhat)
+  )
+
+kable(tab,
+      format    = "latex",
+      booktabs  = TRUE,
+      longtable = TRUE,
+      escape    = FALSE,
+      align     = c("l", rep("r", 7)),
+      col.names = c("Parameter", "Mean", "SD", "2.5\\%", "Median", "97.5\\%","$n_{\\mathrm{eff}}$", "$\\hat{R}$"),
+      caption   = "Posterior summaries of the model parameters.",
+      label     = "model_summary") %>%
+  writeLines(con = "data/Tables/model_summary.tex")
+
+#MODEL OUTPUT: Masting metrics, dispersion, general output from the model on seed production and state transition.
+species_order <- c("THPL", "TSHE", "PSME", "ABAM", "CANO", "TSME", "ABLA")
+latin_names <- c(THPL = "Thuja plicata",TSHE = "Tsuga heterophylla",PSME = "Pseudotsuga menziesii",ABAM = "Abies amabilis",CANO = "Callitropsis nootkatensis",TSME = "Tsuga mertensiana",ABLA = "Abies lasiocarpa")
+
+tab2<-species_table %>%
+  mutate(estimate= case_when(grepl("^P", parameter)~ sprintf("%.2f (%.2f--%.2f)", median, lo90, hi90),TRUE ~ sprintf("%.1f (%.1f--%.1f)", median, lo90, hi90)), species= factor(species, levels = names(latin_names)))%>%
+  arrange(species)
+tab2<-tab2 %>%
+  group_by(species)%>%
+  mutate(species_label= if_else(row_number()==1, paste0("\\textit{", unname (latin_names[as.character(species)]), "}"),""))%>%
+  ungroup()%>%
+  select(species_label, parameter, estimate)
+kable(tab2, 
+      format= "latex", 
+      booktabs = TRUE, 
+      longtable= TRUE, 
+      escape = FALSE, 
+      align = c("1", "1", "r"), 
+      col.names= c("Species", "Parameter", "Median  (90\\%CI)"), 
+      linesep= c(rep(c(rep("", 7), "\\addlinespace"), 6), rep("", 8)), 
+      caption= "Posterior median and 90\\% credible interval of the model parameters for each species.",
+      label= "species_parameters") %>%
+  writeLines(con = "data/Tables/species_parameters.tex")
+
+
+#INTRASPECIFIC SYNCHRONY
+tab3<- all_species_INTRASYNC %>%
+  mutate( species= factor(species, levels= names(latin_names)), 
+          Species= paste0("\\textit{", unname (latin_names[as.character(species)]), "}"),
+                          unweighted= sprintf("%.2f (%.2f --%.2f)", median, lo90, hi90),
+                          weighted = sprintf("%.2f (%.2f --%.2f)", median_wgt, lo90_wgt, hi90_wgt))%>%
+  arrange(species)%>%
+  select(Species, unweighted, weighted)
+
+
+kable(tab3, 
+      format= "latex", 
+      booktabs = TRUE,  
+      escape = FALSE, 
+      align = c("1", "r", "r"), 
+      col.names= c("Species", "Unweighted median (90\\% CI)", " Weighted median  (90\\%CI)"), 
+      caption= "Intraspecific synchrony (proportion of stands in the majority state), averaged across years. The unweighted value gives each year equal weight; the weighted value weights each year by the number of stands monitored. We present posterior medians with 90\\% credible intervals.",,
+      label= "intraspecific_results") %>%
+  writeLines(con = "data/Tables/intraspecific_results.tex")
+
+
+#INTERSPECIFIC SYNCHRONY AMONG STANDS
+tab4<- all_stands_INTERSYNC %>%
+  mutate( stand= factor(stand, levels= stand_order), 
+          unweighted= sprintf("%.2f (%.2f --%.2f)", median, lo90, hi90),
+          weighted = sprintf("%.2f (%.2f --%.2f)", median_wgt, lo90_wgt, hi90_wgt))%>%
+  arrange(stand)%>%
+  select(stand, unweighted, weighted)
+
+
+kable(tab4, 
+      format= "latex", 
+      booktabs = TRUE,  
+      escape = FALSE, 
+      align = c("1", "r", "r"), 
+      col.names= c("Stand", "Unweighted median (90\\% CI)", " Weighted median  (90\\%CI)"), 
+      caption= "Stand Interspecific synchrony (proportion of species in the majority state within a stand), averaged across years. The unweighted value gives each year equal weight; the weighted value weights each year by the number of species present. We present posterior medians with 90\\% credible intervals.",,
+      label= "stand_interspecific_results") %>%
+  writeLines(con = "data/Tables/stand_interspecific_results.tex")
+
+
+#INTERSPECIFIC SYNCHRONY
+
+tab5<- INTERSYNC %>%
+  mutate( Year= as.character(year), 
+          estimate= sprintf("%.2f (%.2f --%.2f)", median, lo90, hi90),
+          tie= sprintf("%.2f", p_tie))%>%
+  select(Year, estimate, tie)
+
+
+kable(tab5, 
+      format= "latex", 
+      booktabs = TRUE,  
+      escape = FALSE, 
+      align = c("1", "r", "r"), 
+      col.names= c("Year", "Median (90\\% CI)", " Probability of a tie"), 
+      caption= "Interspecific synchrony per year: proportion of the seven species in the majority state (median and 90\\% credible interval across posterior draws). Tied species contribute 0.5 to the proportion, so values can fall to 0.5 (for example 3.5 out of 7 because one specie is 1/2). The last column gives the share of draws in which the overall state was an exact tie",,
+      label= "interspecific_results") %>%
+  writeLines(con = "data/Tables/interspecific_results.tex")
+
+
+
 
 
 
